@@ -1,0 +1,828 @@
+openapi: "3.0.2"
+info:
+  title: Api Bus Travel
+  version: "1.0"
+  contact:
+    name: Maulidito Dwinandana
+    email: maulidito@gmail.com
+  description: Dokumentasi Portofolio manajemen bus travel
+servers:
+  - url: http://localhost:8080/v1
+tags:
+  - name: Bus
+    description: "endpoint that related on data Bus"
+  - name: Agency
+    description: "endpoint that related on data Agency"
+  - name: Customer
+    description: "endpoint that related on data Customer"
+  - name: Ticket
+    description: "endpoint that related on data Ticket"
+  - name: Driver
+    description: "endpoint that related on data Driver"
+components:
+  parameters:
+    busId:
+      in: path
+      name: busId
+      schema:
+        type: integer
+      required: true
+    agencyId:
+      in: path
+      name: agencyId
+      schema:
+        type: integer
+      required: true
+    driverId:
+      in: path
+      name: driverId
+      schema:
+        type: integer
+      required: true
+    customerId:
+      in: path
+      name: customerId
+      schema:
+        type: integer
+      required: true
+    ticketId:
+      in: path
+      name: agencyId
+      schema:
+        type: integer
+      required: true
+
+  schemas:
+    responseNoData:
+      type: "object"
+      properties:
+        code:
+          type: "number"
+        status:
+          type: "string"
+    agencyComponent:
+      type: "object"
+      properties:
+        agencyId:
+          type: "number"
+        name:
+          type: "string"
+        place:
+          type: "string"
+    busComponent:
+      type: object
+      properties:
+        busId:
+          type: integer
+        agencyId:
+          type: integer
+        numberPlate:
+          type: string
+    customerComponent:
+      type: object
+      properties:
+        customerId:
+          type: integer
+        name:
+          type: integer
+        phoneNumber:
+          type: string
+    driverComponent:
+      type: object
+      properties:
+        driverId:
+          type: integer
+        agencyId:
+          type: integer
+        name:
+          type: string
+    ticketComponent:
+      type: object
+      properties:
+        ticketId:
+          type: integer
+        busId:
+          type: integer
+        driverId:
+          type: integer
+        customerId:
+          type: integer
+        departurePlace:
+          type: string
+        arrivalPlace:
+          type: string
+        price:
+          type: number
+        date:
+          type: string
+
+paths:
+  /agency:
+    get:
+      tags:
+        - "Agency"
+      description: "Get List All Agency"
+      parameters: []
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  code:
+                    type: "number"
+                  status:
+                    type: "string"
+                  data:
+                    type: "array"
+                    items:
+                      $ref: "#components/schemas/agencyComponent"
+
+          description: OK
+    post:
+      description: "Adding one Agency from request"
+      tags:
+        - "Agency"
+      parameters: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                place:
+                  type: string
+        description: "Request Body"
+      summary: "adding agency"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/responseNoData"
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/responseNoData"
+          description: Bad Request
+
+  /agency/{agencyId}:
+    get:
+      tags:
+        - "Agency"
+      description: "Get Specific Agency"
+      parameters:
+        - $ref: "#/components/parameters/agencyId"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: "number"
+                  status:
+                    type: "string"
+                  data:
+                    $ref: "#/components/schemas/agencyComponent"
+
+          description: OK
+    delete:
+      description: "Delete specific Agency with Id"
+      tags:
+        - "Agency"
+      parameters:
+        - $ref: "#/components/parameters/agencyId"
+
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: number
+                  status:
+                    type: string
+                  data:
+                    $ref: "#/components/schemas/agencyComponent"
+
+          description: OK
+
+  /bus:
+    get:
+      tags:
+        - "Bus"
+      description: "Get all bus on all agency"
+      parameters: []
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  status:
+                    type: string
+                  data:
+                    type: "array"
+                    items:
+                      $ref: "#/components/schemas/busComponent"
+          description: OK
+
+  /{agencyId}/bus:
+    get:
+      tags:
+        - "Bus"
+      description: "Get all bus from specific agency"
+      parameters:
+        - $ref: "#/components/parameters/agencyId"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  status:
+                    type: string
+                  data:
+                    type: "object"
+                    properties:
+                      agency:
+                        type: "object"
+                        properties:
+                          id:
+                            type: integer
+                          name:
+                            type: string
+                      bus:
+                        type: "array"
+                        items:
+                          type: object
+                          properties:
+                            busId:
+                              type: integer
+                            numberPlate:
+                              type: string
+          description: OK
+    post:
+      tags:
+        - "Bus"
+      description: ""
+      parameters:
+        - $ref: "#/components/parameters/agencyId"
+
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                agencyId:
+                  type: integer
+                numberPlate:
+                  type: string
+
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/responseNoData"
+          description: OK
+
+  /{agencyId}/bus/{busId}:
+    get:
+      tags:
+        - "Bus"
+      description: ""
+      parameters:
+        - $ref: "#/components/parameters/agencyId"
+        - $ref: "#/components/parameters/busId"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  status:
+                    type: string
+                  data:
+                    $ref: "#/components/schemas/busComponent"
+          description: OK
+    delete:
+      tags:
+        - "Bus"
+      description: "Delete specific Bus on Specific Agency"
+      parameters:
+        - $ref: "#/components/parameters/agencyId"
+        - $ref: "#/components/parameters/busId"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  status:
+                    type: string
+                  data:
+                    $ref: "#/components/schemas/busComponent"
+          description: OK
+
+  /driver:
+    get:
+      tags:
+        - "Driver"
+      description: "Get all driver from all agency"
+      parameters: []
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  status:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: "#components/schemas/driverComponent"
+          description: OK
+
+  /{agencyId}/driver:
+    get:
+      tags:
+        - "Driver"
+      description: "get all driver from specific agency"
+      parameters:
+        - $ref: "#/components/parameters/driverId"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  status:
+                    type: string
+                  data:
+                    type: "object"
+                    properties:
+                      agency:
+                        type: "object"
+                        properties:
+                          id:
+                            type: integer
+                          name:
+                            type: string
+                      driver:
+                        type: "array"
+                        items:
+                          type: object
+                          properties:
+                            driverId:
+                              type: integer
+                            name:
+                              type: string
+
+          description: OK
+
+    post:
+      tags:
+        - "Driver"
+      description: "Adding driver to specific Agency"
+      parameters:
+        - $ref: "#/components/parameters/driverId"
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                agencyId:
+                  type: integer
+                name:
+                  type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/responseNoData"
+          description: OK
+
+  /{agencyId}/driver/{driverId}:
+    get:
+      tags:
+        - "Driver"
+      description: "get specific driver from specific agency"
+      parameters:
+        - $ref: "#/components/parameters/agencyId"
+        - $ref: "#/components/parameters/driverId"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  status:
+                    type: string
+                  data:
+                    $ref: "#/components/schemas/driverComponent"
+          description: OK
+    delete:
+      tags:
+        - "Driver"
+      description: "delete specific driver from specific agency"
+      parameters:
+        - $ref: "#/components/parameters/agencyId"
+        - $ref: "#/components/parameters/driverId"
+
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  status:
+                    type: string
+                  data:
+                    $ref: "#/components/schemas/driverComponent"
+
+          description: OK
+
+  /customer:
+    get:
+      tags:
+        - "Customer"
+      description: "Get List All Customer"
+      parameters: []
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  code:
+                    type: "number"
+                  status:
+                    type: "string"
+                  data:
+                    type: "array"
+                    items:
+                      $ref: "#/components/schemas/customerComponent"
+
+          description: OK
+    post:
+      description: "Adding one Customer from request"
+      tags:
+        - "Customer"
+      parameters: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                phoneNumber:
+                  type: string
+        description: "Request Body"
+      summary: "adding Customer"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/responseNoData"
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/responseNoData"
+          description: Bad Request
+
+  /customer/{customerId}:
+    get:
+      tags:
+        - "Customer"
+      description: "Get Specific Customer"
+      parameters:
+        - $ref: "#/components/parameters/customerId"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: "number"
+                  status:
+                    type: "string"
+                  data:
+                    $ref: "#/components/schemas/customerComponent"
+
+          description: OK
+    delete:
+      description: "Delete specific Customer with Id"
+      tags:
+        - "Customer"
+      parameters:
+        - $ref: "#/components/parameters/agencyId"
+
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: number
+                  status:
+                    type: string
+                  data:
+                    $ref: "#/components/schemas/agencyComponent"
+
+          description: OK
+
+  /ticket:
+    get:
+      tags:
+        - "Ticket"
+      description: "get all data ticket"
+      parameters: []
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  status:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: "#components/schemas/ticketComponent"
+          description: OK
+    post:
+      tags:
+        - "Ticket"
+      description: "Adding a ticket"
+      parameters: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                busId:
+                  type: integer
+                driverId:
+                  type: integer
+                customerId:
+                  type: integer
+                departurePlace:
+                  type: string
+                arrivalPlace:
+                  type: string
+                price:
+                  type: integer
+                date:
+                  type: integer
+      responses:
+        "200":
+          description: OK
+
+  /ticket/{ticketId}:
+    get:
+      tags:
+        - "Ticket"
+      description: ""
+      parameters:
+        - $ref: "#/components/parameters/ticketId"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  status:
+                    type: integer
+                  data:
+                    $ref: "#components/schemas/ticketComponent"
+
+          description: OK
+
+    delete:
+      tags:
+        - "Ticket"
+      description: ""
+      parameters:
+        - $ref: "#/components/parameters/ticketId"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  status:
+                    type: string
+                  data:
+                    $ref: "#components/schemas/ticketComponent"
+          description: OK
+
+  /ticket/driver/{driverId}:
+    get:
+      tags:
+        - "Ticket"
+      description: "get all ticket from specific driver"
+      parameters:
+        - $ref: "#/components/parameters/driverId"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  status:
+                    type: string
+                  data:
+                    type: "object"
+                    properties:
+                      driver:
+                        type: "object"
+                        properties:
+                          driverId:
+                            type: integer
+                          agencyId:
+                            type: integer
+                          name:
+                            type: string
+                      ticket:
+                        type: "array"
+                        items:
+                          type: object
+                          properties:
+                            ticketId:
+                              type: integer
+                            busId:
+                              type: integer
+                            customerId:
+                              type: integer
+                            departurePlace:
+                              type: string
+                            arrivalPlace:
+                              type: string
+                            price:
+                              type: number
+                            date:
+                              type: string
+          description: OK
+
+  /ticket/customer/{customerId}:
+    get:
+      tags:
+        - "Ticket"
+      description: "get all ticket from specific customer"
+      parameters:
+        - $ref: "#/components/parameters/customerId"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  status:
+                    type: string
+                  data:
+                    type: "object"
+                    properties:
+                      customer:
+                        type: "object"
+                        properties:
+                          customerId:
+                            type: integer
+                          name:
+                            type: string
+                          phoneNumber:
+                            type: string
+                      ticket:
+                        type: "array"
+                        items:
+                          type: object
+                          properties:
+                            ticketId:
+                              type: integer
+                            busId:
+                              type: integer
+                            driverId:
+                              type: integer
+                            departurePlace:
+                              type: string
+                            arrivalPlace:
+                              type: string
+                            price:
+                              type: number
+                            date:
+                              type: string
+          description: OK
+
+  /ticket/bus/{busId}:
+    get:
+      tags:
+        - "Ticket"
+      description: "Get all Ticket from specific bus Id"
+      parameters:
+        - $ref: "#/components/parameters/busId"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  status:
+                    type: string
+                  data:
+                    type: "object"
+                    properties:
+                      bus:
+                        type: "object"
+                        properties:
+                          busId:
+                            type: integer
+                          agencyId:
+                            type: integer
+                          numberPlate:
+                            type: string
+                      ticket:
+                        type: "array"
+                        items:
+                          type: object
+                          properties:
+                            ticketId:
+                              type: integer
+                            driverId:
+                              type: integer
+                            customerId:
+                              type: integer
+                            departurePlace:
+                              type: string
+                            arrivalPlace:
+                              type: string
+                            price:
+                              type: number
+                            date:
+                              type: string
+          description: OK
