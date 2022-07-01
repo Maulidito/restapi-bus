@@ -84,7 +84,7 @@ components:
         customerId:
           type: integer
         name:
-          type: integer
+          type: string
         phoneNumber:
           type: string
     driverComponent:
