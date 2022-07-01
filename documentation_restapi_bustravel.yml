@@ -239,7 +239,7 @@ paths:
                       $ref: "#/components/schemas/busComponent"
           description: OK
 
-  /{agencyId}/bus:
+  /agency/{agencyId}/bus:
     get:
       tags:
         - "Bus"
@@ -303,7 +303,7 @@ paths:
                 $ref: "#/components/schemas/responseNoData"
           description: OK
 
-  /{agencyId}/bus/{busId}:
+  /agency/{agencyId}/bus/{busId}:
     get:
       tags:
         - "Bus"
@@ -370,7 +370,7 @@ paths:
                       $ref: "#components/schemas/driverComponent"
           description: OK
 
-  /{agencyId}/driver:
+  /agency/{agencyId}/driver:
     get:
       tags:
         - "Driver"
@@ -434,7 +434,7 @@ paths:
                 $ref: "#/components/schemas/responseNoData"
           description: OK
 
-  /{agencyId}/driver/{driverId}:
+  /agency/{agencyId}/driver/{driverId}:
     get:
       tags:
         - "Driver"
