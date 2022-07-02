@@ -1,4 +1,2 @@
-
-log/logging.go
-log/recoveryLog.go
-
+log/*.log
+*.sum
