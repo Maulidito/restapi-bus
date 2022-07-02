@@ -20,3 +20,18 @@ func CustomerRequestToEntity(customer *request.Customer) entity.Customer {
 		PhoneNumber: customer.PhoneNumber,
 	}
 }
+
+func AgencyEntityToResponse(agency *entity.Agency) response.Agency {
+	return response.Agency{
+		AgencyId: agency.AgencyId,
+		Name:     agency.Name,
+		Place:    agency.Place,
+	}
+}
+
+func AgencyRequestToEntity(agency *request.Agency) entity.Agency {
+	return entity.Agency{
+		Name:  agency.Name,
+		Place: agency.Place,
+	}
+}

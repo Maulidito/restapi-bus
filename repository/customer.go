@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"restapi-bus/helper"
 	"restapi-bus/models/entity"
 )
@@ -17,8 +18,8 @@ type CustomerRepositoryInterface interface {
 type CustomerRepositoryImplementation struct {
 }
 
-func NewCustomerRepository() CustomerRepositoryImplementation {
-	return CustomerRepositoryImplementation{}
+func NewCustomerRepository() CustomerRepositoryInterface {
+	return &CustomerRepositoryImplementation{}
 }
 
 func (repo *CustomerRepositoryImplementation) GetAllCustomer(ctx context.Context, tx *sql.Tx) []entity.Customer {
@@ -65,10 +66,10 @@ func (repo *CustomerRepositoryImplementation) GetOneCustomer(ctx context.Context
 	customerData := entity.Customer{}
 	if rows.Next() {
 		err = rows.Scan(&customerData.CustomerId, &customerData.Name, &customerData.PhoneNumber)
+		helper.PanicIfError(err)
+		return customerData
 	}
-
-	helper.PanicIfError(err)
-	return customerData
+	panic(fmt.Sprintf("ID Customer %d Not Found", id))
 
 }
 func (repo *CustomerRepositoryImplementation) DeleteOneCustomer(ctx context.Context, tx *sql.Tx, id int) entity.Customer {

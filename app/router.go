@@ -1,22 +1,45 @@
 package app
 
 import (
+	"os"
 	"restapi-bus/controller"
 	"restapi-bus/middleware"
 
 	"github.com/gin-gonic/gin"
 )
 
-func Router(customer controller.CustomerControllerInterface) *gin.Engine {
+func configurationRouter() *gin.Engine {
+	fileLog, _ := os.OpenFile("../log/logging.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	fileRecovery, _ := os.OpenFile("../log/recoveryLog.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+
 	g := gin.Default()
-	g.Use(middleware.MiddlewarePanicHandler)
+
+	g.Use(middleware.MiddlewarePanic)
+	g.Use(gin.LoggerWithWriter(fileLog))
+	g.Use(gin.RecoveryWithWriter(fileRecovery))
+
+	return g
+}
+
+func Router(customer controller.CustomerControllerInterface, agency controller.AgencyControllerInterface) *gin.Engine {
+
+	g := configurationRouter()
 
 	grouter := g.Group("/v1")
 
-	grouter.GET("/customer", customer.GetAllCustomer)
-	grouter.POST("/customer/", customer.AddCustomer)
-	grouter.GET("/customer/:customerId", customer.GetOneCustomer)
-	grouter.DELETE("/customer/:customerId", customer.DeleteOneCustomer)
+	grouterCustomer := grouter.Group("/customer")
+
+	grouterCustomer.GET("/", customer.GetAllCustomer)
+	grouterCustomer.POST("/", customer.AddCustomer)
+	grouterCustomer.GET("/:customerId", customer.GetOneCustomer)
+	grouterCustomer.DELETE("/:customerId", customer.DeleteOneCustomer)
+
+	grouterAgency := grouter.Group("/agency")
+
+	grouterAgency.GET("/", agency.GetAllAgency)
+	grouterAgency.POST("/", agency.AddAgency)
+	grouterAgency.GET("/:agencyId", agency.GetOneAgency)
+	grouterAgency.DELETE("/:agencyId", agency.DeleteOneAgency)
 
 	return g
 }
