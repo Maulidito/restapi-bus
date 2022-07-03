@@ -5,3 +5,8 @@ type Bus struct {
 	AgencyId    int    `json:"agencyId"`
 	NumberPlate string `json:"numberPlate"`
 }
+
+type BusNoAgency struct {
+	BusId       int    `json:"busId"`
+	NumberPlate string `json:"numberPlate"`
+}

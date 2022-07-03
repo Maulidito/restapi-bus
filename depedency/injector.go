@@ -14,20 +14,36 @@ import (
 	"github.com/google/wire"
 )
 
-var controllerCustomerSet = wire.NewSet(
-	repository.NewCustomerRepository,
-	service.NewCustomerService,
-	controller.NewCustomerController)
-
-var controllerAgencySet = wire.NewSet(
-	repository.NewAgencyRepository,
-	service.NewAgencyService,
-	controller.NewAgencyController)
-
-func InitializedServer(db *sql.DB) *gin.Engine {
+func InitializedControllerCustomer(db *sql.DB) controller.CustomerControllerInterface {
 	wire.Build(
-		controllerCustomerSet,
-		controllerAgencySet,
+		repository.NewCustomerRepository,
+		service.NewCustomerService,
+		controller.NewCustomerController)
+	return nil
+}
+
+func InitializedControllerAgency(db *sql.DB) controller.AgencyControllerInterface {
+	wire.Build(
+		repository.NewAgencyRepository,
+		service.NewAgencyService,
+		controller.NewAgencyController)
+	return nil
+}
+
+func InitializedControllerBus(db *sql.DB) controller.BusControllerInterface {
+	wire.Build(repository.NewBusRepository,
+		repository.NewAgencyRepository,
+		service.NewBusService,
+		controller.NewBusController)
+	return nil
+}
+
+func InitializedServer() *gin.Engine {
+	wire.Build(
+		app.NewDatabase,
+		InitializedControllerCustomer,
+		InitializedControllerAgency,
+		InitializedControllerBus,
 		app.Router)
 	return nil
 }

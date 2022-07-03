@@ -9,7 +9,6 @@ package depedency
 import (
 	"database/sql"
 	"github.com/gin-gonic/gin"
-	"github.com/google/wire"
 	"restapi-bus/app"
 	"restapi-bus/controller"
 	"restapi-bus/repository"
@@ -18,19 +17,33 @@ import (
 
 // Injectors from injector.go:
 
-func InitializedServer(db *sql.DB) *gin.Engine {
+func InitializedControllerCustomer(db *sql.DB) controller.CustomerControllerInterface {
 	customerRepositoryInterface := repository.NewCustomerRepository()
 	customerServiceInterface := service.NewCustomerService(db, customerRepositoryInterface)
 	customerControllerInterface := controller.NewCustomerController(customerServiceInterface)
+	return customerControllerInterface
+}
+
+func InitializedControllerAgency(db *sql.DB) controller.AgencyControllerInterface {
 	agencyRepositoryInterface := repository.NewAgencyRepository()
 	agencyServiceInterface := service.NewAgencyService(db, agencyRepositoryInterface)
 	agencyControllerInterface := controller.NewAgencyController(agencyServiceInterface)
-	engine := app.Router(customerControllerInterface, agencyControllerInterface)
-	return engine
+	return agencyControllerInterface
 }
 
-// injector.go:
+func InitializedControllerBus(db *sql.DB) controller.BusControllerInterface {
+	busRepositoryInterface := repository.NewBusRepository()
+	agencyRepositoryInterface := repository.NewAgencyRepository()
+	busServiceInterface := service.NewBusService(db, busRepositoryInterface, agencyRepositoryInterface)
+	busControllerInterface := controller.NewBusController(busServiceInterface)
+	return busControllerInterface
+}
 
-var controllerCustomerSet = wire.NewSet(repository.NewCustomerRepository, service.NewCustomerService, controller.NewCustomerController)
-
-var controllerAgencySet = wire.NewSet(repository.NewAgencyRepository, service.NewAgencyService, controller.NewAgencyController)
+func InitializedServer() *gin.Engine {
+	db := app.NewDatabase()
+	customerControllerInterface := InitializedControllerCustomer(db)
+	agencyControllerInterface := InitializedControllerAgency(db)
+	busControllerInterface := InitializedControllerBus(db)
+	engine := app.Router(customerControllerInterface, agencyControllerInterface, busControllerInterface)
+	return engine
+}

@@ -12,9 +12,8 @@ import (
 func TestRequestToEntitySuccessAgency(t *testing.T) {
 	agency := request.Agency{Name: "TEST", Place: "TEST123"}
 
-	agencyEntity, err := helper.RequestToEntity[*request.Agency, entity.Agency](&agency)
+	agencyEntity := helper.RequestToEntity[*request.Agency, entity.Agency](&agency)
 
-	assert.Nil(t, err)
 	assert.Equal(t, agency.Name, agencyEntity.Name)
 	assert.Equal(t, agency.Place, agencyEntity.Place)
 	assert.Zero(t, agencyEntity.AgencyId)
@@ -23,9 +22,8 @@ func TestRequestToEntitySuccessAgency(t *testing.T) {
 func TestRequestToEntitySuccessBus(t *testing.T) {
 	bus := request.Bus{AgencyId: 1, NumberPlate: "TEST123"}
 
-	busEntity, err := helper.RequestToEntity[*request.Bus, entity.Bus](&bus)
+	busEntity := helper.RequestToEntity[*request.Bus, entity.Bus](&bus)
 
-	assert.Nil(t, err)
 	assert.Equal(t, bus.AgencyId, busEntity.AgencyId)
 	assert.Equal(t, bus.NumberPlate, busEntity.NumberPlate)
 	assert.Zero(t, busEntity.BusId)
@@ -35,9 +33,30 @@ func TestRequestToEntitySuccessBus(t *testing.T) {
 func TestRequestToEntityFailed(t *testing.T) {
 	agency := request.Agency{Name: "TEST", Place: "TEST123"}
 
-	agencyEntity, err := helper.RequestToEntity[*request.Agency, entity.Bus](&agency)
+	agencyEntity := helper.RequestToEntity[*request.Agency, entity.Bus](&agency)
 
-	assert.NotNil(t, err)
 	assert.Equal(t, agencyEntity, entity.Bus{})
+
+}
+
+func BenchmarkRequestToEntity(b *testing.B) {
+
+	b.Run(
+		"Custom Function", func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				data := &request.Agency{Name: "MAULIDITO DWINANDANA", Place: "DEPOK"}
+				helper.RequestToEntity[*request.Agency, entity.Agency](data)
+			}
+		},
+	)
+
+	b.Run(
+		"Normal Function", func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				data := &request.Agency{Name: "MAULIDITO DWINANDANA", Place: "DEPOK"}
+				helper.AgencyRequestToEntity(data)
+			}
+		},
+	)
 
 }

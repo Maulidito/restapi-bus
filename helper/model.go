@@ -3,6 +3,7 @@ package helper
 import (
 	"errors"
 	"fmt"
+	"log"
 	"restapi-bus/models/entity"
 	"restapi-bus/models/request"
 	"restapi-bus/models/response"
@@ -32,18 +33,63 @@ func BusEntityToResponse(bus *entity.Bus) response.Bus {
 	}
 }
 
+func AgencyRequestToEntity(agency *request.Agency) entity.Agency {
+	return entity.Agency{
+
+		Name:  agency.Name,
+		Place: agency.Place,
+	}
+}
+func BusRequestToEntity(bus *request.Bus) entity.Bus {
+	return entity.Bus{
+
+		AgencyId:    bus.AgencyId,
+		NumberPlate: bus.NumberPlate,
+	}
+}
+
+func CustomerRequestToEntity(customer *request.Customer) entity.Customer {
+	return entity.Customer{
+
+		Name:        customer.Name,
+		PhoneNumber: customer.PhoneNumber,
+	}
+}
+
+func DriverRequestToEntity(driver *request.Driver) entity.Driver {
+	return entity.Driver{
+
+		AgencyId: driver.AgencyId,
+		Name:     driver.Name,
+	}
+}
+
+func TicketRequestToEntity(ticket *request.Ticket) entity.Ticket {
+	return entity.Ticket{
+
+		BusId:          ticket.BusId,
+		DriverId:       ticket.DriverId,
+		CustomerId:     ticket.CustomerId,
+		DeparturePlace: ticket.DeparturePlace,
+		ArrivalPlace:   ticket.ArrivalPlace,
+		Price:          ticket.Price,
+		Date:           ticket.Date,
+	}
+}
+
 func RequestToEntity[REQ interface {
 	*request.Bus | *request.Agency | *request.Customer | *request.Driver | *request.Ticket
 },
 	ENT interface {
 		entity.Bus | entity.Agency | entity.Customer | entity.Driver | entity.Ticket
 	},
-](requestInput REQ) (dataReturn ENT, err error) {
+](requestInput REQ) (dataReturn ENT) {
 
 	defer func() {
 		data := recover()
 		if data != nil {
-			err = errors.New(fmt.Sprint(data))
+			err := errors.New(fmt.Sprint(data))
+			log.Fatal(err)
 		}
 
 	}()
@@ -102,6 +148,6 @@ func RequestToEntity[REQ interface {
 
 	}
 
-	return dataReturn, nil
+	return dataReturn
 
 }

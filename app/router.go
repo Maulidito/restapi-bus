@@ -9,8 +9,8 @@ import (
 )
 
 func configurationRouter() *gin.Engine {
-	fileLog, _ := os.OpenFile("../log/logging.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
-	fileRecovery, _ := os.OpenFile("../log/recoveryLog.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	fileLog, _ := os.OpenFile("./log/logging.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	fileRecovery, _ := os.OpenFile("./log/recoveryLog.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 
 	g := gin.Default()
 
@@ -21,7 +21,7 @@ func configurationRouter() *gin.Engine {
 	return g
 }
 
-func Router(customer controller.CustomerControllerInterface, agency controller.AgencyControllerInterface) *gin.Engine {
+func Router(customer controller.CustomerControllerInterface, agency controller.AgencyControllerInterface, bus controller.BusControllerInterface) *gin.Engine {
 
 	g := configurationRouter()
 
@@ -40,6 +40,10 @@ func Router(customer controller.CustomerControllerInterface, agency controller.A
 	grouterAgency.POST("/", agency.AddAgency)
 	grouterAgency.GET("/:agencyId", agency.GetOneAgency)
 	grouterAgency.DELETE("/:agencyId", agency.DeleteOneAgency)
+
+	grouterBus := grouter.Group("/bus")
+
+	grouterBus.GET("/", bus.GetAllBus)
 
 	return g
 }
