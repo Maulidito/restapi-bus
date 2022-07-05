@@ -14,9 +14,8 @@ func configurationRouter() *gin.Engine {
 
 	g := gin.Default()
 
-	g.Use(middleware.MiddlewarePanic)
 	g.Use(gin.LoggerWithWriter(fileLog))
-	g.Use(gin.RecoveryWithWriter(fileRecovery))
+	g.Use(gin.CustomRecoveryWithWriter(fileRecovery, middleware.MiddlewarePanic))
 
 	return g
 }
@@ -41,9 +40,13 @@ func Router(customer controller.CustomerControllerInterface, agency controller.A
 	grouterAgency.GET("/:agencyId", agency.GetOneAgency)
 	grouterAgency.DELETE("/:agencyId", agency.DeleteOneAgency)
 
-	grouterBus := grouter.Group("/bus")
+	grouterBusOnSpecificAgency := grouterAgency.Group("/:agencyId/bus")
 
-	grouterBus.GET("/", bus.GetAllBus)
+	grouter.GET("/bus", bus.GetAllBus)
+	grouterBusOnSpecificAgency.GET("/", bus.GetAllBusOnSpecificAgency)
+	grouterBusOnSpecificAgency.POST("/", bus.AddBus)
+	grouterBusOnSpecificAgency.GET("/:busId", bus.GetOneBusOnSpecificAgency)
+	grouterBusOnSpecificAgency.DELETE("/busId", bus.DeleteOneBus)
 
 	return g
 }

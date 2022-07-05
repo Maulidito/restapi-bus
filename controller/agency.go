@@ -34,7 +34,10 @@ func (ctrl *AgencyControllerImplementation) GetAllAgency(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, finalResponse)
 }
 func (ctrl *AgencyControllerImplementation) AddAgency(ctx *gin.Context) {
-	agencyRequest := request.Agency{}
+	name, _ := ctx.Params.Get("name")
+	place, _ := ctx.Params.Get("place")
+
+	agencyRequest := request.Agency{Name: name, Place: place}
 	err := ctx.ShouldBind(&agencyRequest)
 	helper.PanicIfError(err)
 	err = ctrl.service.AddAgency(ctx, &agencyRequest)
@@ -48,7 +51,7 @@ func (ctrl *AgencyControllerImplementation) GetOneAgency(ctx *gin.Context) {
 	id, idBool := ctx.Params.Get("agencyId")
 
 	if !idBool {
-		panic("ERROR ID PARAMAETER NOT FOUND")
+		helper.PanicIfErrorString("ERROR ID PARAMAETER NOT FOUND")
 	}
 	idInt, err := strconv.Atoi(id)
 	helper.PanicIfError(err)
@@ -63,7 +66,8 @@ func (ctrl *AgencyControllerImplementation) DeleteOneAgency(ctx *gin.Context) {
 	id, idBool := ctx.Params.Get("agencyId")
 
 	if !idBool {
-		panic("ERROR ID PARAMAETER NOT FOUND")
+		helper.PanicIfErrorString("ERROR ID PARAMAETER NOT FOUND")
+
 	}
 	idInt, err := strconv.Atoi(id)
 	helper.PanicIfError(err)

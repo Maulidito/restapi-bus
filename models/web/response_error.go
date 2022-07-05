@@ -1,7 +1,7 @@
 package web
 
 type ErrorMessage struct {
-	ErrorMessage string
+	ErrorMessage string `json:"errorMessage"`
 }
 
 type ResponseError struct {

@@ -3,14 +3,12 @@ package service
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 	"restapi-bus/helper"
 	"restapi-bus/models/entity"
 	"restapi-bus/models/request"
 	"restapi-bus/models/response"
 	"restapi-bus/repository"
-	"sync"
 )
 
 type BusServiceInterface interface {
@@ -58,7 +56,8 @@ func (service *BusServiceImplemtation) GetOneBusSpecificAgency(ctx context.Conte
 	tx, err := service.Db.Begin()
 	helper.PanicIfError(err)
 
-	agencyEntity := service.RepoAgency.GetOneAgency(ctx, tx, idAgency)
+	agencyEntity := entity.Agency{AgencyId: idAgency}
+	service.RepoAgency.GetOneAgency(ctx, tx, &agencyEntity)
 
 	if agencyEntity.Name == "" {
 		helper.PanicIfError(fmt.Errorf("agency id %d , not found", agencyEntity.AgencyId))
@@ -75,19 +74,31 @@ func (service *BusServiceImplemtation) GetOneBusSpecificAgency(ctx context.Conte
 
 func (service *BusServiceImplemtation) GetAllBusOnSpecificAgency(ctx context.Context, idAgency int) (responseBus []response.Bus, responseAgency response.Agency) {
 	tx, err := service.Db.Begin()
-	waitGroup := sync.WaitGroup{}
+
 	helper.PanicIfError(err)
 	var busEntity []entity.Bus
-	var agencyEntity entity.Agency
 
-	waitGroup.Add(1)
+	chanErr := make(chan string, 1)
+
+	var agencyEntity entity.Agency = entity.Agency{AgencyId: idAgency}
+
 	go func() {
-		defer waitGroup.Done()
+		defer func() {
 
-		agencyEntity = service.RepoAgency.GetOneAgency(ctx, tx, idAgency)
+			tempRecover := recover()
+
+			if tempRecover != nil {
+				chanErr <- tempRecover.(string)
+			}
+
+			close(chanErr)
+
+		}()
+
+		service.RepoAgency.GetOneAgency(ctx, tx, &agencyEntity)
 		busEntity = service.RepoBus.GetAllBusSpecificAgency(ctx, tx, idAgency)
 	}()
-	waitGroup.Wait()
+	helper.PanicIfErrorString(<-chanErr)
 
 	for _, val := range busEntity {
 		responseBus = append(responseBus, helper.BusEntityToResponse(&val))
@@ -107,10 +118,11 @@ func (service *BusServiceImplemtation) DeleteOneBus(ctx context.Context, idAgenc
 		AgencyId: idAgency,
 	}
 
-	agencyEntity := service.RepoAgency.GetOneAgency(ctx, tx, busEntity.AgencyId)
+	agencyEntity := entity.Agency{AgencyId: idAgency}
+	service.RepoAgency.GetOneAgency(ctx, tx, &agencyEntity)
 
 	if agencyEntity.Name == "" {
-		helper.PanicIfError(errors.New(fmt.Sprintf("Agency id %d , Not Found", busEntity.AgencyId)))
+		helper.PanicIfError(fmt.Errorf("agency id %d , not found", busEntity.AgencyId))
 	}
 
 	service.RepoBus.DeleteOneBus(ctx, tx, &busEntity)

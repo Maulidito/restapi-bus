@@ -38,18 +38,20 @@ func TestAgencyGetOne(t *testing.T) {
 	tx, err := db.Begin()
 	helper.PanicIfError(err)
 	repoAgency := repository.NewAgencyRepository()
-	AgencyData := repoAgency.GetOneAgency(ctx, tx, 3)
+	agency := entity.Agency{AgencyId: 3}
+	repoAgency.GetOneAgency(ctx, tx, &agency)
 
-	fmt.Println(AgencyData)
-	assert.NotNil(t, AgencyData)
+	fmt.Println(agency)
+	assert.NotNil(t, agency)
 }
 
 func TestAgencyDelete(t *testing.T) {
 	tx, err := db.Begin()
 	helper.PanicIfError(err)
 	repoAgency := repository.NewAgencyRepository()
-	AgencyData := repoAgency.DeleteOneAgency(ctx, tx, 3)
+	agency := entity.Agency{AgencyId: 3}
+	repoAgency.DeleteOneAgency(ctx, tx, &agency)
 
-	fmt.Println("Deleted ", AgencyData)
-	assert.NotNil(t, AgencyData)
+	fmt.Println("Deleted ", agency)
+	assert.NotNil(t, agency)
 }

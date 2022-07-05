@@ -22,7 +22,7 @@ func TestCustomerGetAll(t *testing.T) {
 	repoCustomer := repository.NewCustomerRepository()
 
 	allCustomer := repoCustomer.GetAllCustomer(ctx, tx)
-	fmt.Println(allCustomer)
+
 	assert.Nil(t, err)
 	assert.NotNil(t, allCustomer)
 
@@ -43,18 +43,37 @@ func TestCustomerGetOne(t *testing.T) {
 	tx, err := db.Begin()
 	helper.PanicIfError(err)
 	repoCustomer := repository.NewCustomerRepository()
-	customerData := repoCustomer.GetOneCustomer(ctx, tx, 3)
+	customer := entity.Customer{CustomerId: 1}
+	repoCustomer.GetOneCustomer(ctx, tx, &customer)
 
-	fmt.Println(customerData)
-	assert.NotNil(t, customerData)
+	fmt.Println(customer)
+	assert.NotNil(t, customer)
 }
 
 func TestCustomerDelete(t *testing.T) {
 	tx, err := db.Begin()
 	helper.PanicIfError(err)
 	repoCustomer := repository.NewCustomerRepository()
-	customerData := repoCustomer.DeleteOneCustomer(ctx, tx, 3)
+	customer := entity.Customer{CustomerId: 3}
+	repoCustomer.DeleteOneCustomer(ctx, tx, &customer)
 
-	fmt.Println("Deleted ", customerData)
-	assert.NotNil(t, customerData)
+	assert.NotNil(t, customer)
+}
+
+func BenchmarkDatabaseTransaction(b *testing.B) {
+	fmt.Println("IN MAX OPEN CONN", db.Stats().MaxOpenConnections)
+
+	go func() {
+
+		for i := 0; i < b.N; i++ {
+			fmt.Println("IN MAX Idle CLosed", db.Stats().MaxIdleClosed)
+			fmt.Println("IN MAX Life Time", db.Stats().MaxLifetimeClosed)
+			fmt.Println("IN USE", db.Stats().InUse)
+			fmt.Println("IN OpenCon", db.Stats().OpenConnections)
+			fmt.Println("IN Idle", db.Stats().Idle)
+			TestCustomerGetAll(&testing.T{})
+			TestCustomerGetOne(&testing.T{})
+		}
+	}()
+
 }

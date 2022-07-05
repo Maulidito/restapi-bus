@@ -51,3 +51,24 @@ func TestGetOneBusOnSpecificAgency(t *testing.T) {
 	repo.GetOneBus(ctx, tx, &bus)
 
 }
+
+func TestAddBus(t *testing.T) {
+	bus := entity.Bus{
+		NumberPlate: "T 8923 XCF",
+		AgencyId:    2,
+	}
+	defer func() {
+		err := recover()
+		fmt.Println(bus, err)
+
+		assert.NotEmpty(t, err)
+		assert.Empty(t, bus)
+	}()
+
+	tx, err := db.Begin()
+	helper.PanicIfError(err)
+	repo := repository.NewBusRepository()
+
+	repo.AddBus(ctx, tx, &bus)
+
+}

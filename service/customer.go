@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"restapi-bus/helper"
+	"restapi-bus/models/entity"
 	"restapi-bus/models/request"
 	"restapi-bus/models/response"
 	"restapi-bus/repository"
@@ -50,16 +51,17 @@ func (service *CustomerServiceImplemtation) AddCustomer(ctx context.Context, cus
 func (service *CustomerServiceImplemtation) GetOneCustomer(ctx context.Context, id int) response.Customer {
 	tx, err := service.Db.Begin()
 	helper.PanicIfError(err)
-	customerEntity := service.Repo.GetOneCustomer(ctx, tx, id)
+	customer := entity.Customer{CustomerId: id}
+	service.Repo.GetOneCustomer(ctx, tx, &customer)
 
-	return helper.CustomerEntityToResponse(&customerEntity)
+	return helper.CustomerEntityToResponse(&customer)
 
 }
 func (service *CustomerServiceImplemtation) DeleteOneCustomer(ctx context.Context, id int) response.Customer {
 	tx, err := service.Db.Begin()
 	helper.PanicIfError(err)
+	customer := entity.Customer{CustomerId: id}
+	service.Repo.DeleteOneCustomer(ctx, tx, &customer)
 
-	customerEntity := service.Repo.DeleteOneCustomer(ctx, tx, id)
-
-	return helper.CustomerEntityToResponse(&customerEntity)
+	return helper.CustomerEntityToResponse(&customer)
 }

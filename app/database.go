@@ -14,8 +14,8 @@ func NewDatabase() *sql.DB {
 
 	helper.PanicIfError(err)
 
-	db.SetConnMaxIdleTime(time.Minute * 30)
-	db.SetConnMaxLifetime(time.Minute * 60)
+	db.SetConnMaxIdleTime(time.Second * 30)
+	db.SetConnMaxLifetime(time.Second * 5)
 	db.SetMaxOpenConns(10)
 	db.SetMaxIdleConns(5)
 

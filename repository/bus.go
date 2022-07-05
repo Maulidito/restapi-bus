@@ -58,6 +58,7 @@ func (repo *BusRepositoryImplementation) GetAllBusSpecificAgency(ctx context.Con
 }
 
 func (repo *BusRepositoryImplementation) AddBus(ctx context.Context, tx *sql.Tx, bus *entity.Bus) error {
+
 	res, err := tx.ExecContext(ctx, "Insert Into bus( agency_id , number_plate ) Values (?,?)", bus.AgencyId, bus.NumberPlate)
 
 	if err != nil {

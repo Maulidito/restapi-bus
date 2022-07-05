@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"restapi-bus/helper"
+	"restapi-bus/models/entity"
 	"restapi-bus/models/request"
 	"restapi-bus/models/response"
 	"restapi-bus/repository"
@@ -50,16 +51,16 @@ func (service *AgencyServiceImplemtation) AddAgency(ctx context.Context, agency 
 func (service *AgencyServiceImplemtation) GetOneAgency(ctx context.Context, id int) response.Agency {
 	tx, err := service.Db.Begin()
 	helper.PanicIfError(err)
-	agencyEntity := service.Repo.GetOneAgency(ctx, tx, id)
-
+	agencyEntity := entity.Agency{AgencyId: id}
+	service.Repo.GetOneAgency(ctx, tx, &agencyEntity)
 	return helper.AgencyEntityToResponse(&agencyEntity)
 
 }
 func (service *AgencyServiceImplemtation) DeleteOneAgency(ctx context.Context, id int) response.Agency {
 	tx, err := service.Db.Begin()
 	helper.PanicIfError(err)
-
-	agencyEntity := service.Repo.DeleteOneAgency(ctx, tx, id)
+	agencyEntity := entity.Agency{AgencyId: id}
+	service.Repo.DeleteOneAgency(ctx, tx, &agencyEntity)
 
 	return helper.AgencyEntityToResponse(&agencyEntity)
 }

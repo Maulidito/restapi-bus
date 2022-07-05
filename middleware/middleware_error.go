@@ -9,17 +9,11 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-func MiddlewarePanic(ctx *gin.Context) {
+func MiddlewarePanic(ctx *gin.Context, panicErr any) {
 	defer func() {
 
-		panicErr := recover()
+		validatorErrorHandle(ctx, panicErr)
 
-		validatorErr, isValidator := panicErr.(validator.ValidationErrors)
-		if isValidator {
-
-			validatorErrorHandle(ctx, validatorErr)
-			return
-		}
 		NotFoundErrorHandle(ctx, panicErr)
 	}()
 
@@ -27,11 +21,16 @@ func MiddlewarePanic(ctx *gin.Context) {
 
 }
 
-func validatorErrorHandle(c *gin.Context, err validator.ValidationErrors) {
+func validatorErrorHandle(c *gin.Context, err any) {
+	validatorErr, isValidator := err.(validator.ValidationErrors)
+	if !isValidator {
+
+		return
+	}
 
 	FieldErrMessage := []web.ErrorMessage{}
 
-	for _, v := range err {
+	for _, v := range validatorErr {
 		message := web.ErrorMessage{ErrorMessage: fmt.Sprintf("ERROR BINDING DATA, WHAT = %s, WHERE = %s", v.ActualTag(), v.Field())}
 		FieldErrMessage = append(FieldErrMessage, message)
 	}
@@ -44,6 +43,7 @@ func NotFoundErrorHandle(c *gin.Context, err interface{}) {
 
 	dataErr, isString := err.(string)
 	if !isString {
+
 		return
 	}
 	errMsg := web.ErrorMessage{ErrorMessage: dataErr}

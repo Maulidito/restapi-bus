@@ -11,8 +11,8 @@ import (
 type CustomerRepositoryInterface interface {
 	GetAllCustomer(ctx context.Context, tx *sql.Tx) []entity.Customer
 	AddCustomer(ctx context.Context, tx *sql.Tx, customer *entity.Customer) error
-	GetOneCustomer(ctx context.Context, tx *sql.Tx, id int) entity.Customer
-	DeleteOneCustomer(ctx context.Context, tx *sql.Tx, id int) entity.Customer
+	GetOneCustomer(ctx context.Context, tx *sql.Tx, customer *entity.Customer)
+	DeleteOneCustomer(ctx context.Context, tx *sql.Tx, customer *entity.Customer)
 }
 
 type CustomerRepositoryImplementation struct {
@@ -37,6 +37,10 @@ func (repo *CustomerRepositoryImplementation) GetAllCustomer(ctx context.Context
 		helper.PanicIfError(err)
 	}
 
+	if err = tx.Commit(); err != nil {
+		helper.PanicIfError(err)
+	}
+
 	return listCustomer
 }
 
@@ -57,32 +61,32 @@ func (repo *CustomerRepositoryImplementation) AddCustomer(ctx context.Context, t
 
 }
 
-func (repo *CustomerRepositoryImplementation) GetOneCustomer(ctx context.Context, tx *sql.Tx, id int) entity.Customer {
-	rows, err := tx.QueryContext(ctx, "SELECT customer_id, name, phone_number FROM customer where customer_id = ?", id)
+func (repo *CustomerRepositoryImplementation) GetOneCustomer(ctx context.Context, tx *sql.Tx, customer *entity.Customer) {
+	rows, err := tx.QueryContext(ctx, "SELECT name, phone_number FROM customer where customer_id = ?", customer.CustomerId)
 
 	helper.PanicIfError(err)
 	defer rows.Close()
 
-	customerData := entity.Customer{}
 	if rows.Next() {
-		err = rows.Scan(&customerData.CustomerId, &customerData.Name, &customerData.PhoneNumber)
+		err = rows.Scan(&customer.Name, &customer.PhoneNumber)
 		helper.PanicIfError(err)
-		return customerData
+		if err = tx.Commit(); err != nil {
+			helper.PanicIfError(err)
+		}
+		return
 	}
-	panic(fmt.Sprintf("ID Customer %d Not Found", id))
+	panic(fmt.Sprintf("ID Customer %d Not Found", customer.CustomerId))
 
 }
-func (repo *CustomerRepositoryImplementation) DeleteOneCustomer(ctx context.Context, tx *sql.Tx, id int) entity.Customer {
+func (repo *CustomerRepositoryImplementation) DeleteOneCustomer(ctx context.Context, tx *sql.Tx, customer *entity.Customer) {
 
-	customerData := repo.GetOneCustomer(ctx, tx, id)
-	_, err := tx.ExecContext(ctx, "DELETE FROM customer WHERE customer_id = ?", id)
+	repo.GetOneCustomer(ctx, tx, customer)
+	_, err := tx.ExecContext(ctx, "DELETE FROM customer WHERE customer_id = ?", customer.CustomerId)
 
 	if err != nil {
 		tx.Rollback()
 		helper.PanicIfError(err)
 	}
 	tx.Commit()
-
-	return customerData
 
 }
