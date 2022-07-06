@@ -25,10 +25,18 @@ func AgencyEntityToResponse(agency *entity.Agency) response.Agency {
 	}
 }
 
+func DriverEntityToResponse(driver *entity.Driver) response.Driver {
+	return response.Driver{
+		AgencyId: driver.AgencyId,
+		Name:     driver.Name,
+		DriverId: driver.DriverId,
+	}
+}
+
 func BusEntityToResponse(bus *entity.Bus) response.Bus {
 	return response.Bus{
 		BusId:       bus.BusId,
-		AgencyId:    bus.BusId,
+		AgencyId:    bus.AgencyId,
 		NumberPlate: bus.NumberPlate,
 	}
 }

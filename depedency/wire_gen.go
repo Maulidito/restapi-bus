@@ -39,11 +39,20 @@ func InitializedControllerBus(db *sql.DB) controller.BusControllerInterface {
 	return busControllerInterface
 }
 
+func InitializedControllerDriver(db *sql.DB) controller.ControllerDriverInterface {
+	driverRepositoryInterface := repository.NewDiverRepository()
+	agencyRepositoryInterface := repository.NewAgencyRepository()
+	serviceDriverInterface := service.NewServiceDriver(db, driverRepositoryInterface, agencyRepositoryInterface)
+	controllerDriverInterface := controller.NewDriverController(serviceDriverInterface)
+	return controllerDriverInterface
+}
+
 func InitializedServer() *gin.Engine {
 	db := app.NewDatabase()
 	customerControllerInterface := InitializedControllerCustomer(db)
 	agencyControllerInterface := InitializedControllerAgency(db)
 	busControllerInterface := InitializedControllerBus(db)
-	engine := app.Router(customerControllerInterface, agencyControllerInterface, busControllerInterface)
+	controllerDriverInterface := InitializedControllerDriver(db)
+	engine := app.Router(customerControllerInterface, agencyControllerInterface, busControllerInterface, controllerDriverInterface)
 	return engine
 }

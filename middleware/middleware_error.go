@@ -12,20 +12,32 @@ import (
 func MiddlewarePanic(ctx *gin.Context, panicErr any) {
 	defer func() {
 
-		validatorErrorHandle(ctx, panicErr)
+		if panicErr == nil {
+			return
+		}
+		if validatorErrorHandle(ctx, &panicErr) {
+			return
+		}
 
-		NotFoundErrorHandle(ctx, panicErr)
+		if NotFoundErrorHandle(ctx, panicErr) {
+			return
+		}
+
+		if BadParamRouter(ctx, panicErr) {
+			return
+		}
 	}()
 
 	ctx.Next()
 
 }
 
-func validatorErrorHandle(c *gin.Context, err any) {
+func validatorErrorHandle(c *gin.Context, err interface{}) bool {
+
 	validatorErr, isValidator := err.(validator.ValidationErrors)
 	if !isValidator {
-
-		return
+		fmt.Println("OUT FROM VALIDATOR ERROR")
+		return false
 	}
 
 	FieldErrMessage := []web.ErrorMessage{}
@@ -37,16 +49,30 @@ func validatorErrorHandle(c *gin.Context, err any) {
 
 	response := web.ResponseBindingError{Code: http.StatusBadRequest, Status: "BAD REQUEST", Data: FieldErrMessage}
 	c.JSON(http.StatusBadRequest, response)
+	return true
 }
 
-func NotFoundErrorHandle(c *gin.Context, err interface{}) {
+func NotFoundErrorHandle(c *gin.Context, err interface{}) bool {
 
 	dataErr, isString := err.(string)
 	if !isString {
-
-		return
+		fmt.Println(err)
+		return false
 	}
 	errMsg := web.ErrorMessage{ErrorMessage: dataErr}
 	response := web.ResponseError{Code: http.StatusNotFound, Status: "NOT FOUND", Data: errMsg}
 	c.JSON(http.StatusNotFound, response)
+	return true
+}
+
+func BadParamRouter(c *gin.Context, err interface{}) bool {
+	dataErr, isErr := err.(error)
+
+	if !isErr {
+		return false
+	}
+	errMsg := web.ErrorMessage{ErrorMessage: dataErr.Error()}
+	response := web.ResponseError{Code: http.StatusBadRequest, Status: "BAD REQUEST", Data: errMsg}
+	c.JSON(http.StatusBadRequest, response)
+	return true
 }

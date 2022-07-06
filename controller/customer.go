@@ -37,8 +37,7 @@ func (ctrl *CustomerControllerImplementation) AddCustomer(ctx *gin.Context) {
 	customerRequest := request.Customer{}
 	err := ctx.ShouldBind(&customerRequest)
 	helper.PanicIfError(err)
-	err = ctrl.service.AddCustomer(ctx, &customerRequest)
-	helper.PanicIfError(err)
+	ctrl.service.AddCustomer(ctx, &customerRequest)
 
 	finalResponse := web.WebResponseNoData{Code: http.StatusOK, Status: "OK"}
 	ctx.JSON(http.StatusOK, finalResponse)

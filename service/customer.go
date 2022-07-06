@@ -12,7 +12,7 @@ import (
 
 type CustomerServiceInterface interface {
 	GetAllCustomer(ctx context.Context) []response.Customer
-	AddCustomer(ctx context.Context, customer *request.Customer) error
+	AddCustomer(ctx context.Context, customer *request.Customer)
 	GetOneCustomer(ctx context.Context, id int) response.Customer
 	DeleteOneCustomer(ctx context.Context, id int) response.Customer
 }
@@ -28,6 +28,7 @@ func NewCustomerService(db *sql.DB, repo repository.CustomerRepositoryInterface)
 
 func (service *CustomerServiceImplemtation) GetAllCustomer(ctx context.Context) []response.Customer {
 	tx, err := service.Db.Begin()
+	defer helper.DoCommit(tx)
 	helper.PanicIfError(err)
 
 	listCustomer := service.Repo.GetAllCustomer(ctx, tx)
@@ -41,15 +42,17 @@ func (service *CustomerServiceImplemtation) GetAllCustomer(ctx context.Context) 
 	return listCustomerResponse
 
 }
-func (service *CustomerServiceImplemtation) AddCustomer(ctx context.Context, customer *request.Customer) error {
+func (service *CustomerServiceImplemtation) AddCustomer(ctx context.Context, customer *request.Customer) {
 	tx, err := service.Db.Begin()
+	defer helper.DoCommit(tx)
 	helper.PanicIfError(err)
 	customerEntity := helper.CustomerRequestToEntity(customer)
-	err = service.Repo.AddCustomer(ctx, tx, &customerEntity)
-	return err
+	service.Repo.AddCustomer(ctx, tx, &customerEntity)
+
 }
 func (service *CustomerServiceImplemtation) GetOneCustomer(ctx context.Context, id int) response.Customer {
 	tx, err := service.Db.Begin()
+	defer helper.DoCommit(tx)
 	helper.PanicIfError(err)
 	customer := entity.Customer{CustomerId: id}
 	service.Repo.GetOneCustomer(ctx, tx, &customer)
@@ -59,6 +62,7 @@ func (service *CustomerServiceImplemtation) GetOneCustomer(ctx context.Context, 
 }
 func (service *CustomerServiceImplemtation) DeleteOneCustomer(ctx context.Context, id int) response.Customer {
 	tx, err := service.Db.Begin()
+	defer helper.DoCommit(tx)
 	helper.PanicIfError(err)
 	customer := entity.Customer{CustomerId: id}
 	service.Repo.DeleteOneCustomer(ctx, tx, &customer)

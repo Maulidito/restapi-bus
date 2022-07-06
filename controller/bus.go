@@ -38,8 +38,7 @@ func (ctrl *BusControllerImplementation) AddBus(ctx *gin.Context) {
 	busRequest := request.Bus{}
 	err := ctx.ShouldBind(&busRequest)
 	helper.PanicIfError(err)
-	err = ctrl.service.AddBus(ctx, &busRequest)
-	helper.PanicIfError(err)
+	ctrl.service.AddBus(ctx, &busRequest)
 
 	finalResponse := web.WebResponseNoData{Code: http.StatusOK, Status: "OK"}
 	ctx.JSON(http.StatusOK, finalResponse)
@@ -78,15 +77,12 @@ func (ctrl *BusControllerImplementation) GetAllBusOnSpecificAgency(ctx *gin.Cont
 	idInt, err := strconv.Atoi(id)
 	helper.PanicIfError(err)
 
-	busResponse, agencyReponse := ctrl.service.GetAllBusOnSpecificAgency(ctx, idInt)
+	dataResponse := ctrl.service.GetAllBusOnSpecificAgency(ctx, idInt)
 
-	finalResponse := web.WebResponseAllBusOnAgency{
+	finalResponse := web.WebResponse{
 		Code:   http.StatusOK,
 		Status: "OK",
-		Data: web.AllBusOnAgency{
-			Agency: &agencyReponse,
-			Bus:    &busResponse,
-		},
+		Data:   dataResponse,
 	}
 
 	ctx.JSON(http.StatusOK, finalResponse)

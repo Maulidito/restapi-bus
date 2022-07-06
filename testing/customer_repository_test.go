@@ -34,7 +34,7 @@ func TestCustomerAdd(t *testing.T) {
 
 	repoCustomer := repository.NewCustomerRepository()
 	dataCustomer := &entity.Customer{Name: "TEST123", PhoneNumber: "0832345432"}
-	err = repoCustomer.AddCustomer(ctx, tx, dataCustomer)
+	repoCustomer.AddCustomer(ctx, tx, dataCustomer)
 
 	assert.Nil(t, err)
 }

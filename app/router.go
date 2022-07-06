@@ -20,7 +20,7 @@ func configurationRouter() *gin.Engine {
 	return g
 }
 
-func Router(customer controller.CustomerControllerInterface, agency controller.AgencyControllerInterface, bus controller.BusControllerInterface) *gin.Engine {
+func Router(customer controller.CustomerControllerInterface, agency controller.AgencyControllerInterface, bus controller.BusControllerInterface, driver controller.ControllerDriverInterface) *gin.Engine {
 
 	g := configurationRouter()
 
@@ -47,6 +47,14 @@ func Router(customer controller.CustomerControllerInterface, agency controller.A
 	grouterBusOnSpecificAgency.POST("/", bus.AddBus)
 	grouterBusOnSpecificAgency.GET("/:busId", bus.GetOneBusOnSpecificAgency)
 	grouterBusOnSpecificAgency.DELETE("/busId", bus.DeleteOneBus)
+
+	grouterDriverOnSpecificAgency := grouterAgency.Group("/:agencyId/driver")
+
+	grouter.GET("/driver", driver.GetAllDriver)
+	grouterDriverOnSpecificAgency.GET("/", driver.GetAllDriverOnSpecificAgency)
+	grouterDriverOnSpecificAgency.POST("/", driver.AddDriver)
+	grouterDriverOnSpecificAgency.GET("/:driverId", driver.GetOneDriverOnSpecificAgency)
+	grouterDriverOnSpecificAgency.DELETE("/:driverId", driver.DeleteDriver)
 
 	return g
 }

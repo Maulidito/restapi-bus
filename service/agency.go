@@ -12,7 +12,7 @@ import (
 
 type AgencyServiceInterface interface {
 	GetAllAgency(ctx context.Context) []response.Agency
-	AddAgency(ctx context.Context, agency *request.Agency) error
+	AddAgency(ctx context.Context, agency *request.Agency)
 	GetOneAgency(ctx context.Context, id int) response.Agency
 	DeleteOneAgency(ctx context.Context, id int) response.Agency
 }
@@ -28,6 +28,7 @@ func NewAgencyService(db *sql.DB, repo repository.AgencyRepositoryInterface) Age
 
 func (service *AgencyServiceImplemtation) GetAllAgency(ctx context.Context) []response.Agency {
 	tx, err := service.Db.Begin()
+	defer helper.DoCommit(tx)
 	helper.PanicIfError(err)
 
 	listAgency := service.Repo.GetAllAgency(ctx, tx)
@@ -41,15 +42,17 @@ func (service *AgencyServiceImplemtation) GetAllAgency(ctx context.Context) []re
 	return listAgencyResponse
 
 }
-func (service *AgencyServiceImplemtation) AddAgency(ctx context.Context, agency *request.Agency) error {
+func (service *AgencyServiceImplemtation) AddAgency(ctx context.Context, agency *request.Agency) {
 	tx, err := service.Db.Begin()
+	defer helper.DoCommit(tx)
 	helper.PanicIfError(err)
 	agencyEntity := helper.AgencyRequestToEntity(agency)
-	err = service.Repo.AddAgency(ctx, tx, &agencyEntity)
-	return err
+	service.Repo.AddAgency(ctx, tx, &agencyEntity)
+
 }
 func (service *AgencyServiceImplemtation) GetOneAgency(ctx context.Context, id int) response.Agency {
 	tx, err := service.Db.Begin()
+	defer helper.DoCommit(tx)
 	helper.PanicIfError(err)
 	agencyEntity := entity.Agency{AgencyId: id}
 	service.Repo.GetOneAgency(ctx, tx, &agencyEntity)
@@ -58,6 +61,7 @@ func (service *AgencyServiceImplemtation) GetOneAgency(ctx context.Context, id i
 }
 func (service *AgencyServiceImplemtation) DeleteOneAgency(ctx context.Context, id int) response.Agency {
 	tx, err := service.Db.Begin()
+	defer helper.DoCommit(tx)
 	helper.PanicIfError(err)
 	agencyEntity := entity.Agency{AgencyId: id}
 	service.Repo.DeleteOneAgency(ctx, tx, &agencyEntity)

@@ -47,7 +47,7 @@ components:
       required: true
     ticketId:
       in: path
-      name: agencyId
+      name: ticketId
       schema:
         type: integer
       required: true
@@ -433,7 +433,7 @@ paths:
         - "Driver"
       description: "get all driver from specific agency"
       parameters:
-        - $ref: "#/components/parameters/driverId"
+        - $ref: "#/components/parameters/agencyId"
       responses:
         "200":
           content:
@@ -478,7 +478,7 @@ paths:
         - "Driver"
       description: "Adding driver to specific Agency"
       parameters:
-        - $ref: "#/components/parameters/driverId"
+        - $ref: "#/components/parameters/agencyId"
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -654,7 +654,7 @@ paths:
       tags:
         - "Customer"
       parameters:
-        - $ref: "#/components/parameters/agencyId"
+        - $ref: "#/components/parameters/customerId"
 
       responses:
         "200":

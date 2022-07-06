@@ -6,9 +6,3 @@ func PanicIfError(err error) {
 	}
 
 }
-
-func PanicIfErrorString(err string) {
-	if err != "" {
-		panic(err)
-	}
-}

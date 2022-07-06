@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"net/http"
 	"restapi-bus/helper"
 	"restapi-bus/models/request"
@@ -40,7 +41,7 @@ func (ctrl *AgencyControllerImplementation) AddAgency(ctx *gin.Context) {
 	agencyRequest := request.Agency{Name: name, Place: place}
 	err := ctx.ShouldBind(&agencyRequest)
 	helper.PanicIfError(err)
-	err = ctrl.service.AddAgency(ctx, &agencyRequest)
+	ctrl.service.AddAgency(ctx, &agencyRequest)
 	helper.PanicIfError(err)
 
 	finalResponse := web.WebResponseNoData{Code: http.StatusOK, Status: "OK"}
@@ -51,7 +52,7 @@ func (ctrl *AgencyControllerImplementation) GetOneAgency(ctx *gin.Context) {
 	id, idBool := ctx.Params.Get("agencyId")
 
 	if !idBool {
-		helper.PanicIfErrorString("ERROR ID PARAMAETER NOT FOUND")
+		helper.PanicIfError(fmt.Errorf("ERROR ID PARAMAETER NOT FOUND"))
 	}
 	idInt, err := strconv.Atoi(id)
 	helper.PanicIfError(err)
@@ -66,7 +67,7 @@ func (ctrl *AgencyControllerImplementation) DeleteOneAgency(ctx *gin.Context) {
 	id, idBool := ctx.Params.Get("agencyId")
 
 	if !idBool {
-		helper.PanicIfErrorString("ERROR ID PARAMAETER NOT FOUND")
+		helper.PanicIfError(fmt.Errorf("ERROR ID PARAMAETER NOT FOUND"))
 
 	}
 	idInt, err := strconv.Atoi(id)
