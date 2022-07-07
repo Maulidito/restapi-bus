@@ -50,26 +50,18 @@ func (controller *ControllerDriverImplementation) GetAllDriverOnSpecificAgency(c
 
 }
 func (controller *ControllerDriverImplementation) GetOneDriverOnSpecificAgency(ctx *gin.Context) {
-	idAgency, idAgencyBool := ctx.Params.Get("agencyId")
-	idDriver, idDriverBool := ctx.Params.Get("driverId")
 
-	if !idAgencyBool {
-		panic(fmt.Errorf("AGENCY ID NOT FOUND"))
-	}
+	idDriver, idDriverBool := ctx.Params.Get("driverId")
 
 	if !idDriverBool {
 		panic(fmt.Errorf("DRIVER ID NOT FOUND"))
 	}
 
-	idAgencyInt, err := strconv.Atoi(idAgency)
-
-	helper.PanicIfError(err)
-
 	idDriverInt, err := strconv.Atoi(idDriver)
 
 	helper.PanicIfError(err)
 
-	finalResponse := controller.service.GetOneDriverOnSpecificAgency(ctx, idAgencyInt, idDriverInt)
+	finalResponse := controller.service.GetOneDriverOnSpecificAgency(ctx, idDriverInt)
 
 	ctx.JSON(http.StatusOK, &web.WebResponse{Code: http.StatusOK, Status: "OK", Data: finalResponse})
 }
@@ -87,25 +79,18 @@ func (controller *ControllerDriverImplementation) AddDriver(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, response)
 }
 func (controller *ControllerDriverImplementation) DeleteDriver(ctx *gin.Context) {
-	idAgency, idAgencyBool := ctx.Params.Get("agencyId")
-	idDriver, idDriverBool := ctx.Params.Get("driverId")
 
-	if !idAgencyBool {
-		panic(fmt.Errorf("AGENCY ID NOT FOUND"))
-	}
+	idDriver, idDriverBool := ctx.Params.Get("driverId")
 
 	if !idDriverBool {
 		panic(fmt.Errorf("DRIVER ID NOT FOUND"))
 	}
-	idAgencyInt, err := strconv.Atoi(idAgency)
-
-	helper.PanicIfError(err)
 
 	idDriverInt, err := strconv.Atoi(idDriver)
 
 	helper.PanicIfError(err)
 
-	responseData := controller.service.DeleteDriver(ctx, idAgencyInt, idDriverInt)
+	responseData := controller.service.DeleteDriver(ctx, idDriverInt)
 	finalResponse := web.WebResponse{Code: http.StatusOK, Status: "OK", Data: responseData}
 	ctx.JSON(http.StatusOK, &finalResponse)
 }

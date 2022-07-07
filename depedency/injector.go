@@ -46,6 +46,18 @@ func InitializedControllerDriver(db *sql.DB) controller.ControllerDriverInterfac
 	return nil
 }
 
+func InitializedControllerTicket(db *sql.DB) controller.ControllerTicketInterface {
+	wire.Build(
+		repository.NewTicketRepository,
+		repository.NewCustomerRepository,
+		repository.NewDiverRepository,
+		repository.NewBusRepository,
+		repository.NewAgencyRepository,
+		service.NewTicketService,
+		controller.NewTicketController)
+	return nil
+}
+
 func InitializedServer() *gin.Engine {
 	wire.Build(
 		app.NewDatabase,
@@ -53,6 +65,7 @@ func InitializedServer() *gin.Engine {
 		InitializedControllerAgency,
 		InitializedControllerBus,
 		InitializedControllerDriver,
+		InitializedControllerTicket,
 		app.Router)
 	return nil
 }

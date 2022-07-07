@@ -1,9 +1,6 @@
 package helper
 
 import (
-	"errors"
-	"fmt"
-	"log"
 	"restapi-bus/models/entity"
 	"restapi-bus/models/request"
 	"restapi-bus/models/response"
@@ -41,6 +38,21 @@ func BusEntityToResponse(bus *entity.Bus) response.Bus {
 	}
 }
 
+func TicketEntityToResponse(ticket *entity.Ticket) response.Ticket {
+	return response.Ticket{
+		TicketId:       ticket.TicketId,
+		AgencyId:       ticket.AgencyId,
+		BusId:          ticket.BusId,
+		DriverId:       ticket.DriverId,
+		CustomerId:     ticket.CustomerId,
+		DeparturePlace: ticket.DeparturePlace,
+		ArrivalPlace:   ticket.ArrivalPlace,
+		Price:          ticket.Price,
+		Date:           ticket.Date,
+		Arrived:        ticket.Arrived,
+	}
+}
+
 func AgencyRequestToEntity(agency *request.Agency) entity.Agency {
 	return entity.Agency{
 
@@ -74,88 +86,69 @@ func DriverRequestToEntity(driver *request.Driver) entity.Driver {
 
 func TicketRequestToEntity(ticket *request.Ticket) entity.Ticket {
 	return entity.Ticket{
-
+		AgencyId:       ticket.AgecnyId,
 		BusId:          ticket.BusId,
 		DriverId:       ticket.DriverId,
 		CustomerId:     ticket.CustomerId,
 		DeparturePlace: ticket.DeparturePlace,
 		ArrivalPlace:   ticket.ArrivalPlace,
 		Price:          ticket.Price,
+		Arrived:        ticket.Arrived,
+	}
+}
+
+func TicketEntityToResponseTicketNoBus(ticket *entity.Ticket) response.TicketNoBus {
+	return response.TicketNoBus{
+		TicketId:       ticket.AgencyId,
+		AgencyId:       ticket.AgencyId,
+		DriverId:       ticket.DriverId,
+		CustomerId:     ticket.CustomerId,
+		DeparturePlace: ticket.DeparturePlace,
+		ArrivalPlace:   ticket.ArrivalPlace,
+		Price:          ticket.Price,
+		Date:           ticket.Date,
+		Arrived:        ticket.Arrived,
+	}
+}
+
+func TicketEntityToResponseTicketNoDriver(ticket *entity.Ticket) response.TicketNoDriver {
+	return response.TicketNoDriver{
+		TicketId:       ticket.TicketId,
+		BusId:          ticket.BusId,
+		AgencyId:       ticket.AgencyId,
+		CustomerId:     ticket.CustomerId,
+		DeparturePlace: ticket.DeparturePlace,
+		ArrivalPlace:   ticket.ArrivalPlace,
+		Price:          ticket.Price,
+		Arrived:        ticket.Arrived,
 		Date:           ticket.Date,
 	}
 }
 
-func RequestToEntity[REQ interface {
-	*request.Bus | *request.Agency | *request.Customer | *request.Driver | *request.Ticket
-},
-	ENT interface {
-		entity.Bus | entity.Agency | entity.Customer | entity.Driver | entity.Ticket
-	},
-](requestInput REQ) (dataReturn ENT) {
-
-	defer func() {
-		data := recover()
-		if data != nil {
-			err := errors.New(fmt.Sprint(data))
-			log.Fatal(err)
-		}
-
-	}()
-
-	dataCustomer, isCustomer := any(requestInput).(*request.Customer)
-	dataAgency, isAgency := any(requestInput).(*request.Agency)
-	dataDriver, isDriver := any(requestInput).(*request.Driver)
-	dataTicket, isTicket := any(requestInput).(*request.Ticket)
-	dataBus, isBus := any(requestInput).(*request.Bus)
-
-	switch {
-	case isCustomer:
-		{
-			dataReturn = any(entity.Customer{
-				Name:        dataCustomer.Name,
-				PhoneNumber: dataCustomer.PhoneNumber,
-			}).(ENT)
-		}
-	case isAgency:
-		{
-			dataReturn = any(entity.Agency{
-				Name:  dataAgency.Name,
-				Place: dataAgency.Place,
-			}).(ENT)
-
-		}
-	case isDriver:
-		{
-			dataReturn = any(entity.Driver{
-				AgencyId: dataDriver.AgencyId,
-				Name:     dataDriver.Name,
-			}).(ENT)
-
-		}
-	case isTicket:
-		{
-			dataReturn = any(entity.Ticket{
-				BusId:          dataTicket.BusId,
-				DriverId:       dataTicket.DriverId,
-				CustomerId:     dataTicket.CustomerId,
-				DeparturePlace: dataTicket.DeparturePlace,
-				ArrivalPlace:   dataTicket.DeparturePlace,
-				Price:          dataTicket.Price,
-				Date:           dataTicket.Date,
-			}).(ENT)
-
-		}
-	case isBus:
-		{
-			dataReturn = any(entity.Bus{
-				AgencyId:    dataBus.AgencyId,
-				NumberPlate: dataBus.NumberPlate,
-			}).(ENT)
-
-		}
-
+func TicketEntityToResponseTicketNoAgency(ticket *entity.Ticket) response.TicketNoAgency {
+	return response.TicketNoAgency{
+		TicketId:       ticket.TicketId,
+		BusId:          ticket.BusId,
+		DriverId:       ticket.DriverId,
+		CustomerId:     ticket.CustomerId,
+		DeparturePlace: ticket.DeparturePlace,
+		ArrivalPlace:   ticket.ArrivalPlace,
+		Price:          ticket.Price,
+		Arrived:        ticket.Arrived,
+		Date:           ticket.Date,
 	}
+}
 
-	return dataReturn
-
+func TicketEntityToResponseTicketNoCustomer(ticket *entity.Ticket) response.TicketNoCustomer {
+	return response.TicketNoCustomer{
+		TicketId:       ticket.TicketId,
+		AgencyId:       ticket.AgencyId,
+		BusId:          ticket.BusId,
+		DriverId:       ticket.DriverId,
+		DeparturePlace: ticket.DeparturePlace,
+		ArrivalPlace:   ticket.ArrivalPlace,
+		Price:          ticket.Price,
+		Arrived:        ticket.Arrived,
+		Date:           ticket.Date,
+	}
 }

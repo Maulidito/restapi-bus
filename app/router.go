@@ -20,7 +20,7 @@ func configurationRouter() *gin.Engine {
 	return g
 }
 
-func Router(customer controller.CustomerControllerInterface, agency controller.AgencyControllerInterface, bus controller.BusControllerInterface, driver controller.ControllerDriverInterface) *gin.Engine {
+func Router(customer controller.CustomerControllerInterface, agency controller.AgencyControllerInterface, bus controller.BusControllerInterface, driver controller.ControllerDriverInterface, ticket controller.ControllerTicketInterface) *gin.Engine {
 
 	g := configurationRouter()
 
@@ -40,21 +40,32 @@ func Router(customer controller.CustomerControllerInterface, agency controller.A
 	grouterAgency.GET("/:agencyId", agency.GetOneAgency)
 	grouterAgency.DELETE("/:agencyId", agency.DeleteOneAgency)
 
-	grouterBusOnSpecificAgency := grouterAgency.Group("/:agencyId/bus")
+	grouterBus := grouter.Group("/bus")
 
-	grouter.GET("/bus", bus.GetAllBus)
-	grouterBusOnSpecificAgency.GET("/", bus.GetAllBusOnSpecificAgency)
-	grouterBusOnSpecificAgency.POST("/", bus.AddBus)
-	grouterBusOnSpecificAgency.GET("/:busId", bus.GetOneBusOnSpecificAgency)
-	grouterBusOnSpecificAgency.DELETE("/busId", bus.DeleteOneBus)
+	grouterBus.GET("/", bus.GetAllBus)
+	grouterBus.POST("/", bus.AddBus)
+	grouterBus.GET("/:busId", bus.GetOneBusOnSpecificAgency)
+	grouterBus.GET("/agency/:agencyId", bus.GetAllBusOnSpecificAgency)
+	grouterBus.DELETE("/:busId", bus.DeleteOneBus)
 
-	grouterDriverOnSpecificAgency := grouterAgency.Group("/:agencyId/driver")
+	grouterDriver := grouter.Group("/driver")
+	grouterDriver.GET("/", driver.GetAllDriver)
+	grouterDriver.GET("/:driverId", driver.GetOneDriverOnSpecificAgency)
+	grouterDriver.POST("/", driver.AddDriver)
+	grouterDriver.GET("/agency/:agencyId", driver.GetAllDriverOnSpecificAgency)
+	grouterDriver.DELETE("/:driverId", driver.DeleteDriver)
 
-	grouter.GET("/driver", driver.GetAllDriver)
-	grouterDriverOnSpecificAgency.GET("/", driver.GetAllDriverOnSpecificAgency)
-	grouterDriverOnSpecificAgency.POST("/", driver.AddDriver)
-	grouterDriverOnSpecificAgency.GET("/:driverId", driver.GetOneDriverOnSpecificAgency)
-	grouterDriverOnSpecificAgency.DELETE("/:driverId", driver.DeleteDriver)
+	grouterTicket := grouter.Group("/ticket")
+
+	grouterTicket.GET("/", ticket.GetAllTicket)
+	grouterTicket.GET("/:ticketId", ticket.GetOneTicket)
+	grouterTicket.GET("/driver/:driverId", ticket.GetAllTicketOnSpecificDriver)
+	grouterTicket.GET("/customer/:customerId", ticket.GetAllTicketOnSpecificCustomer)
+	grouterTicket.GET("/bus/:busId", ticket.GetAllTicketOnSpecificBus)
+	grouterTicket.GET("/agency/:agencyId", ticket.GetAllTicketOnSpecificAgency)
+
+	grouterTicket.POST("/", ticket.AddTicket)
+	grouterTicket.DELETE("/:ticketId", ticket.DeleteTicket)
 
 	return g
 }

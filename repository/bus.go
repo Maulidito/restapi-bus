@@ -72,17 +72,17 @@ func (repo *BusRepositoryImplementation) AddBus(ctx context.Context, tx *sql.Tx,
 
 func (repo *BusRepositoryImplementation) GetOneBus(ctx context.Context, tx *sql.Tx, bus *entity.Bus) {
 	defer helper.ShouldRollback(tx)
-	rows, err := tx.QueryContext(ctx, "SELECT number_plate FROM bus where bus_id = ? AND agency_id = ?", bus.BusId, bus.AgencyId)
+	rows, err := tx.QueryContext(ctx, "SELECT agency_id,number_plate FROM bus where bus_id = ?", bus.BusId)
 
 	helper.PanicIfError(err)
 	defer rows.Close()
 
 	if rows.Next() {
-		err = rows.Scan(&bus.NumberPlate)
+		err = rows.Scan(&bus.AgencyId, &bus.NumberPlate)
 		helper.PanicIfError(err)
 		return
 	}
-	panic(fmt.Errorf("ID Bus %d Not Found in Agency Id %d", bus.BusId, bus.AgencyId))
+	panic(fmt.Errorf("id bus %d not found ", bus.BusId))
 
 }
 func (repo *BusRepositoryImplementation) DeleteOneBus(ctx context.Context, tx *sql.Tx, bus *entity.Bus) {

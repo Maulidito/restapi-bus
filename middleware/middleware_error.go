@@ -15,7 +15,7 @@ func MiddlewarePanic(ctx *gin.Context, panicErr any) {
 		if panicErr == nil {
 			return
 		}
-		if validatorErrorHandle(ctx, &panicErr) {
+		if validatorErrorHandle(ctx, panicErr) {
 			return
 		}
 

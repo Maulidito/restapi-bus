@@ -72,7 +72,7 @@ func (repo *AgencyRepositoryImplementation) GetOneAgency(ctx context.Context, tx
 }
 func (repo *AgencyRepositoryImplementation) DeleteOneAgency(ctx context.Context, tx *sql.Tx, agency *entity.Agency) {
 	defer helper.ShouldRollback(tx)
-	repo.GetOneAgency(ctx, tx, agency)
+
 	_, err := tx.ExecContext(ctx, "DELETE FROM agency WHERE agency_id = ?", agency.AgencyId)
 
 	helper.PanicIfError(err)
