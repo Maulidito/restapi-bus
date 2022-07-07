@@ -64,6 +64,7 @@ func (service *AgencyServiceImplemtation) DeleteOneAgency(ctx context.Context, i
 	defer helper.DoCommit(tx)
 	helper.PanicIfError(err)
 	agencyEntity := entity.Agency{AgencyId: id}
+	//service.Repo.GetOneAgency(ctx, tx, &agencyEntity)
 	service.Repo.DeleteOneAgency(ctx, tx, &agencyEntity)
 
 	return helper.AgencyEntityToResponse(&agencyEntity)

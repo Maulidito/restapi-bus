@@ -63,12 +63,12 @@ func (repo *CustomerRepositoryImplementation) GetOneCustomer(ctx context.Context
 		helper.PanicIfError(err)
 		return
 	}
-	panic(fmt.Sprintf("ID Customer %d Not Found", customer.CustomerId))
+	panic(fmt.Errorf("ID Customer %d Not Found", customer.CustomerId))
 
 }
 func (repo *CustomerRepositoryImplementation) DeleteOneCustomer(ctx context.Context, tx *sql.Tx, customer *entity.Customer) {
 	defer helper.ShouldRollback(tx)
-	repo.GetOneCustomer(ctx, tx, customer)
+
 	_, err := tx.ExecContext(ctx, "DELETE FROM customer WHERE customer_id = ?", customer.CustomerId)
 
 	helper.PanicIfError(err)

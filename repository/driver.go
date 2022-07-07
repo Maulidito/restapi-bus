@@ -59,7 +59,7 @@ func (repo *DriverRepositoryImplementation) GetAllDriverOnSpecificAgency(tx *sql
 func (repo *DriverRepositoryImplementation) GetOneDriverOnSpecificAgency(tx *sql.Tx, ctx context.Context, driver *entity.Driver) {
 	defer helper.ShouldRollback(tx)
 
-	rows, err := tx.QueryContext(ctx, "SELECT name FROM driver WHERE agency_id = ? AND driver_id = ?", driver.AgencyId, driver.DriverId)
+	rows, err := tx.QueryContext(ctx, "SELECT name FROM driver WHERE driver_id = ?", driver.DriverId)
 	helper.PanicIfError(err)
 	defer rows.Close()
 
@@ -68,7 +68,7 @@ func (repo *DriverRepositoryImplementation) GetOneDriverOnSpecificAgency(tx *sql
 		helper.PanicIfError(err)
 		return
 	}
-	panic(fmt.Errorf("ERROR NOT FOUND AGENCY ID %d AND DRIVER ID %d", driver.AgencyId, driver.DriverId))
+	panic(fmt.Errorf("ERROR NOT FOUND DRIVER ID %d", driver.DriverId))
 
 }
 func (repo *DriverRepositoryImplementation) AddDriver(tx *sql.Tx, ctx context.Context, driver *entity.Driver) {

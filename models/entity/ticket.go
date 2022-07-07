@@ -2,6 +2,7 @@ package entity
 
 type Ticket struct {
 	TicketId       int
+	AgencyId       int
 	BusId          int
 	DriverId       int
 	CustomerId     int
@@ -9,4 +10,5 @@ type Ticket struct {
 	ArrivalPlace   string
 	Price          int
 	Date           string
+	Arrived        bool `default:"false"`
 }

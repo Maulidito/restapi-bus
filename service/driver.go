@@ -12,10 +12,10 @@ import (
 
 type ServiceDriverInterface interface {
 	GetAllDriver(ctx context.Context) []response.Driver
-	GetAllDriverOnSpecificAgency(ctx context.Context, agencyId int) response.AllDriverOnAgency
-	GetOneDriverOnSpecificAgency(ctx context.Context, agencyId int, driverId int) response.Driver
+	GetAllDriverOnSpecificAgency(ctx context.Context, agencyId int) []response.Driver
+	GetOneDriverOnSpecificAgency(ctx context.Context, driverId int) response.Driver
 	AddDriver(ctx context.Context, driver *request.Driver)
-	DeleteDriver(ctx context.Context, agencyId int, driverId int) response.Driver
+	DeleteDriver(ctx context.Context, driverId int) response.Driver
 }
 
 type ServiceDriverImplementation struct {
@@ -44,7 +44,7 @@ func (service *ServiceDriverImplementation) GetAllDriver(ctx context.Context) []
 	return res
 
 }
-func (service *ServiceDriverImplementation) GetAllDriverOnSpecificAgency(ctx context.Context, agencyId int) response.AllDriverOnAgency {
+func (service *ServiceDriverImplementation) GetAllDriverOnSpecificAgency(ctx context.Context, agencyId int) []response.Driver {
 	tx, err := service.Db.Begin()
 	defer helper.DoCommit(tx)
 	helper.PanicIfError(err)
@@ -73,35 +73,17 @@ func (service *ServiceDriverImplementation) GetAllDriverOnSpecificAgency(ctx con
 		listDriverResponse = append(listDriverResponse, helper.DriverEntityToResponse(&val))
 	}
 
-	responseAgency := helper.AgencyEntityToResponse(&agency)
-	finalResponse := response.AllDriverOnAgency{Agency: &responseAgency, Driver: &listDriverResponse}
-	return finalResponse
+	return listDriverResponse
 
 }
-func (service *ServiceDriverImplementation) GetOneDriverOnSpecificAgency(ctx context.Context, agencyId int, driverId int) response.Driver {
+func (service *ServiceDriverImplementation) GetOneDriverOnSpecificAgency(ctx context.Context, driverId int) response.Driver {
 	tx, err := service.Db.Begin()
 	defer helper.DoCommit(tx)
 	helper.PanicIfError(err)
 
-	agency := entity.Agency{AgencyId: agencyId}
-	driver := entity.Driver{DriverId: driverId, AgencyId: agencyId}
+	driver := entity.Driver{DriverId: driverId}
 
-	chanErr := make(chan error, 1)
-	go func() {
-		defer func() {
-			tempRecover := recover()
-
-			if tempRecover != nil {
-				chanErr <- tempRecover.(error)
-			}
-			close(chanErr)
-
-		}()
-		service.RepoAgency.GetOneAgency(ctx, tx, &agency)
-		service.RepoDriver.GetOneDriverOnSpecificAgency(tx, ctx, &driver)
-	}()
-
-	helper.PanicIfError(<-chanErr)
+	service.RepoDriver.GetOneDriverOnSpecificAgency(tx, ctx, &driver)
 
 	return helper.DriverEntityToResponse(&driver)
 
@@ -111,17 +93,17 @@ func (service *ServiceDriverImplementation) AddDriver(ctx context.Context, drive
 	defer helper.DoCommit(tx)
 	helper.PanicIfError(err)
 
+	service.RepoAgency.GetOneAgency(ctx, tx, &entity.Agency{AgencyId: driver.AgencyId})
 	driverEntity := helper.DriverRequestToEntity(driver)
 
 	service.RepoDriver.AddDriver(tx, ctx, &driverEntity)
 }
-func (service *ServiceDriverImplementation) DeleteDriver(ctx context.Context, agencyId int, driverId int) response.Driver {
+func (service *ServiceDriverImplementation) DeleteDriver(ctx context.Context, driverId int) response.Driver {
 	tx, err := service.Db.Begin()
 	defer helper.DoCommit(tx)
 	helper.PanicIfError(err)
 
-	driverEntity := entity.Driver{AgencyId: agencyId, DriverId: driverId}
-
+	driverEntity := entity.Driver{DriverId: driverId}
 	service.RepoDriver.GetOneDriverOnSpecificAgency(tx, ctx, &driverEntity)
 	service.RepoDriver.DeleteDriver(tx, ctx, &driverEntity)
 

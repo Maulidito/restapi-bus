@@ -46,20 +46,14 @@ func (ctrl *BusControllerImplementation) AddBus(ctx *gin.Context) {
 }
 func (ctrl *BusControllerImplementation) GetOneBusOnSpecificAgency(ctx *gin.Context) {
 	idBus, idBoolBus := ctx.Params.Get("busId")
-	idAgency, idBoolAgency := ctx.Params.Get("agencyId")
 
 	if !idBoolBus {
 		panic("ERROR ID BUS PARAMAETER NOT FOUND")
 	}
 
-	if !idBoolAgency {
-		panic("ERROR ID AGENCY PARAMAETER NOT FOUND")
-	}
-	idIntAgency, err := strconv.Atoi(idAgency)
-	helper.PanicIfError(err)
 	idIntBus, err := strconv.Atoi(idBus)
 	helper.PanicIfError(err)
-	busResponse := ctrl.service.GetOneBusSpecificAgency(ctx, idIntAgency, idIntBus)
+	busResponse := ctrl.service.GetOneBusSpecificAgency(ctx, idIntBus)
 
 	finalResponse := web.WebResponse{Code: http.StatusOK, Status: "OK", Data: busResponse}
 
@@ -90,20 +84,15 @@ func (ctrl *BusControllerImplementation) GetAllBusOnSpecificAgency(ctx *gin.Cont
 }
 func (ctrl *BusControllerImplementation) DeleteOneBus(ctx *gin.Context) {
 	busId, idBoolBus := ctx.Params.Get("busId")
-	agencyId, idBoolAgency := ctx.Params.Get("agencyId")
 
 	if !idBoolBus {
 		panic("ERROR ID busId PARAMAETER NOT FOUND")
 	}
-	if !idBoolAgency {
-		panic("ERROR ID agencyId PARAMAETER NOT FOUND")
-	}
+
 	idBusIdInt, err := strconv.Atoi(busId)
 	helper.PanicIfError(err)
-	idAgencyIdInt, err := strconv.Atoi(agencyId)
-	helper.PanicIfError(err)
 
-	busResponse := ctrl.service.DeleteOneBus(ctx, idAgencyIdInt, idBusIdInt)
+	busResponse := ctrl.service.DeleteOneBus(ctx, idBusIdInt)
 
 	finalResponse := web.WebResponse{Code: http.StatusOK, Status: "OK", Data: busResponse}
 
