@@ -1,8 +1,8 @@
 package controller
 
 import (
-	"fmt"
 	"net/http"
+	"restapi-bus/exception"
 	"restapi-bus/helper"
 	"restapi-bus/models/request"
 	"restapi-bus/models/web"
@@ -52,10 +52,12 @@ func (ctrl *AgencyControllerImplementation) GetOneAgency(ctx *gin.Context) {
 	id, idBool := ctx.Params.Get("agencyId")
 
 	if !idBool {
-		helper.PanicIfError(fmt.Errorf("ERROR ID PARAMAETER NOT FOUND"))
+		panic(exception.NewBadRequestError("ERROR AGENCY ID NOT FOUND"))
 	}
 	idInt, err := strconv.Atoi(id)
-	helper.PanicIfError(err)
+	if err != nil {
+		panic(exception.NewBadRequestError("ERROR AGENCY ID NOT INTEGER"))
+	}
 	agencyResponse := ctrl.service.GetOneAgency(ctx, idInt)
 
 	finalResponse := web.WebResponse{Code: http.StatusOK, Status: "OK", Data: agencyResponse}
@@ -67,11 +69,13 @@ func (ctrl *AgencyControllerImplementation) DeleteOneAgency(ctx *gin.Context) {
 	id, idBool := ctx.Params.Get("agencyId")
 
 	if !idBool {
-		helper.PanicIfError(fmt.Errorf("ERROR ID PARAMAETER NOT FOUND"))
+		panic(exception.NewBadRequestError("ERROR AGENCY ID NOT FOUND"))
 
 	}
 	idInt, err := strconv.Atoi(id)
-	helper.PanicIfError(err)
+	if err != nil {
+		panic(exception.NewBadRequestError("ERROR AGENCY ID NOT INTEGER"))
+	}
 	agencyResponse := ctrl.service.DeleteOneAgency(ctx, idInt)
 
 	finalResponse := web.WebResponse{Code: http.StatusOK, Status: "OK", Data: agencyResponse}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"restapi-bus/exception"
 	"restapi-bus/helper"
 	"restapi-bus/models/entity"
 )
@@ -67,7 +68,10 @@ func (repo *AgencyRepositoryImplementation) GetOneAgency(ctx context.Context, tx
 		helper.PanicIfError(err)
 		return
 	}
-	panic(fmt.Errorf("ID Agency %d Not Found", agency.AgencyId))
+
+	errMsg := fmt.Sprintf("ID Agency %d Not Found", agency.AgencyId)
+
+	panic(exception.NewNotFoundError(errMsg))
 
 }
 func (repo *AgencyRepositoryImplementation) DeleteOneAgency(ctx context.Context, tx *sql.Tx, agency *entity.Agency) {

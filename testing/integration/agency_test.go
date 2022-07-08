@@ -1,22 +1,21 @@
 package integration
 
 import (
-	"fmt"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"restapi-bus/depedency"
-	"restapi-bus/helper"
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
 )
 
 var serverAddr = "http://localhost:8080/v1"
 var server *gin.Engine
 
 func TestMain(m *testing.M) {
+
 	server = depedency.InitializedServer()
 
 	extit := m.Run()
@@ -33,11 +32,11 @@ func TestGetAllTicket(t *testing.T) {
 
 	server.ServeHTTP(recorder, request)
 
-	bodyByte, err := io.ReadAll(recorder.Result().Body)
+	// bodyByte, err := io.ReadAll(recorder.Result().Body)
 
-	helper.PanicIfError(err)
+	// helper.PanicIfError(err)
 
-	fmt.Println(string(bodyByte))
+	assert.Equal(t, recorder.Code, http.StatusOK)
 
 }
 func TestGetOneTicket(t *testing.T) {
@@ -50,10 +49,46 @@ func TestGetOneTicket(t *testing.T) {
 
 	server.ServeHTTP(recorder, request)
 
-	bodyByte, err := io.ReadAll(recorder.Result().Body)
+	// bodyByte, err := io.ReadAll(recorder.Result().Body)
 
-	helper.PanicIfError(err)
+	// helper.PanicIfError(err)
 
-	fmt.Println(string(bodyByte))
+	assert.Equal(t, recorder.Code, http.StatusOK)
+
+}
+
+func TestGetOneTicketFailed(t *testing.T) {
+	id := "29"
+	t.Log("GET TICKET WHERE TICKET ID", id)
+
+	recorder := httptest.NewRecorder()
+
+	request := httptest.NewRequest(http.MethodGet, serverAddr+"/ticket/"+id, nil)
+
+	server.ServeHTTP(recorder, request)
+
+	// bodyByte, err := io.ReadAll(recorder.Result().Body)
+
+	// helper.PanicIfError(err)
+
+	assert.Equal(t, recorder.Code, http.StatusNotFound)
+
+}
+
+func TestGetOneTicketFailedNotInt(t *testing.T) {
+	id := "bukanInt"
+	t.Log("GET TICKET WHERE TICKET ID", id)
+
+	recorder := httptest.NewRecorder()
+
+	request := httptest.NewRequest(http.MethodGet, serverAddr+"/ticket/"+id, nil)
+
+	server.ServeHTTP(recorder, request)
+
+	// bodyByte, err := io.ReadAll(recorder.Result().Body)
+
+	// helper.PanicIfError(err)
+
+	assert.Equal(t, recorder.Code, http.StatusBadRequest)
 
 }

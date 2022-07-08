@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"restapi-bus/helper"
 	"restapi-bus/models/entity"
 	"restapi-bus/models/request"
@@ -88,7 +87,6 @@ func (service *TicketServiceImplementation) AddTicket(ctx context.Context, ticke
 	}()
 
 	helper.PanicIfError(<-chanErr)
-	fmt.Println("CHECK PASS ERR")
 	service.RepoTicket.AddTicket(tx, ctx, &ticketEntity)
 
 }

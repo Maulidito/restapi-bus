@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"restapi-bus/exception"
 	"restapi-bus/helper"
 	"restapi-bus/models/entity"
 )
@@ -63,7 +64,7 @@ func (repo *CustomerRepositoryImplementation) GetOneCustomer(ctx context.Context
 		helper.PanicIfError(err)
 		return
 	}
-	panic(fmt.Errorf("ID Customer %d Not Found", customer.CustomerId))
+	panic(exception.NewNotFoundError(fmt.Sprintf("ID Customer %d Not Found", customer.CustomerId)))
 
 }
 func (repo *CustomerRepositoryImplementation) DeleteOneCustomer(ctx context.Context, tx *sql.Tx, customer *entity.Customer) {

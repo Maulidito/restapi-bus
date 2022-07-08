@@ -1,8 +1,8 @@
 package controller
 
 import (
-	"fmt"
 	"net/http"
+	"restapi-bus/exception"
 	"restapi-bus/helper"
 	"restapi-bus/models/request"
 	"restapi-bus/models/web"
@@ -38,12 +38,15 @@ func (controller *ControllerDriverImplementation) GetAllDriverOnSpecificAgency(c
 	idAgency, idAgencyBool := ctx.Params.Get("agencyId")
 
 	if !idAgencyBool {
-		panic(fmt.Errorf("AGENCy ID NOT FOUND"))
+		panic(exception.NewBadRequestError("ERROR AGENCY ID NOT FOUND"))
+
 	}
 
 	idAgencyInt, err := strconv.Atoi(idAgency)
 
-	helper.PanicIfError(err)
+	if err != nil {
+		panic(exception.NewBadRequestError("ERROR AGENCY ID NOT INTEGER"))
+	}
 	finalResponse := controller.service.GetAllDriverOnSpecificAgency(ctx, idAgencyInt)
 
 	ctx.JSON(http.StatusOK, &web.WebResponse{Code: http.StatusOK, Status: "OK", Data: finalResponse})
@@ -54,7 +57,7 @@ func (controller *ControllerDriverImplementation) GetOneDriverOnSpecificAgency(c
 	idDriver, idDriverBool := ctx.Params.Get("driverId")
 
 	if !idDriverBool {
-		panic(fmt.Errorf("DRIVER ID NOT FOUND"))
+		panic(exception.NewBadRequestError("DRIVER ID NOT FOUND"))
 	}
 
 	idDriverInt, err := strconv.Atoi(idDriver)
@@ -70,9 +73,8 @@ func (controller *ControllerDriverImplementation) AddDriver(ctx *gin.Context) {
 
 	req := request.Driver{}
 	err := ctx.ShouldBindWith(&req, binding.Form)
-	fmt.Println("TEST SEBELUM")
+
 	helper.PanicIfError(err)
-	fmt.Println("TEST SESUDAH")
 
 	controller.service.AddDriver(ctx, &req)
 	response := web.WebResponseNoData{Code: http.StatusOK, Status: "OK"}
@@ -83,12 +85,14 @@ func (controller *ControllerDriverImplementation) DeleteDriver(ctx *gin.Context)
 	idDriver, idDriverBool := ctx.Params.Get("driverId")
 
 	if !idDriverBool {
-		panic(fmt.Errorf("DRIVER ID NOT FOUND"))
+		panic(exception.NewBadRequestError("ERROR DRIVER ID NOT FOUND"))
 	}
 
 	idDriverInt, err := strconv.Atoi(idDriver)
 
-	helper.PanicIfError(err)
+	if err != nil {
+		panic(exception.NewBadRequestError("ERROR DRIVER ID NOT INTEGER"))
+	}
 
 	responseData := controller.service.DeleteDriver(ctx, idDriverInt)
 	finalResponse := web.WebResponse{Code: http.StatusOK, Status: "OK", Data: responseData}

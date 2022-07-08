@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"restapi-bus/exception"
 	"restapi-bus/helper"
 	"restapi-bus/models/entity"
 )
@@ -82,7 +83,8 @@ func (repo *BusRepositoryImplementation) GetOneBus(ctx context.Context, tx *sql.
 		helper.PanicIfError(err)
 		return
 	}
-	panic(fmt.Errorf("id bus %d not found ", bus.BusId))
+
+	panic(exception.NewNotFoundError(fmt.Sprintf("id bus %d not found ", bus.BusId)))
 
 }
 func (repo *BusRepositoryImplementation) DeleteOneBus(ctx context.Context, tx *sql.Tx, bus *entity.Bus) {

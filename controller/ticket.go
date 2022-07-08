@@ -2,6 +2,7 @@ package controller
 
 import (
 	"net/http"
+	"restapi-bus/exception"
 	"restapi-bus/helper"
 	"restapi-bus/models/request"
 	"restapi-bus/models/web"
@@ -49,12 +50,14 @@ func (ctrl *ControllerTicketImplementation) GetOneTicket(ctx *gin.Context) {
 	ticketId, isTicketId := ctx.Params.Get("ticketId")
 
 	if !isTicketId {
-		panic("ERROR TICKET ID NOT FOUND")
+		panic(exception.NewBadRequestError("ERROR TICKET ID NOT FOUND"))
 	}
 
 	ticketIdInt, err := strconv.Atoi(ticketId)
 
-	helper.PanicIfError(err)
+	if err != nil {
+		panic(exception.NewBadRequestError("ERROR TICKET ID NOT INTEGER"))
+	}
 
 	Ticket := ctrl.service.GetOneTicket(ctx, ticketIdInt)
 	finalResponse := web.WebResponse{Code: http.StatusOK, Status: "OK", Data: Ticket}
@@ -64,12 +67,14 @@ func (ctrl *ControllerTicketImplementation) DeleteTicket(ctx *gin.Context) {
 	ticketId, isTicketId := ctx.Params.Get("ticketId")
 
 	if !isTicketId {
-		panic("ERROR TICKET ID NOT FOUND")
+		panic(exception.NewBadRequestError("ERROR TICKET ID NOT FOUND"))
 	}
 
 	ticketIdInt, err := strconv.Atoi(ticketId)
 
-	helper.PanicIfError(err)
+	if err != nil {
+		panic(exception.NewBadRequestError("ERROR TICKET ID NOT INTEGER"))
+	}
 
 	Ticket := ctrl.service.DeleteTicket(ctx, ticketIdInt)
 	finalResponse := web.WebResponse{Code: http.StatusOK, Status: "OK", Data: Ticket}
@@ -79,12 +84,14 @@ func (ctrl *ControllerTicketImplementation) GetAllTicketOnSpecificDriver(ctx *gi
 	driverId, isDriverId := ctx.Params.Get("driverId")
 
 	if !isDriverId {
-		panic("ERROR DRIVER ID NOT FOUND")
+		panic(exception.NewBadRequestError("ERROR DRIVER ID NOT FOUND"))
 	}
 
 	driverIdInt, err := strconv.Atoi(driverId)
 
-	helper.PanicIfError(err)
+	if err != nil {
+		panic(exception.NewBadRequestError("ERROR DRIVER ID NOT INTEGER"))
+	}
 
 	Ticket := ctrl.service.GetAllTicketOnDriver(ctx, driverIdInt)
 	finalResponse := web.WebResponse{Code: http.StatusOK, Status: "OK", Data: Ticket}
@@ -95,12 +102,14 @@ func (ctrl *ControllerTicketImplementation) GetAllTicketOnSpecificCustomer(ctx *
 	customerId, isCustomerId := ctx.Params.Get("customerId")
 
 	if !isCustomerId {
-		panic("ERROR DRIVER ID NOT FOUND")
+		panic(exception.NewBadRequestError("ERROR CUSTOMER ID NOT FOUND"))
 	}
 
 	customerIdInt, err := strconv.Atoi(customerId)
 
-	helper.PanicIfError(err)
+	if err != nil {
+		panic(exception.NewBadRequestError("ERROR CUSTOMER ID NOT INTEGER"))
+	}
 
 	Ticket := ctrl.service.GetAllTicketOnCustomer(ctx, customerIdInt)
 	finalResponse := web.WebResponse{Code: http.StatusOK, Status: "OK", Data: Ticket}
@@ -111,13 +120,14 @@ func (ctrl *ControllerTicketImplementation) GetAllTicketOnSpecificAgency(ctx *gi
 	agencyId, isAgencyId := ctx.Params.Get("agencyId")
 
 	if !isAgencyId {
-		panic("ERROR DRIVER ID NOT FOUND")
+		panic(exception.NewBadRequestError("ERROR AGENCY ID NOT FOUND"))
 	}
 
 	agencyIdInt, err := strconv.Atoi(agencyId)
 
-	helper.PanicIfError(err)
-
+	if err != nil {
+		panic(exception.NewBadRequestError("ERROR AGENCY ID NOT INTEGER"))
+	}
 	Ticket := ctrl.service.GetAllTicketOnAgency(ctx, agencyIdInt)
 	finalResponse := web.WebResponse{Code: http.StatusOK, Status: "OK", Data: Ticket}
 	ctx.JSON(http.StatusOK, &finalResponse)
@@ -127,12 +137,14 @@ func (ctrl *ControllerTicketImplementation) GetAllTicketOnSpecificBus(ctx *gin.C
 	driverId, isDriverId := ctx.Params.Get("busId")
 
 	if !isDriverId {
-		panic("ERROR DRIVER ID NOT FOUND")
+		panic(exception.NewBadRequestError("ERROR BUS ID NOT FOUND"))
 	}
 
 	driverIdInt, err := strconv.Atoi(driverId)
 
-	helper.PanicIfError(err)
+	if err != nil {
+		panic(exception.NewBadRequestError("ERROR BUS ID NOT INTEGER"))
+	}
 
 	Ticket := ctrl.service.GetAllTicketOnDriver(ctx, driverIdInt)
 	finalResponse := web.WebResponse{Code: http.StatusOK, Status: "OK", Data: Ticket}

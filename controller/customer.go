@@ -2,6 +2,7 @@ package controller
 
 import (
 	"net/http"
+	"restapi-bus/exception"
 	"restapi-bus/helper"
 	"restapi-bus/models/request"
 	"restapi-bus/models/web"
@@ -47,10 +48,12 @@ func (ctrl *CustomerControllerImplementation) GetOneCustomer(ctx *gin.Context) {
 	id, idBool := ctx.Params.Get("customerId")
 
 	if !idBool {
-		panic("ERROR ID NOT FOUND")
+		panic(exception.NewBadRequestError("ERROR CUSTOMER ID NOT FOUND"))
 	}
 	idInt, err := strconv.Atoi(id)
-	helper.PanicIfError(err)
+	if err != nil {
+		panic(exception.NewBadRequestError("ERROR CUSTOMER ID NOT INTEGER"))
+	}
 	customerResponse := ctrl.service.GetOneCustomer(ctx, idInt)
 
 	finalResponse := web.WebResponse{Code: http.StatusOK, Status: "OK", Data: customerResponse}
@@ -62,10 +65,12 @@ func (ctrl *CustomerControllerImplementation) DeleteOneCustomer(ctx *gin.Context
 	id, idBool := ctx.Params.Get("customerId")
 
 	if !idBool {
-		panic("ERROR ID NOT FOUND")
+		panic(exception.NewBadRequestError("ERROR CUSTOMER ID NOT FOUND"))
 	}
 	idInt, err := strconv.Atoi(id)
-	helper.PanicIfError(err)
+	if err != nil {
+		panic(exception.NewBadRequestError("ERROR CUSTOMER ID NOT INTEGER"))
+	}
 	customerResponse := ctrl.service.DeleteOneCustomer(ctx, idInt)
 
 	finalResponse := web.WebResponse{Code: http.StatusOK, Status: "OK", Data: customerResponse}

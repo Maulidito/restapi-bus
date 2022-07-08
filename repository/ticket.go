@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"restapi-bus/exception"
 	"restapi-bus/helper"
 	"restapi-bus/models/entity"
 )
@@ -67,7 +68,7 @@ func (repo *TicketRepositoryImplementation) GetOneTicket(tx *sql.Tx, ctx context
 		return
 	}
 
-	panic(fmt.Errorf("TICKET ID %d NOT FOUND", ticket.TicketId))
+	panic(exception.NewNotFoundError(fmt.Sprintf("TICKET ID %d NOT FOUND", ticket.TicketId)))
 }
 func (repo *TicketRepositoryImplementation) DeleteTicket(tx *sql.Tx, ctx context.Context, ticket *entity.Ticket) {
 	defer helper.ShouldRollback(tx)

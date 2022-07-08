@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"restapi-bus/exception"
 	"restapi-bus/helper"
 	"restapi-bus/models/entity"
 )
@@ -68,7 +69,7 @@ func (repo *DriverRepositoryImplementation) GetOneDriverOnSpecificAgency(tx *sql
 		helper.PanicIfError(err)
 		return
 	}
-	panic(fmt.Errorf("ERROR NOT FOUND DRIVER ID %d", driver.DriverId))
+	panic(exception.NewNotFoundError(fmt.Sprintf("ERROR NOT FOUND DRIVER ID %d", driver.DriverId)))
 
 }
 func (repo *DriverRepositoryImplementation) AddDriver(tx *sql.Tx, ctx context.Context, driver *entity.Driver) {
