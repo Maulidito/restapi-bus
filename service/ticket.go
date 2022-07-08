@@ -70,9 +70,7 @@ func (service *TicketServiceImplementation) AddTicket(ctx context.Context, ticke
 	customerEntity := entity.Customer{CustomerId: ticket.CustomerId}
 	chanErr := make(chan error, 1)
 
-	fmt.Println("BEFORE CHECK ALL")
 	service.RepoAgency.GetOneAgency(ctx, tx, &agencyEntity)
-
 	go func() {
 		defer func() {
 			tempErr := recover()

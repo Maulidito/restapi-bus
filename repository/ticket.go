@@ -114,6 +114,7 @@ func (repo *TicketRepositoryImplementation) GetAllTicketOnCustomer(tx *sql.Tx, c
 	}
 
 	return listEntityTicket
+
 }
 func (repo *TicketRepositoryImplementation) GetAllTicketOnBus(tx *sql.Tx, ctx context.Context, idBus int) []entity.Ticket {
 	defer helper.ShouldRollback(tx)
