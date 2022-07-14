@@ -18,6 +18,7 @@ type TicketRepositoryInterface interface {
 	GetAllTicketOnCustomer(tx *sql.Tx, ctx context.Context, idCustomer int) []entity.Ticket
 	GetAllTicketOnBus(tx *sql.Tx, ctx context.Context, idBus int) []entity.Ticket
 	GetAllTicketOnAgency(tx *sql.Tx, ctx context.Context, idBus int) []entity.Ticket
+	UpdateArrivedTicket(tx *sql.Tx, ctx context.Context, ticket *entity.Ticket)
 }
 
 type TicketRepositoryImplementation struct {
@@ -155,4 +156,10 @@ func (repo *TicketRepositoryImplementation) GetAllTicketOnAgency(tx *sql.Tx, ctx
 	}
 
 	return listEntityTicket
+}
+
+func (repo *TicketRepositoryImplementation) UpdateArrivedTicket(tx *sql.Tx, ctx context.Context, ticket *entity.Ticket) {
+	defer helper.ShouldRollback(tx)
+	_, err := tx.ExecContext(ctx, "UPDATE ticket SET arrived = ? WHERE ticket_id =? ", ticket.Arrived, ticket.TicketId)
+	helper.PanicIfError(err)
 }

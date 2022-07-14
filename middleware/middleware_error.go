@@ -48,7 +48,7 @@ func validatorErrorHandle(c *gin.Context, err interface{}) bool {
 	FieldErrMessage := []web.ErrorMessage{}
 
 	for _, v := range validatorErr {
-		message := web.ErrorMessage{ErrorMessage: fmt.Sprintf("ERROR BINDING DATA, WHAT = %s, WHERE = %s", v.ActualTag(), v.Field())}
+		message := web.ErrorMessage{ErrorMessage: fmt.Sprintf("ERROR BINDING DATA, WHAT = %s, WHERE = %s ", v.ActualTag(), v.Field())}
 		FieldErrMessage = append(FieldErrMessage, message)
 	}
 
@@ -106,7 +106,9 @@ func Error(c *gin.Context, err interface{}) bool {
 		return false
 	}
 	errMsg := web.ErrorMessage{ErrorMessage: dataErr.Error()}
+
 	response := web.ResponseError{Code: http.StatusInternalServerError, Status: "INTERNAL SERVER ERROR", Data: errMsg}
-	c.JSON(http.StatusBadRequest, response)
+
+	c.JSON(http.StatusInternalServerError, response)
 	return true
 }

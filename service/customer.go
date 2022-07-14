@@ -65,7 +65,7 @@ func (service *CustomerServiceImplemtation) DeleteOneCustomer(ctx context.Contex
 	defer helper.DoCommit(tx)
 	helper.PanicIfError(err)
 	customer := entity.Customer{CustomerId: id}
-	//service.Repo.GetOneCustomer(ctx, tx, &customer)
+	service.Repo.GetOneCustomer(ctx, tx, &customer)
 	service.Repo.DeleteOneCustomer(ctx, tx, &customer)
 
 	return helper.CustomerEntityToResponse(&customer)

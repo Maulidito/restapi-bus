@@ -29,7 +29,11 @@ func NewBusController(service service.BusServiceInterface) BusControllerInterfac
 }
 
 func (ctrl *BusControllerImplementation) GetAllBus(ctx *gin.Context) {
-	busResponse := ctrl.service.GetAllBus(ctx)
+	requestBusFilter := request.BusFilter{}
+	err := ctx.Bind(&requestBusFilter)
+	helper.PanicIfError(err)
+
+	busResponse := ctrl.service.GetAllBus(ctx, &requestBusFilter)
 
 	finalResponse := web.WebResponse{Code: http.StatusOK, Status: "OK", Data: busResponse}
 

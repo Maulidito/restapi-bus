@@ -11,7 +11,7 @@ import (
 )
 
 type AgencyServiceInterface interface {
-	GetAllAgency(ctx context.Context) []response.Agency
+	GetAllAgency(ctx context.Context, filter *request.AgencyFilter) []response.Agency
 	AddAgency(ctx context.Context, agency *request.Agency)
 	GetOneAgency(ctx context.Context, id int) response.Agency
 	DeleteOneAgency(ctx context.Context, id int) response.Agency
@@ -26,12 +26,12 @@ func NewAgencyService(db *sql.DB, repo repository.AgencyRepositoryInterface) Age
 	return &AgencyServiceImplemtation{Db: db, Repo: repo}
 }
 
-func (service *AgencyServiceImplemtation) GetAllAgency(ctx context.Context) []response.Agency {
+func (service *AgencyServiceImplemtation) GetAllAgency(ctx context.Context, filter *request.AgencyFilter) []response.Agency {
 	tx, err := service.Db.Begin()
 	defer helper.DoCommit(tx)
 	helper.PanicIfError(err)
 
-	listAgency := service.Repo.GetAllAgency(ctx, tx)
+	listAgency := service.Repo.GetAllAgency(ctx, tx, helper.RequestFilterAgencyToString(filter))
 	listAgencyResponse := []response.Agency{}
 
 	for _, agency := range listAgency {

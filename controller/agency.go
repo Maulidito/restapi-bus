@@ -28,17 +28,24 @@ func NewAgencyController(service service.AgencyServiceInterface) AgencyControlle
 }
 
 func (ctrl *AgencyControllerImplementation) GetAllAgency(ctx *gin.Context) {
-	agencyResponse := ctrl.service.GetAllAgency(ctx)
+
+	filter := request.AgencyFilter{}
+
+	err := ctx.Bind(&filter)
+
+	if err != nil {
+		panic(exception.NewBadRequestError(err.Error()))
+	}
+
+	agencyResponse := ctrl.service.GetAllAgency(ctx, &filter)
 
 	finalResponse := web.WebResponse{Code: http.StatusOK, Status: "OK", Data: agencyResponse}
 
 	ctx.JSON(http.StatusOK, finalResponse)
 }
 func (ctrl *AgencyControllerImplementation) AddAgency(ctx *gin.Context) {
-	name, _ := ctx.Params.Get("name")
-	place, _ := ctx.Params.Get("place")
 
-	agencyRequest := request.Agency{Name: name, Place: place}
+	agencyRequest := request.Agency{}
 	err := ctx.ShouldBind(&agencyRequest)
 	helper.PanicIfError(err)
 	ctrl.service.AddAgency(ctx, &agencyRequest)
@@ -76,6 +83,7 @@ func (ctrl *AgencyControllerImplementation) DeleteOneAgency(ctx *gin.Context) {
 	if err != nil {
 		panic(exception.NewBadRequestError("ERROR AGENCY ID NOT INTEGER"))
 	}
+
 	agencyResponse := ctrl.service.DeleteOneAgency(ctx, idInt)
 
 	finalResponse := web.WebResponse{Code: http.StatusOK, Status: "OK", Data: agencyResponse}

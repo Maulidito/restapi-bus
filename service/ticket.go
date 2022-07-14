@@ -19,6 +19,7 @@ type TicketServiceInterface interface {
 	GetAllTicketOnCustomer(ctx context.Context, idCustomer int) response.AllTicketOnCustomer
 	GetAllTicketOnBus(ctx context.Context, idBus int) response.AllTicketOnBus
 	GetAllTicketOnAgency(ctx context.Context, idAgency int) response.AllTicketOnAgency
+	UpdateArrivedTicket(ctx context.Context, idTicket int, arrived bool) response.Ticket
 }
 
 type TicketServiceImplementation struct {
@@ -208,4 +209,17 @@ func (service *TicketServiceImplementation) GetAllTicketOnAgency(ctx context.Con
 	}
 
 	return responseAllTicket
+}
+
+func (service *TicketServiceImplementation) UpdateArrivedTicket(ctx context.Context, idTicket int, arrived bool) response.Ticket {
+	tx, err := service.Db.Begin()
+	helper.PanicIfError(err)
+	defer helper.DoCommit(tx)
+
+	entityTicket := entity.Ticket{TicketId: idTicket}
+	service.RepoTicket.GetOneTicket(tx, ctx, &entityTicket)
+	entityTicket.Arrived = arrived
+	service.RepoTicket.UpdateArrivedTicket(tx, ctx, &entityTicket)
+
+	return helper.TicketEntityToResponse(&entityTicket)
 }

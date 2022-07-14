@@ -21,6 +21,7 @@ type ControllerTicketInterface interface {
 	GetAllTicketOnSpecificCustomer(ctx *gin.Context)
 	GetAllTicketOnSpecificAgency(ctx *gin.Context)
 	GetAllTicketOnSpecificBus(ctx *gin.Context)
+	UpdateArrivedTicket(ctx *gin.Context)
 }
 
 type ControllerTicketImplementation struct {
@@ -148,6 +149,38 @@ func (ctrl *ControllerTicketImplementation) GetAllTicketOnSpecificBus(ctx *gin.C
 
 	Ticket := ctrl.service.GetAllTicketOnDriver(ctx, driverIdInt)
 	finalResponse := web.WebResponse{Code: http.StatusOK, Status: "OK", Data: Ticket}
+	ctx.JSON(http.StatusOK, &finalResponse)
+
+}
+
+func (ctrl *ControllerTicketImplementation) UpdateArrivedTicket(ctx *gin.Context) {
+	idTicket, isIdTicket := ctx.Params.Get("ticketId")
+	arrivedData, isArrived := ctx.GetPostForm("arrived")
+
+	if !isIdTicket {
+		panic(exception.NewBadRequestError("ERROR TICKET ID NOT FOUND"))
+	}
+
+	if !isArrived {
+		panic(exception.NewBadRequestError("ERROR ARRIVED DATA NOT FOUND"))
+	}
+
+	boolArrived, err := strconv.ParseBool(arrivedData)
+
+	if err != nil {
+		panic(exception.NewBadRequestError("ERROR ARRIVED DATA IS NOT BOOLEAN"))
+	}
+
+	intTicketId, err := strconv.Atoi(idTicket)
+
+	if err != nil {
+		panic(exception.NewBadRequestError("ERROR TICKET ID IS NOT INT"))
+	}
+
+	responseTicket := ctrl.service.UpdateArrivedTicket(ctx, intTicketId, boolArrived)
+
+	finalResponse := web.WebResponse{Code: http.StatusOK, Status: "OK", Data: responseTicket}
+
 	ctx.JSON(http.StatusOK, &finalResponse)
 
 }

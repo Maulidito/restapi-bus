@@ -11,7 +11,7 @@ import (
 )
 
 type BusServiceInterface interface {
-	GetAllBus(ctx context.Context) []response.Bus
+	GetAllBus(ctx context.Context, filter *request.BusFilter) []response.Bus
 	AddBus(ctx context.Context, bus *request.Bus)
 	GetOneBusSpecificAgency(ctx context.Context, idBus int) response.Bus
 	DeleteOneBus(ctx context.Context, idBus int) response.Bus
@@ -28,12 +28,12 @@ func NewBusService(db *sql.DB, repoBus repository.BusRepositoryInterface, repoAg
 	return &BusServiceImplemtation{Db: db, RepoBus: repoBus, RepoAgency: repoAgency}
 }
 
-func (service *BusServiceImplemtation) GetAllBus(ctx context.Context) []response.Bus {
+func (service *BusServiceImplemtation) GetAllBus(ctx context.Context, filter *request.BusFilter) []response.Bus {
 	tx, err := service.Db.Begin()
 	defer helper.DoCommit(tx)
 	helper.PanicIfError(err)
 
-	listBus := service.RepoBus.GetAllBus(ctx, tx)
+	listBus := service.RepoBus.GetAllBus(ctx, tx, helper.RequestFilterBusToString(filter))
 	listBusResponse := []response.Bus{}
 
 	for _, bus := range listBus {

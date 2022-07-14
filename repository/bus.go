@@ -10,7 +10,7 @@ import (
 )
 
 type BusRepositoryInterface interface {
-	GetAllBus(ctx context.Context, tx *sql.Tx) []entity.Bus
+	GetAllBus(ctx context.Context, tx *sql.Tx, filter string) []entity.Bus
 	AddBus(ctx context.Context, tx *sql.Tx, bus *entity.Bus)
 	GetOneBus(ctx context.Context, tx *sql.Tx, bus *entity.Bus)
 	DeleteOneBus(ctx context.Context, tx *sql.Tx, bus *entity.Bus)
@@ -24,9 +24,10 @@ func NewBusRepository() BusRepositoryInterface {
 	return &BusRepositoryImplementation{}
 }
 
-func (repo *BusRepositoryImplementation) GetAllBus(ctx context.Context, tx *sql.Tx) []entity.Bus {
+func (repo *BusRepositoryImplementation) GetAllBus(ctx context.Context, tx *sql.Tx, filter string) []entity.Bus {
 	defer helper.ShouldRollback(tx)
-	row, err := tx.QueryContext(ctx, "SELECT bus_id,agency_id,number_plate FROM bus")
+
+	row, err := tx.QueryContext(ctx, "SELECT bus_id,agency_id,number_plate FROM bus "+filter)
 	helper.PanicIfError(err)
 	defer row.Close()
 	listBus := []entity.Bus{}
@@ -44,6 +45,7 @@ func (repo *BusRepositoryImplementation) GetAllBus(ctx context.Context, tx *sql.
 func (repo *BusRepositoryImplementation) GetAllBusSpecificAgency(ctx context.Context, tx *sql.Tx, agencyId int) []entity.Bus {
 	defer helper.ShouldRollback(tx)
 	row, err := tx.QueryContext(ctx, "SELECT bus_id,agency_id,number_plate FROM bus WHERE agency_id = ?", agencyId)
+
 	helper.PanicIfError(err)
 	defer row.Close()
 	listBus := []entity.Bus{}

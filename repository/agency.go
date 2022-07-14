@@ -10,7 +10,7 @@ import (
 )
 
 type AgencyRepositoryInterface interface {
-	GetAllAgency(ctx context.Context, tx *sql.Tx) []entity.Agency
+	GetAllAgency(ctx context.Context, tx *sql.Tx, filter string) []entity.Agency
 	AddAgency(ctx context.Context, tx *sql.Tx, agency *entity.Agency)
 	GetOneAgency(ctx context.Context, tx *sql.Tx, agency *entity.Agency)
 	DeleteOneAgency(ctx context.Context, tx *sql.Tx, agency *entity.Agency)
@@ -23,9 +23,10 @@ func NewAgencyRepository() AgencyRepositoryInterface {
 	return &AgencyRepositoryImplementation{}
 }
 
-func (repo *AgencyRepositoryImplementation) GetAllAgency(ctx context.Context, tx *sql.Tx) []entity.Agency {
+func (repo *AgencyRepositoryImplementation) GetAllAgency(ctx context.Context, tx *sql.Tx, filter string) []entity.Agency {
 	defer helper.ShouldRollback(tx)
-	row, err := tx.QueryContext(ctx, "SELECT agency_id,name,place FROM agency")
+
+	row, err := tx.QueryContext(ctx, "SELECT agency.agency_id,agency.name,agency.place FROM agency "+filter)
 	helper.PanicIfError(err)
 
 	defer row.Close()

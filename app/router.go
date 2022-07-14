@@ -50,6 +50,7 @@ func Router(customer controller.CustomerControllerInterface, agency controller.A
 
 	grouterDriver := grouter.Group("/driver")
 	grouterDriver.GET("/", driver.GetAllDriver)
+	grouterDriver.GET("/filter", driver.GetAllDriver)
 	grouterDriver.GET("/:driverId", driver.GetOneDriverOnSpecificAgency)
 	grouterDriver.POST("/", driver.AddDriver)
 	grouterDriver.GET("/agency/:agencyId", driver.GetAllDriverOnSpecificAgency)
@@ -66,6 +67,8 @@ func Router(customer controller.CustomerControllerInterface, agency controller.A
 
 	grouterTicket.POST("/", ticket.AddTicket)
 	grouterTicket.DELETE("/:ticketId", ticket.DeleteTicket)
+
+	grouterTicket.PATCH("/:ticketId/arrived", ticket.UpdateArrivedTicket)
 
 	return g
 }

@@ -10,3 +10,15 @@ type Ticket struct {
 	Price          int    `json:"price" binding:"required" form:"price"`
 	Arrived        bool   `json:"arrived"  form:"arrived"`
 }
+
+type TicketFilter struct {
+	FromDate       string `form:"formDate" binding:"dateTime"`
+	ToDate         string `form:"toDate" binding:"dateTime ,required_with=formDate"`
+	OnDate         string `form:"onDate" binding:"dateTime"`
+	DeparturePlace string `form:"departurePlace" binding:"alpha"`
+	ArrivalPlace   string `form:"arrivalPlace" binding:"alpha"`
+	Arrived        bool   `form:"arrived" binding:"boolean"`
+	Limit          int    `form:"limit" binding:"number"`
+	PriceAbove     int    `form:"priceAbove" binding:"number"`
+	PriceBelow     int    `form:"priceBelow" binding:"number"`
+}
