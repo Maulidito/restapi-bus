@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"net/http"
 	"restapi-bus/exception"
 	"restapi-bus/helper"
@@ -28,7 +29,12 @@ func NewCustomerController(service service.CustomerServiceInterface) CustomerCon
 }
 
 func (ctrl *CustomerControllerImplementation) GetAllCustomer(ctx *gin.Context) {
-	customerResponse := ctrl.service.GetAllCustomer(ctx)
+	filter := request.CustomerFilter{}
+	fmt.Println("CHECK ERR", filter)
+	err := ctx.ShouldBindQuery(&filter)
+	helper.PanicIfError(err)
+
+	customerResponse := ctrl.service.GetAllCustomer(ctx, &filter)
 
 	finalResponse := web.WebResponse{Code: http.StatusOK, Status: "OK", Data: customerResponse}
 

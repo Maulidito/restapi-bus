@@ -10,7 +10,7 @@ import (
 )
 
 type CustomerRepositoryInterface interface {
-	GetAllCustomer(ctx context.Context, tx *sql.Tx) []entity.Customer
+	GetAllCustomer(ctx context.Context, tx *sql.Tx, filter string) []entity.Customer
 	AddCustomer(ctx context.Context, tx *sql.Tx, customer *entity.Customer)
 	GetOneCustomer(ctx context.Context, tx *sql.Tx, customer *entity.Customer)
 	DeleteOneCustomer(ctx context.Context, tx *sql.Tx, customer *entity.Customer)
@@ -23,9 +23,10 @@ func NewCustomerRepository() CustomerRepositoryInterface {
 	return &CustomerRepositoryImplementation{}
 }
 
-func (repo *CustomerRepositoryImplementation) GetAllCustomer(ctx context.Context, tx *sql.Tx) []entity.Customer {
+func (repo *CustomerRepositoryImplementation) GetAllCustomer(ctx context.Context, tx *sql.Tx, filter string) []entity.Customer {
 	defer helper.ShouldRollback(tx)
-	row, err := tx.QueryContext(ctx, "SELECT customer_id,name,phone_number FROM customer")
+	fmt.Println("CHECK FILTER SQL ", filter)
+	row, err := tx.QueryContext(ctx, "SELECT customer_id,name,phone_number FROM customer "+filter)
 	helper.PanicIfError(err)
 	defer row.Close()
 

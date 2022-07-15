@@ -43,3 +43,19 @@ func RequestFilterAgencyToString(request *request.AgencyFilter) (result string) 
 	}
 	return
 }
+
+func RequestFilterCustomerToString(request *request.CustomerFilter) (result string) {
+	result += "WHERE 1=1 "
+	if request.Name != "" {
+		result += fmt.Sprintf(` AND LEFT(name,%d) = "%s"`, len(request.Name), request.Name)
+	}
+
+	if request.FrontNumber != "" {
+		result += fmt.Sprintf(` AND LEFT(phone_number,4) = "%s"`, request.FrontNumber)
+	}
+
+	if request.Limit != 0 {
+		result += fmt.Sprintf(` LIMIT %d`, request.Limit)
+	}
+	return
+}

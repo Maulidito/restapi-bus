@@ -6,7 +6,7 @@ type Customer struct {
 }
 
 type CustomerFilter struct {
-	Name        string `form:"name" binding:"alpha"`
-	Limit       int    `form:"limit" binding:"number"`
-	FrontNumber string `form:"frontNumber" binding:"alpha, len=4"`
+	Name        string `form:"name" binding:"omitempty,alpha"`
+	Limit       int    `form:"limit" binding:"omitempty,number"`
+	FrontNumber string `form:"frontNumber" binding:"omitempty,number,len=4"`
 }

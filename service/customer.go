@@ -11,7 +11,7 @@ import (
 )
 
 type CustomerServiceInterface interface {
-	GetAllCustomer(ctx context.Context) []response.Customer
+	GetAllCustomer(ctx context.Context, filter *request.CustomerFilter) []response.Customer
 	AddCustomer(ctx context.Context, customer *request.Customer)
 	GetOneCustomer(ctx context.Context, id int) response.Customer
 	DeleteOneCustomer(ctx context.Context, id int) response.Customer
@@ -26,12 +26,12 @@ func NewCustomerService(db *sql.DB, repo repository.CustomerRepositoryInterface)
 	return &CustomerServiceImplemtation{Db: db, Repo: repo}
 }
 
-func (service *CustomerServiceImplemtation) GetAllCustomer(ctx context.Context) []response.Customer {
+func (service *CustomerServiceImplemtation) GetAllCustomer(ctx context.Context, filter *request.CustomerFilter) []response.Customer {
 	tx, err := service.Db.Begin()
 	defer helper.DoCommit(tx)
 	helper.PanicIfError(err)
 
-	listCustomer := service.Repo.GetAllCustomer(ctx, tx)
+	listCustomer := service.Repo.GetAllCustomer(ctx, tx, helper.RequestFilterCustomerToString(filter))
 	listCustomerResponse := []response.Customer{}
 
 	for _, customer := range listCustomer {

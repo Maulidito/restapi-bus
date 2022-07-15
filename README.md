@@ -65,4 +65,4 @@ Rest api dengan golang dan mysql
 
 ## Documentation Rest Api
 
-menggunakan [openApi](https://app.swaggerhub.com/apis/Maulidito/api-bus_travel/1.0)
+menggunakan [openApi](https://app.swaggerhub.com/apis/Maulidito/api-bus_travel)
