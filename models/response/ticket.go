@@ -77,3 +77,20 @@ type AllTicketOnCustomer struct {
 	Customer *Customer           `json:"customer"`
 	Ticket   *[]TicketNoCustomer `json:"ticket"`
 }
+
+type AllTicketPrice struct {
+	TotalPrice  *int64 `json:"totalTicket" default:"0"`
+	TicketCount int    `json:"ticketCount" default:"0"`
+}
+
+type AllTicketPriceSpecificAgency struct {
+	Agency      Agency `json:"agency"`
+	TotalPrice  *int64 `json:"totalTicket" default:"0"`
+	TicketCount int    `json:"ticketCount" default:"0"`
+}
+
+type AllTicketPriceSpecificDriver struct {
+	Driver      Driver `json:"driver"`
+	TotalPrice  *int64 `json:"totalTicket" default:"0"`
+	TicketCount int    `json:"ticketCount" default:"0"`
+}

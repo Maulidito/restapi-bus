@@ -11,7 +11,7 @@ import (
 )
 
 type ServiceDriverInterface interface {
-	GetAllDriver(ctx context.Context) []response.Driver
+	GetAllDriver(ctx context.Context, filter *request.DriverFilter) []response.Driver
 	GetAllDriverOnSpecificAgency(ctx context.Context, agencyId int) []response.Driver
 	GetOneDriverOnSpecificAgency(ctx context.Context, driverId int) response.Driver
 	AddDriver(ctx context.Context, driver *request.Driver)
@@ -28,13 +28,13 @@ func NewServiceDriver(db *sql.DB, repoDriver repository.DriverRepositoryInterfac
 	return &ServiceDriverImplementation{Db: db, RepoDriver: repoDriver, RepoAgency: repoAgency}
 }
 
-func (service *ServiceDriverImplementation) GetAllDriver(ctx context.Context) []response.Driver {
+func (service *ServiceDriverImplementation) GetAllDriver(ctx context.Context, filter *request.DriverFilter) []response.Driver {
 
 	tx, err := service.Db.Begin()
 	defer helper.DoCommit(tx)
 	helper.PanicIfError(err)
 
-	listDriver := service.RepoDriver.GetAllDriver(tx, ctx)
+	listDriver := service.RepoDriver.GetAllDriver(tx, ctx, helper.RequestFilterDriverToString(filter))
 
 	res := []response.Driver{}
 	for _, val := range listDriver {

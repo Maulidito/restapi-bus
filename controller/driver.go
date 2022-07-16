@@ -19,7 +19,6 @@ type ControllerDriverInterface interface {
 	GetOneDriverOnSpecificAgency(ctx *gin.Context)
 	AddDriver(ctx *gin.Context)
 	DeleteDriver(ctx *gin.Context)
-	GetAllDriverFilter(ctx *gin.Context)
 }
 
 type ControllerDriverImplementation struct {
@@ -31,7 +30,11 @@ func NewDriverController(serv service.ServiceDriverInterface) ControllerDriverIn
 }
 
 func (controller *ControllerDriverImplementation) GetAllDriver(ctx *gin.Context) {
-	listDriver := controller.service.GetAllDriver(ctx)
+	request := request.DriverFilter{}
+	err := ctx.ShouldBindQuery(&request)
+
+	helper.PanicIfError(err)
+	listDriver := controller.service.GetAllDriver(ctx, &request)
 
 	ctx.JSON(http.StatusOK, web.WebResponse{Code: http.StatusOK, Status: "OK", Data: &listDriver})
 }
@@ -99,11 +102,4 @@ func (controller *ControllerDriverImplementation) DeleteDriver(ctx *gin.Context)
 	finalResponse := web.WebResponse{Code: http.StatusOK, Status: "OK", Data: responseData}
 	ctx.JSON(http.StatusOK, &finalResponse)
 
-}
-
-func (controller *ControllerDriverImplementation) GetAllDriverFilter(ctx *gin.Context) {
-	// requestBusFilter := request.BusFilter{}
-	// err := ctx.BindQuery(&requestBusFilter)
-
-	// helper.PanicIfError(err)
 }

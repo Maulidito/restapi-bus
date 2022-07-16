@@ -7,10 +7,11 @@ import (
 	"restapi-bus/exception"
 	"restapi-bus/helper"
 	"restapi-bus/models/entity"
+	"restapi-bus/models/response"
 )
 
 type TicketRepositoryInterface interface {
-	GetAllTicket(tx *sql.Tx, ctx context.Context) []entity.Ticket
+	GetAllTicket(tx *sql.Tx, ctx context.Context, filter string) []entity.Ticket
 	AddTicket(tx *sql.Tx, ctx context.Context, ticket *entity.Ticket)
 	GetOneTicket(tx *sql.Tx, ctx context.Context, ticket *entity.Ticket)
 	DeleteTicket(tx *sql.Tx, ctx context.Context, ticket *entity.Ticket)
@@ -19,6 +20,9 @@ type TicketRepositoryInterface interface {
 	GetAllTicketOnBus(tx *sql.Tx, ctx context.Context, idBus int) []entity.Ticket
 	GetAllTicketOnAgency(tx *sql.Tx, ctx context.Context, idBus int) []entity.Ticket
 	UpdateArrivedTicket(tx *sql.Tx, ctx context.Context, ticket *entity.Ticket)
+	GetTotalPriceAllTicket(tx *sql.Tx, ctx context.Context, response *response.AllTicketPrice)
+	GetTotalPriceTicketFromSpecificAgency(tx *sql.Tx, ctx context.Context, response *response.AllTicketPriceSpecificAgency)
+	GetTotalPriceTicketFromSpecificDriver(tx *sql.Tx, ctx context.Context, response *response.AllTicketPriceSpecificDriver)
 }
 
 type TicketRepositoryImplementation struct {
@@ -28,9 +32,11 @@ func NewTicketRepository() TicketRepositoryInterface {
 	return &TicketRepositoryImplementation{}
 }
 
-func (repo *TicketRepositoryImplementation) GetAllTicket(tx *sql.Tx, ctx context.Context) []entity.Ticket {
+func (repo *TicketRepositoryImplementation) GetAllTicket(tx *sql.Tx, ctx context.Context, filter string) []entity.Ticket {
 	defer helper.ShouldRollback(tx)
-	row, err := tx.QueryContext(ctx, "SELECT * FROM ticket")
+	row, err := tx.QueryContext(ctx, "SELECT * FROM ticket "+filter)
+
+	fmt.Println("CHECK SQL FILTER", filter)
 
 	helper.PanicIfError(err)
 	defer row.Close()
@@ -162,4 +168,70 @@ func (repo *TicketRepositoryImplementation) UpdateArrivedTicket(tx *sql.Tx, ctx 
 	defer helper.ShouldRollback(tx)
 	_, err := tx.ExecContext(ctx, "UPDATE ticket SET arrived = ? WHERE ticket_id =? ", ticket.Arrived, ticket.TicketId)
 	helper.PanicIfError(err)
+}
+
+func (repo *TicketRepositoryImplementation) GetTotalPriceAllTicket(tx *sql.Tx, ctx context.Context, response *response.AllTicketPrice) {
+	defer helper.ShouldRollback(tx)
+
+	rows, err := tx.QueryContext(ctx, "SELECT SUM(price) as TotalPrice ,COUNT(price) as TicketCount FROM ticket ")
+	helper.PanicIfError(err)
+	defer rows.Close()
+
+	if rows.Next() {
+		err := rows.Scan(&response.TotalPrice, &response.TicketCount)
+
+		helper.PanicIfError(err)
+
+	}
+
+	if response.TotalPrice == nil {
+		errMsg := "Not Found Single Data From Ticket"
+
+		panic(exception.NewNotFoundError(errMsg))
+	}
+
+}
+
+func (repo *TicketRepositoryImplementation) GetTotalPriceTicketFromSpecificAgency(tx *sql.Tx, ctx context.Context, response *response.AllTicketPriceSpecificAgency) {
+	defer helper.ShouldRollback(tx)
+
+	rows, err := tx.QueryContext(ctx, "SELECT SUM(price) as TotalPrice ,COUNT(price) as TicketCount FROM ticket WHERE agency_id = ?", response.Agency.AgencyId)
+	helper.PanicIfError(err)
+	defer rows.Close()
+
+	if rows.Next() {
+
+		err := rows.Scan(&response.TotalPrice, &response.TicketCount)
+		helper.PanicIfError(err)
+
+	}
+	fmt.Println("CHCEK TOTAL PRICE", response.TotalPrice)
+
+	if response.TotalPrice == nil {
+		errMsg := fmt.Sprintf(`Not Found Single Ticket From "%s" Agency With Id = %d`, response.Agency.Name, response.Agency.AgencyId)
+
+		panic(exception.NewNotFoundError(errMsg))
+	}
+
+}
+
+func (repo *TicketRepositoryImplementation) GetTotalPriceTicketFromSpecificDriver(tx *sql.Tx, ctx context.Context, response *response.AllTicketPriceSpecificDriver) {
+	defer helper.ShouldRollback(tx)
+
+	rows, err := tx.QueryContext(ctx, "SELECT SUM(price) as TotalPrice ,COUNT(price) as TicketCount FROM ticket WHERE driver_id = ?", response.Driver.DriverId)
+	helper.PanicIfError(err)
+	defer rows.Close()
+
+	if rows.Next() {
+		err := rows.Scan(&response.TotalPrice, &response.TicketCount)
+		helper.PanicIfError(err)
+
+	}
+
+	if response.TotalPrice == nil {
+		errMsg := fmt.Sprintf(`Not Found Single Ticket From Driver Name "%s"  With Id = %d`, response.Driver.Name, response.Driver.DriverId)
+
+		panic(exception.NewNotFoundError(errMsg))
+	}
+
 }

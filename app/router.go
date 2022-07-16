@@ -3,9 +3,12 @@ package app
 import (
 	"os"
 	"restapi-bus/controller"
+	"restapi-bus/helper"
 	"restapi-bus/middleware"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
+	"github.com/go-playground/validator/v10"
 )
 
 func configurationRouter() *gin.Engine {
@@ -20,9 +23,17 @@ func configurationRouter() *gin.Engine {
 	return g
 }
 
+func IntializedCustomValidation() {
+	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
+		v.RegisterValidation("validatefromTodate", helper.ValidateFromToDate)
+	}
+}
+
 func Router(customer controller.CustomerControllerInterface, agency controller.AgencyControllerInterface, bus controller.BusControllerInterface, driver controller.ControllerDriverInterface, ticket controller.ControllerTicketInterface) *gin.Engine {
 
 	g := configurationRouter()
+
+	IntializedCustomValidation()
 
 	grouter := g.Group("/v1")
 
@@ -64,6 +75,9 @@ func Router(customer controller.CustomerControllerInterface, agency controller.A
 	grouterTicket.GET("/customer/:customerId", ticket.GetAllTicketOnSpecificCustomer)
 	grouterTicket.GET("/bus/:busId", ticket.GetAllTicketOnSpecificBus)
 	grouterTicket.GET("/agency/:agencyId", ticket.GetAllTicketOnSpecificAgency)
+	grouterTicket.GET("/price", ticket.GetTotalPriceAllTicket)
+	grouterTicket.GET("/agency/:agencyId/price", ticket.GetTotalPriceTicketFromSpecificAgency)
+	grouterTicket.GET("/driver/:driverId/price", ticket.GetTotalPriceTicketFromSpecificDriver)
 
 	grouterTicket.POST("/", ticket.AddTicket)
 	grouterTicket.DELETE("/:ticketId", ticket.DeleteTicket)

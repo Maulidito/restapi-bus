@@ -10,7 +10,7 @@ import (
 )
 
 type DriverRepositoryInterface interface {
-	GetAllDriver(tx *sql.Tx, ctx context.Context) []entity.Driver
+	GetAllDriver(tx *sql.Tx, ctx context.Context, filter string) []entity.Driver
 	GetAllDriverOnSpecificAgency(tx *sql.Tx, ctx context.Context, agencyId int) []entity.Driver
 	GetOneDriverOnSpecificAgency(tx *sql.Tx, ctx context.Context, driver *entity.Driver)
 	AddDriver(tx *sql.Tx, ctx context.Context, driver *entity.Driver)
@@ -24,9 +24,9 @@ func NewDiverRepository() DriverRepositoryInterface {
 	return &DriverRepositoryImplementation{}
 }
 
-func (repo *DriverRepositoryImplementation) GetAllDriver(tx *sql.Tx, ctx context.Context) []entity.Driver {
+func (repo *DriverRepositoryImplementation) GetAllDriver(tx *sql.Tx, ctx context.Context, filter string) []entity.Driver {
 	defer helper.ShouldRollback(tx)
-	rows, err := tx.QueryContext(ctx, "SELECT driver_id,agency_id,name FROM driver")
+	rows, err := tx.QueryContext(ctx, "SELECT driver_id,agency_id,name FROM driver "+filter)
 	helper.PanicIfError(err)
 
 	listDriver := []entity.Driver{}

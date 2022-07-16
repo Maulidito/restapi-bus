@@ -12,13 +12,13 @@ type Ticket struct {
 }
 
 type TicketFilter struct {
-	FromDate       string `form:"formDate" binding:"dateTime"`
-	ToDate         string `form:"toDate" binding:"dateTime ,required_with=formDate"`
-	OnDate         string `form:"onDate" binding:"dateTime"`
-	DeparturePlace string `form:"departurePlace" binding:"alpha"`
-	ArrivalPlace   string `form:"arrivalPlace" binding:"alpha"`
-	Arrived        bool   `form:"arrived" binding:"boolean"`
-	Limit          int    `form:"limit" binding:"number"`
-	PriceAbove     int    `form:"priceAbove" binding:"number"`
-	PriceBelow     int    `form:"priceBelow" binding:"number"`
+	FromDate       string `form:"fromDate" binding:"required_with=ToDate,omitempty,datetime=2006-01-02,ltefield=ToDate,validatefromTodate=ToDate"`
+	ToDate         string `form:"toDate" binding:"omitempty,datetime=2006-01-02"`
+	OnDate         string `form:"onDate" binding:"excluded_with=ToDate FromDate,omitempty,datetime=2006-01-02"`
+	DeparturePlace string `form:"departurePlace" binding:"omitempty,alpha"`
+	ArrivalPlace   string `form:"arrivalPlace" binding:"omitempty,alpha"`
+	Arrived        *bool  `form:"arrived" binding:"omitempty"`
+	Limit          int    `form:"limit" binding:"omitempty,number"`
+	PriceAbove     int    `form:"priceAbove" binding:"omitempty,number"`
+	PriceBelow     int    `form:"priceBelow" binding:"omitempty,number"`
 }

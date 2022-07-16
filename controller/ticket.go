@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"net/http"
 	"restapi-bus/exception"
 	"restapi-bus/helper"
@@ -22,6 +23,9 @@ type ControllerTicketInterface interface {
 	GetAllTicketOnSpecificAgency(ctx *gin.Context)
 	GetAllTicketOnSpecificBus(ctx *gin.Context)
 	UpdateArrivedTicket(ctx *gin.Context)
+	GetTotalPriceAllTicket(ctx *gin.Context)
+	GetTotalPriceTicketFromSpecificAgency(ctx *gin.Context)
+	GetTotalPriceTicketFromSpecificDriver(ctx *gin.Context)
 }
 
 type ControllerTicketImplementation struct {
@@ -33,7 +37,17 @@ func NewTicketController(serv service.TicketServiceInterface) ControllerTicketIn
 }
 
 func (ctrl *ControllerTicketImplementation) GetAllTicket(ctx *gin.Context) {
-	listTicket := ctrl.service.GetAllTicket(ctx)
+	filter := request.TicketFilter{}
+
+	err := ctx.BindQuery(&filter)
+	//checkBool, _ := strconv.ParseBool(filter.Arrived)
+	fmt.Println("CHECK FILTER ", filter.Arrived, "err", err)
+	if err != nil {
+
+		panic(exception.NewBadRequestError(err.Error()))
+	}
+
+	listTicket := ctrl.service.GetAllTicket(ctx, &filter)
 	finalResponse := web.WebResponse{Code: http.StatusOK, Status: "OK", Data: listTicket}
 	ctx.JSON(http.StatusOK, &finalResponse)
 }
@@ -183,4 +197,48 @@ func (ctrl *ControllerTicketImplementation) UpdateArrivedTicket(ctx *gin.Context
 
 	ctx.JSON(http.StatusOK, &finalResponse)
 
+}
+
+func (ctrl *ControllerTicketImplementation) GetTotalPriceAllTicket(ctx *gin.Context) {
+
+	response := ctrl.service.GetTotalPriceAllTicket(ctx)
+	finalResponse := web.WebResponse{Code: http.StatusOK, Status: "OK", Data: response}
+	ctx.JSON(http.StatusOK, &finalResponse)
+}
+
+func (ctrl *ControllerTicketImplementation) GetTotalPriceTicketFromSpecificAgency(ctx *gin.Context) {
+	agencyId, isAgencyId := ctx.Params.Get("agencyId")
+
+	fmt.Println("CHECK agency", agencyId)
+
+	if !isAgencyId {
+		panic(exception.NewBadRequestError("ERROR AGENCY ID NOT FOUND"))
+	}
+
+	agencyIdInt, err := strconv.Atoi(agencyId)
+
+	if err != nil {
+		panic(exception.NewBadRequestError("ERROR AGENCY ID NOT INTEGER"))
+	}
+
+	response := ctrl.service.GetTotalPriceTicketFromSpecificAgency(ctx, agencyIdInt)
+	finalResponse := web.WebResponse{Code: http.StatusOK, Status: "OK", Data: response}
+	ctx.JSON(http.StatusOK, &finalResponse)
+}
+func (ctrl *ControllerTicketImplementation) GetTotalPriceTicketFromSpecificDriver(ctx *gin.Context) {
+	driverId, isDriverId := ctx.Params.Get("driverId")
+
+	if !isDriverId {
+		panic(exception.NewBadRequestError("ERROR DRIVER ID NOT FOUND"))
+	}
+
+	driverIdInt, err := strconv.Atoi(driverId)
+
+	if err != nil {
+		panic(exception.NewBadRequestError("ERROR DRIVER ID NOT INTEGER"))
+	}
+
+	response := ctrl.service.GetTotalPriceTicketFromSpecificDriver(ctx, driverIdInt)
+	finalResponse := web.WebResponse{Code: http.StatusOK, Status: "OK", Data: response}
+	ctx.JSON(http.StatusOK, &finalResponse)
 }

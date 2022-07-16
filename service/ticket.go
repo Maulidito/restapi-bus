@@ -11,7 +11,7 @@ import (
 )
 
 type TicketServiceInterface interface {
-	GetAllTicket(ctx context.Context) []response.Ticket
+	GetAllTicket(ctx context.Context, filter *request.TicketFilter) []response.Ticket
 	AddTicket(ctx context.Context, ticket *request.Ticket)
 	GetOneTicket(ctx context.Context, ticketId int) response.Ticket
 	DeleteTicket(ctx context.Context, ticketId int) response.Ticket
@@ -20,6 +20,9 @@ type TicketServiceInterface interface {
 	GetAllTicketOnBus(ctx context.Context, idBus int) response.AllTicketOnBus
 	GetAllTicketOnAgency(ctx context.Context, idAgency int) response.AllTicketOnAgency
 	UpdateArrivedTicket(ctx context.Context, idTicket int, arrived bool) response.Ticket
+	GetTotalPriceAllTicket(ctx context.Context) response.AllTicketPrice
+	GetTotalPriceTicketFromSpecificAgency(ctx context.Context, idAgency int) response.AllTicketPriceSpecificAgency
+	GetTotalPriceTicketFromSpecificDriver(ctx context.Context, idDriver int) response.AllTicketPriceSpecificDriver
 }
 
 type TicketServiceImplementation struct {
@@ -43,12 +46,12 @@ func NewTicketService(
 	return &TicketServiceImplementation{Db: db, RepoBus: repoBus, RepoCustomer: repoCustomer, RepoDriver: repoDriver, RepoTicket: repoTicket, RepoAgency: repoAgency}
 }
 
-func (service *TicketServiceImplementation) GetAllTicket(ctx context.Context) []response.Ticket {
+func (service *TicketServiceImplementation) GetAllTicket(ctx context.Context, filter *request.TicketFilter) []response.Ticket {
 	tx, err := service.Db.Begin()
 	helper.PanicIfError(err)
 	defer helper.DoCommit(tx)
 
-	listAllTicket := service.RepoTicket.GetAllTicket(tx, ctx)
+	listAllTicket := service.RepoTicket.GetAllTicket(tx, ctx, helper.RequestFilterTicketToString(filter))
 
 	responseListTicket := []response.Ticket{}
 
@@ -222,4 +225,39 @@ func (service *TicketServiceImplementation) UpdateArrivedTicket(ctx context.Cont
 	service.RepoTicket.UpdateArrivedTicket(tx, ctx, &entityTicket)
 
 	return helper.TicketEntityToResponse(&entityTicket)
+}
+
+func (service *TicketServiceImplementation) GetTotalPriceAllTicket(ctx context.Context) response.AllTicketPrice {
+	tx, err := service.Db.Begin()
+	helper.PanicIfError(err)
+	defer helper.DoCommit(tx)
+
+	response := response.AllTicketPrice{}
+
+	service.RepoTicket.GetTotalPriceAllTicket(tx, ctx, &response)
+	return response
+
+}
+func (service *TicketServiceImplementation) GetTotalPriceTicketFromSpecificAgency(ctx context.Context, idAgency int) response.AllTicketPriceSpecificAgency {
+	tx, err := service.Db.Begin()
+	helper.PanicIfError(err)
+	defer helper.DoCommit(tx)
+
+	agencyEntity := entity.Agency{AgencyId: idAgency}
+	service.RepoAgency.GetOneAgency(ctx, tx, &agencyEntity)
+	response := response.AllTicketPriceSpecificAgency{Agency: helper.AgencyEntityToResponse(&agencyEntity)}
+	service.RepoTicket.GetTotalPriceTicketFromSpecificAgency(tx, ctx, &response)
+	return response
+
+}
+func (service *TicketServiceImplementation) GetTotalPriceTicketFromSpecificDriver(ctx context.Context, idDriver int) response.AllTicketPriceSpecificDriver {
+	tx, err := service.Db.Begin()
+	helper.PanicIfError(err)
+	defer helper.DoCommit(tx)
+
+	driverEntity := entity.Driver{DriverId: idDriver}
+	service.RepoDriver.GetOneDriverOnSpecificAgency(tx, ctx, &driverEntity)
+	response := response.AllTicketPriceSpecificDriver{Driver: helper.DriverEntityToResponse(&driverEntity)}
+	service.RepoTicket.GetTotalPriceTicketFromSpecificDriver(tx, ctx, &response)
+	return response
 }
