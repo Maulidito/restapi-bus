@@ -3,9 +3,12 @@ package app
 import (
 	"os"
 	"restapi-bus/controller"
+	"restapi-bus/helper"
 	"restapi-bus/middleware"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
+	"github.com/go-playground/validator/v10"
 )
 
 func configurationRouter() *gin.Engine {
@@ -20,9 +23,17 @@ func configurationRouter() *gin.Engine {
 	return g
 }
 
-func Router(customer controller.CustomerControllerInterface, agency controller.AgencyControllerInterface, bus controller.BusControllerInterface) *gin.Engine {
+func IntializedCustomValidation() {
+	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
+		v.RegisterValidation("validatefromTodate", helper.ValidateFromToDate)
+	}
+}
+
+func Router(customer controller.CustomerControllerInterface, agency controller.AgencyControllerInterface, bus controller.BusControllerInterface, driver controller.ControllerDriverInterface, ticket controller.ControllerTicketInterface) *gin.Engine {
 
 	g := configurationRouter()
+
+	IntializedCustomValidation()
 
 	grouter := g.Group("/v1")
 
@@ -40,13 +51,38 @@ func Router(customer controller.CustomerControllerInterface, agency controller.A
 	grouterAgency.GET("/:agencyId", agency.GetOneAgency)
 	grouterAgency.DELETE("/:agencyId", agency.DeleteOneAgency)
 
-	grouterBusOnSpecificAgency := grouterAgency.Group("/:agencyId/bus")
+	grouterBus := grouter.Group("/bus")
 
-	grouter.GET("/bus", bus.GetAllBus)
-	grouterBusOnSpecificAgency.GET("/", bus.GetAllBusOnSpecificAgency)
-	grouterBusOnSpecificAgency.POST("/", bus.AddBus)
-	grouterBusOnSpecificAgency.GET("/:busId", bus.GetOneBusOnSpecificAgency)
-	grouterBusOnSpecificAgency.DELETE("/busId", bus.DeleteOneBus)
+	grouterBus.GET("/", bus.GetAllBus)
+	grouterBus.POST("/", bus.AddBus)
+	grouterBus.GET("/:busId", bus.GetOneBusOnSpecificAgency)
+	grouterBus.GET("/agency/:agencyId", bus.GetAllBusOnSpecificAgency)
+	grouterBus.DELETE("/:busId", bus.DeleteOneBus)
+
+	grouterDriver := grouter.Group("/driver")
+	grouterDriver.GET("/", driver.GetAllDriver)
+	grouterDriver.GET("/filter", driver.GetAllDriver)
+	grouterDriver.GET("/:driverId", driver.GetOneDriverOnSpecificAgency)
+	grouterDriver.POST("/", driver.AddDriver)
+	grouterDriver.GET("/agency/:agencyId", driver.GetAllDriverOnSpecificAgency)
+	grouterDriver.DELETE("/:driverId", driver.DeleteDriver)
+
+	grouterTicket := grouter.Group("/ticket")
+
+	grouterTicket.GET("/", ticket.GetAllTicket)
+	grouterTicket.GET("/:ticketId", ticket.GetOneTicket)
+	grouterTicket.GET("/driver/:driverId", ticket.GetAllTicketOnSpecificDriver)
+	grouterTicket.GET("/customer/:customerId", ticket.GetAllTicketOnSpecificCustomer)
+	grouterTicket.GET("/bus/:busId", ticket.GetAllTicketOnSpecificBus)
+	grouterTicket.GET("/agency/:agencyId", ticket.GetAllTicketOnSpecificAgency)
+	grouterTicket.GET("/price", ticket.GetTotalPriceAllTicket)
+	grouterTicket.GET("/agency/:agencyId/price", ticket.GetTotalPriceTicketFromSpecificAgency)
+	grouterTicket.GET("/driver/:driverId/price", ticket.GetTotalPriceTicketFromSpecificDriver)
+
+	grouterTicket.POST("/", ticket.AddTicket)
+	grouterTicket.DELETE("/:ticketId", ticket.DeleteTicket)
+
+	grouterTicket.PATCH("/:ticketId/arrived", ticket.UpdateArrivedTicket)
 
 	return g
 }

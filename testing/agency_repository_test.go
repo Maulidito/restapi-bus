@@ -29,7 +29,7 @@ func TestAgencyAdd(t *testing.T) {
 
 	repoAgency := repository.NewAgencyRepository()
 	dataAgency := &entity.Agency{Name: "Pariwisata Raya", Place: "Jakarta"}
-	err = repoAgency.AddAgency(ctx, tx, dataAgency)
+	repoAgency.AddAgency(ctx, tx, dataAgency)
 
 	assert.Nil(t, err)
 }
@@ -38,11 +38,12 @@ func TestAgencyGetOne(t *testing.T) {
 	tx, err := db.Begin()
 	helper.PanicIfError(err)
 	repoAgency := repository.NewAgencyRepository()
-	agency := entity.Agency{AgencyId: 3}
+	agency := entity.Agency{AgencyId: 1}
 	repoAgency.GetOneAgency(ctx, tx, &agency)
 
 	fmt.Println(agency)
 	assert.NotNil(t, agency)
+
 }
 
 func TestAgencyDelete(t *testing.T) {

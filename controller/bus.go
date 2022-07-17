@@ -2,6 +2,7 @@ package controller
 
 import (
 	"net/http"
+	"restapi-bus/exception"
 	"restapi-bus/helper"
 	"restapi-bus/models/request"
 	"restapi-bus/models/web"
@@ -28,7 +29,11 @@ func NewBusController(service service.BusServiceInterface) BusControllerInterfac
 }
 
 func (ctrl *BusControllerImplementation) GetAllBus(ctx *gin.Context) {
-	busResponse := ctrl.service.GetAllBus(ctx)
+	requestBusFilter := request.BusFilter{}
+	err := ctx.Bind(&requestBusFilter)
+	helper.PanicIfError(err)
+
+	busResponse := ctrl.service.GetAllBus(ctx, &requestBusFilter)
 
 	finalResponse := web.WebResponse{Code: http.StatusOK, Status: "OK", Data: busResponse}
 
@@ -38,8 +43,7 @@ func (ctrl *BusControllerImplementation) AddBus(ctx *gin.Context) {
 	busRequest := request.Bus{}
 	err := ctx.ShouldBind(&busRequest)
 	helper.PanicIfError(err)
-	err = ctrl.service.AddBus(ctx, &busRequest)
-	helper.PanicIfError(err)
+	ctrl.service.AddBus(ctx, &busRequest)
 
 	finalResponse := web.WebResponseNoData{Code: http.StatusOK, Status: "OK"}
 	ctx.JSON(http.StatusOK, finalResponse)
@@ -47,20 +51,16 @@ func (ctrl *BusControllerImplementation) AddBus(ctx *gin.Context) {
 }
 func (ctrl *BusControllerImplementation) GetOneBusOnSpecificAgency(ctx *gin.Context) {
 	idBus, idBoolBus := ctx.Params.Get("busId")
-	idAgency, idBoolAgency := ctx.Params.Get("agencyId")
 
 	if !idBoolBus {
-		panic("ERROR ID BUS PARAMAETER NOT FOUND")
+		panic(exception.NewBadRequestError("ERROR BUS ID NOT FOUND"))
 	}
 
-	if !idBoolAgency {
-		panic("ERROR ID AGENCY PARAMAETER NOT FOUND")
-	}
-	idIntAgency, err := strconv.Atoi(idAgency)
-	helper.PanicIfError(err)
 	idIntBus, err := strconv.Atoi(idBus)
-	helper.PanicIfError(err)
-	busResponse := ctrl.service.GetOneBusSpecificAgency(ctx, idIntAgency, idIntBus)
+	if err != nil {
+		panic(exception.NewBadRequestError("ERROR BUS ID NOT INTEGER"))
+	}
+	busResponse := ctrl.service.GetOneBusSpecificAgency(ctx, idIntBus)
 
 	finalResponse := web.WebResponse{Code: http.StatusOK, Status: "OK", Data: busResponse}
 
@@ -72,21 +72,20 @@ func (ctrl *BusControllerImplementation) GetAllBusOnSpecificAgency(ctx *gin.Cont
 	id, idBool := ctx.Params.Get("agencyId")
 
 	if !idBool {
-		panic("ERROR ID agencyId PARAMETER NOT FOUND")
+		panic(exception.NewBadRequestError("ERROR AGENCY ID NOT FOUND"))
 	}
 
 	idInt, err := strconv.Atoi(id)
-	helper.PanicIfError(err)
+	if err != nil {
+		panic(exception.NewBadRequestError("ERROR AGENCY ID NOT INTEGER"))
+	}
 
-	busResponse, agencyReponse := ctrl.service.GetAllBusOnSpecificAgency(ctx, idInt)
+	dataResponse := ctrl.service.GetAllBusOnSpecificAgency(ctx, idInt)
 
-	finalResponse := web.WebResponseAllBusOnAgency{
+	finalResponse := web.WebResponse{
 		Code:   http.StatusOK,
 		Status: "OK",
-		Data: web.AllBusOnAgency{
-			Agency: &agencyReponse,
-			Bus:    &busResponse,
-		},
+		Data:   dataResponse,
 	}
 
 	ctx.JSON(http.StatusOK, finalResponse)
@@ -94,20 +93,17 @@ func (ctrl *BusControllerImplementation) GetAllBusOnSpecificAgency(ctx *gin.Cont
 }
 func (ctrl *BusControllerImplementation) DeleteOneBus(ctx *gin.Context) {
 	busId, idBoolBus := ctx.Params.Get("busId")
-	agencyId, idBoolAgency := ctx.Params.Get("agencyId")
 
 	if !idBoolBus {
-		panic("ERROR ID busId PARAMAETER NOT FOUND")
+		panic(exception.NewBadRequestError("ERROR BUS ID NOT FOUND"))
 	}
-	if !idBoolAgency {
-		panic("ERROR ID agencyId PARAMAETER NOT FOUND")
-	}
-	idBusIdInt, err := strconv.Atoi(busId)
-	helper.PanicIfError(err)
-	idAgencyIdInt, err := strconv.Atoi(agencyId)
-	helper.PanicIfError(err)
 
-	busResponse := ctrl.service.DeleteOneBus(ctx, idAgencyIdInt, idBusIdInt)
+	idBusIdInt, err := strconv.Atoi(busId)
+	if err != nil {
+		panic(exception.NewBadRequestError("ERROR BUS ID NOT INTEGER"))
+	}
+
+	busResponse := ctrl.service.DeleteOneBus(ctx, idBusIdInt)
 
 	finalResponse := web.WebResponse{Code: http.StatusOK, Status: "OK", Data: busResponse}
 

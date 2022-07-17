@@ -10,3 +10,8 @@ type BusNoAgency struct {
 	BusId       int    `json:"busId"`
 	NumberPlate string `json:"numberPlate"`
 }
+
+type AllBusOnAgency struct {
+	Agency *Agency `json:"agency"`
+	Bus    *[]Bus  `json:"bus"`
+}

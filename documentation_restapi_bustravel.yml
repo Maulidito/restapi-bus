@@ -1,7 +1,7 @@
 openapi: "3.0.2"
 info:
   title: Api Bus Travel
-  version: "1.0"
+  version: "1.1"
   contact:
     name: Maulidito Dwinandana
     email: maulidito@gmail.com
@@ -47,10 +47,16 @@ components:
       required: true
     ticketId:
       in: path
-      name: agencyId
+      name: ticketId
       schema:
         type: integer
       required: true
+    limit:
+      in: query
+      name: limit
+      schema:
+        type: integer
+      description: "Limitation Get Data"
 
   schemas:
     responseNoData:
@@ -78,6 +84,19 @@ components:
           type: integer
         numberPlate:
           type: string
+
+    busAgen cyComponent:
+      type: object
+      properties:
+        agency:
+          $ref: "#/components/schemas/agencyComponent"
+        bus:
+          type: "object"
+          properties:
+            busId:
+              type: integer
+            numberPlate:
+              type: string
     customerComponent:
       type: object
       properties:
@@ -96,10 +115,25 @@ components:
           type: integer
         name:
           type: string
+
+    driverAgencyComponent:
+      type: "object"
+      properties:
+        agency:
+          $ref: "#/components/schemas/agencyComponent"
+        driver:
+          type: object
+          properties:
+            driverId:
+              type: integer
+            name:
+              type: string
     ticketComponent:
       type: object
       properties:
         ticketId:
+          type: integer
+        agencyId:
           type: integer
         busId:
           type: integer
@@ -115,6 +149,8 @@ components:
           type: number
         date:
           type: string
+        arrived:
+          type: boolean
     responseBindingError:
       type: object
       properties:
@@ -148,7 +184,32 @@ paths:
       tags:
         - "Agency"
       description: "Get List All Agency"
-      parameters: []
+      parameters:
+        - in: query
+          name: name
+          schema:
+            type: string
+          description: "Get All Agency from specific Name"
+
+        - $ref: "#/components/parameters/limit"
+
+        - in: query
+          name: place
+          schema:
+            type: string
+          description: "Get All Agency from specific Place"
+
+        - in: query
+          name: belowBusCount
+          schema:
+            type: integer
+          description: "Get All Agency where bus is below parameter"
+
+        - in: query
+          name: aboveBusCount
+          schema:
+            type: integer
+          description: "Get All Agency where bus is abive parameter"
       responses:
         "200":
           content:
@@ -160,10 +221,23 @@ paths:
                     type: "number"
                   status:
                     type: "string"
+                  filter:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      limit:
+                        type: integer
+                      place:
+                        type: string
+                      belowBusCount:
+                        type: integer
+                      aboveBusCount:
+                        type: integer
                   data:
                     type: "array"
                     items:
-                      $ref: "#components/schemas/agencyComponent"
+                      $ref: "#/components/schemas/agencyComponent"
 
           description: OK
     post:
@@ -253,7 +327,12 @@ paths:
       tags:
         - "Bus"
       description: "Get all bus on all agency"
-      parameters: []
+      parameters:
+        - in: query
+          name: frontNumberPlate
+          schema:
+            type: string
+          description: "Get all bus from specific Front Number Plate"
       responses:
         "200":
           content:
@@ -265,62 +344,20 @@ paths:
                     type: integer
                   status:
                     type: string
+                  filter:
+                    type: object
+                    properties:
+                      frontNumberPlate:
+                        type: string
                   data:
                     type: "array"
                     items:
                       $ref: "#/components/schemas/busComponent"
           description: OK
-
-  /agency/{agencyId}/bus:
-    get:
-      tags:
-        - "Bus"
-      description: "Get all bus from specific agency"
-      parameters:
-        - $ref: "#/components/parameters/agencyId"
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  code:
-                    type: integer
-                  status:
-                    type: string
-                  data:
-                    type: "object"
-                    properties:
-                      agency:
-                        type: "object"
-                        properties:
-                          id:
-                            type: integer
-                          name:
-                            type: string
-                      bus:
-                        type: "array"
-                        items:
-                          type: object
-                          properties:
-                            busId:
-                              type: integer
-                            numberPlate:
-                              type: string
-          description: OK
-        "404":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/responseError"
-          description: Not Found
     post:
       tags:
         - "Bus"
       description: ""
-      parameters:
-        - $ref: "#/components/parameters/agencyId"
 
       requestBody:
         content:
@@ -347,13 +384,42 @@ paths:
                 $ref: "#/components/schemas/responseBindingError"
           description: BAD REQUEST
 
-  /agency/{agencyId}/bus/{busId}:
+  /bus/agency/{agencyId}:
     get:
       tags:
         - "Bus"
-      description: ""
+      description: "Get all bus from specific agency"
       parameters:
         - $ref: "#/components/parameters/agencyId"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  status:
+                    type: string
+                  data:
+                    type: "array"
+                    items:
+                      $ref: "#/components/schemas/busComponent"
+          description: OK
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/responseError"
+          description: Not Found
+
+  /bus/{busId}:
+    delete:
+      tags:
+        - "Bus"
+      description: "Delete specific Bus on Specific Agency"
+      parameters:
         - $ref: "#/components/parameters/busId"
       responses:
         "200":
@@ -375,13 +441,11 @@ paths:
               schema:
                 $ref: "#/components/schemas/responseError"
           description: Not Found
-
-    delete:
+    get:
       tags:
         - "Bus"
-      description: "Delete specific Bus on Specific Agency"
+      description: ""
       parameters:
-        - $ref: "#/components/parameters/agencyId"
         - $ref: "#/components/parameters/busId"
       responses:
         "200":
@@ -409,7 +473,15 @@ paths:
       tags:
         - "Driver"
       description: "Get all driver from all agency"
-      parameters: []
+      parameters:
+        - in: query
+          name: name
+          schema:
+            type: string
+          description: "Get All Customer from specific Name"
+
+        - $ref: "#/components/parameters/limit"
+
       responses:
         "200":
           content:
@@ -421,64 +493,24 @@ paths:
                     type: integer
                   status:
                     type: string
+                  filter:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      limit:
+                        type: integer
+
                   data:
                     type: array
                     items:
-                      $ref: "#components/schemas/driverComponent"
+                      $ref: "#/components/schemas/driverComponent"
           description: OK
-
-  /agency/{agencyId}/driver:
-    get:
-      tags:
-        - "Driver"
-      description: "get all driver from specific agency"
-      parameters:
-        - $ref: "#/components/parameters/driverId"
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  code:
-                    type: integer
-                  status:
-                    type: string
-                  data:
-                    type: "object"
-                    properties:
-                      agency:
-                        type: "object"
-                        properties:
-                          id:
-                            type: integer
-                          name:
-                            type: string
-                      driver:
-                        type: "array"
-                        items:
-                          type: object
-                          properties:
-                            driverId:
-                              type: integer
-                            name:
-                              type: string
-
-          description: OK
-        "404":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/responseError"
-          description: Not Found
-
     post:
       tags:
         - "Driver"
       description: "Adding driver to specific Agency"
-      parameters:
-        - $ref: "#/components/parameters/driverId"
+      parameters: []
       requestBody:
         content:
           application/x-www-form-urlencoded:
@@ -503,13 +535,43 @@ paths:
                 $ref: "#/components/schemas/responseBindingError"
           description: BAD REQUEST
 
-  /agency/{agencyId}/driver/{driverId}:
+  /driver/agency/{agencyId}:
     get:
       tags:
         - "Driver"
-      description: "get specific driver from specific agency"
+      description: "get all driver from specific agency"
       parameters:
         - $ref: "#/components/parameters/agencyId"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  status:
+                    type: string
+                  data:
+                    type: "array"
+                    items:
+                      $ref: "#/components/schemas/driverComponent"
+
+          description: OK
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/responseError"
+          description: Not Found
+
+  /driver/{driverId}:
+    get:
+      tags:
+        - "Driver"
+      description: "get specific driver"
+      parameters:
         - $ref: "#/components/parameters/driverId"
       responses:
         "200":
@@ -531,12 +593,12 @@ paths:
               schema:
                 $ref: "#/components/schemas/responseError"
           description: Not Found
+
     delete:
       tags:
         - "Driver"
       description: "delete specific driver from specific agency"
       parameters:
-        - $ref: "#/components/parameters/agencyId"
         - $ref: "#/components/parameters/driverId"
 
       responses:
@@ -566,7 +628,20 @@ paths:
       tags:
         - "Customer"
       description: "Get List All Customer"
-      parameters: []
+      parameters:
+        - in: query
+          name: name
+          schema:
+            type: string
+          description: "Get All Customer from specific Name"
+
+        - $ref: "#/components/parameters/limit"
+
+        - in: query
+          name: frontNumber
+          schema:
+            type: string
+          description: "Get All Customer from 4 front number"
       responses:
         "200":
           content:
@@ -578,6 +653,15 @@ paths:
                     type: "number"
                   status:
                     type: "string"
+                  filter:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      limit:
+                        type: integer
+                      frontNumber:
+                        type: string
                   data:
                     type: "array"
                     items:
@@ -654,7 +738,7 @@ paths:
       tags:
         - "Customer"
       parameters:
-        - $ref: "#/components/parameters/agencyId"
+        - $ref: "#/components/parameters/customerId"
 
       responses:
         "200":
@@ -668,7 +752,7 @@ paths:
                   status:
                     type: string
                   data:
-                    $ref: "#/components/schemas/agencyComponent"
+                    $ref: "#/components/schemas/customerComponent"
 
           description: OK
         "404":
@@ -683,7 +767,67 @@ paths:
       tags:
         - "Ticket"
       description: "get all data ticket"
-      parameters: []
+      parameters:
+        - in: query
+          name: fromDate
+          schema:
+            type: string
+          description: "Get All Customer from specific Name"
+
+        - in: query
+          name: toDate
+          schema:
+            type: string
+          description: "Get All Customer from specific Name"
+
+        - in: query
+          name: OnDate
+          schema:
+            type: string
+          description: "Get All Ticket On Date, cannot join fromDate and ToDate"
+
+        - in: query
+          name: departurePlace
+          schema:
+            type: string
+          description: "Get All Customer from specific Name"
+
+        - in: query
+          name: arrivalPlace
+          schema:
+            type: string
+          description: "Get All Customer from specific Name"
+
+        - in: query
+          name: arrived
+          schema:
+            type: boolean
+          description: "Get All Customer from specific Name"
+          example: false
+
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          description: "Limitation Get Data"
+          examples:
+            1:
+              value: 5
+              summary: Sample 5 Limit
+            2:
+              summary: Sample 100 Limit
+              value: 100
+        - in: query
+          name: priceAbove
+          schema:
+            type: integer
+          description: "Get All Ticket on specific price above parameter"
+
+        - in: query
+          name: priceBelow
+          schema:
+            type: integer
+          description: "Get All Ticket on specific price below parameter"
       responses:
         "200":
           content:
@@ -695,10 +839,32 @@ paths:
                     type: integer
                   status:
                     type: string
+                  filter:
+                    type: object
+                    properties:
+                      fromDate:
+                        type: string
+                      toDate:
+                        type: string
+                      onDate:
+                        type: string
+                      departurePlace:
+                        type: string
+                      arrivalPlace:
+                        type: string
+                      arrived:
+                        type: boolean
+                      priceAbove:
+                        type: integer
+                      priceBelow:
+                        type: integer
+                      limit:
+                        type: integer
+
                   data:
                     type: array
                     items:
-                      $ref: "#components/schemas/ticketComponent"
+                      $ref: "#/components/schemas/ticketComponent"
           description: OK
     post:
       tags:
@@ -711,6 +877,8 @@ paths:
             schema:
               type: object
               properties:
+                agencyId:
+                  type: integer
                 busId:
                   type: integer
                 driverId:
@@ -723,8 +891,28 @@ paths:
                   type: string
                 price:
                   type: integer
-                date:
-                  type: integer
+                arrived:
+                  type: boolean
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/responseNoData"
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/responseBindingError"
+          description: BAD REQUEST
+
+  /ticket/price:
+    get:
+      tags:
+        - "Ticket"
+      description: "sum all price from all ticket"
+      parameters: []
       responses:
         "200":
           content:
@@ -737,14 +925,74 @@ paths:
                   status:
                     type: string
                   data:
-                    $ref: "#components/schemas/ticketComponent"
+                    type: object
+                    properties:
+                      totalPrice:
+                        type: integer
+                      ticketCount:
+                        type: integer
+
           description: OK
-        "400":
+
+  /ticket/agency/{agencyId}/price:
+    get:
+      tags:
+        - "Ticket"
+      description: "sum all price from all ticket on specific agency"
+      parameters:
+        - $ref: "#/components/parameters/agencyId"
+      responses:
+        "200":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/responseBindingError"
-          description: BAD REQUEST
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  status:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      agency:
+                        $ref: "#/components/schemas/agencyComponent"
+                      totalPrice:
+                        type: integer
+                      ticketCount:
+                        type: integer
+
+          description: OK
+
+  /ticket/driver/{driverId}/price:
+    get:
+      tags:
+        - "Ticket"
+      description: "sum all price from all ticket on specific driver"
+      parameters:
+        - $ref: "#/components/parameters/driverId"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  status:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      agency:
+                        $ref: "#/components/schemas/driverComponent"
+                      totalPrice:
+                        type: integer
+                      ticketCount:
+                        type: integer
+
+          description: OK
 
   /ticket/{ticketId}:
     get:
@@ -765,7 +1013,7 @@ paths:
                   status:
                     type: integer
                   data:
-                    $ref: "#components/schemas/ticketComponent"
+                    $ref: "#/components/schemas/ticketComponent"
 
           description: OK
         "404":
@@ -793,7 +1041,43 @@ paths:
                   status:
                     type: string
                   data:
-                    $ref: "#components/schemas/ticketComponent"
+                    $ref: "#/components/schemas/ticketComponent"
+          description: OK
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/responseError"
+          description: Not Found
+  /ticket/{ticketId}/arrived:
+    patch:
+      tags:
+        - "Ticket"
+      description: ""
+      parameters:
+        - $ref: "#/components/parameters/ticketId"
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                arrived:
+                  type: boolean
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  status:
+                    type: integer
+                  data:
+                    $ref: "#/components/schemas/ticketComponent"
+
           description: OK
         "404":
           content:
@@ -824,20 +1108,15 @@ paths:
                     type: "object"
                     properties:
                       driver:
-                        type: "object"
-                        properties:
-                          driverId:
-                            type: integer
-                          agencyId:
-                            type: integer
-                          name:
-                            type: string
+                        $ref: "#/components/schemas/driverComponent"
                       ticket:
                         type: "array"
                         items:
                           type: object
                           properties:
                             ticketId:
+                              type: integer
+                            agencyId:
                               type: integer
                             busId:
                               type: integer
@@ -851,6 +1130,8 @@ paths:
                               type: number
                             date:
                               type: string
+                            arrived:
+                              type: boolean
           description: OK
         "404":
           content:
@@ -881,20 +1162,15 @@ paths:
                     type: "object"
                     properties:
                       customer:
-                        type: "object"
-                        properties:
-                          customerId:
-                            type: integer
-                          name:
-                            type: string
-                          phoneNumber:
-                            type: string
+                        $ref: "#/components/schemas/customerComponent"
                       ticket:
                         type: "array"
                         items:
                           type: object
                           properties:
                             ticketId:
+                              type: integer
+                            agencyId:
                               type: integer
                             busId:
                               type: integer
@@ -908,6 +1184,8 @@ paths:
                               type: number
                             date:
                               type: string
+                            arrived:
+                              type: boolean
           description: OK
         "404":
           content:
@@ -938,20 +1216,15 @@ paths:
                     type: "object"
                     properties:
                       bus:
-                        type: "object"
-                        properties:
-                          busId:
-                            type: integer
-                          agencyId:
-                            type: integer
-                          numberPlate:
-                            type: string
+                        $ref: "#/components/schemas/busComponent"
                       ticket:
                         type: "array"
                         items:
                           type: object
                           properties:
                             ticketId:
+                              type: integer
+                            agencyId:
                               type: integer
                             driverId:
                               type: integer
@@ -965,6 +1238,8 @@ paths:
                               type: number
                             date:
                               type: string
+                            arrived:
+                              type: boolean
           description: OK
         "404":
           content:
@@ -972,3 +1247,57 @@ paths:
               schema:
                 $ref: "#/components/schemas/responseError"
           description: Not Found
+  /ticket/agency/{agencyId}:
+    get:
+      description: "Get all ticket on specific Agency"
+      tags:
+        - "Ticket"
+      parameters:
+        - $ref: "#/components/parameters/agencyId"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  status:
+                    type: string
+                  data:
+                    type: "object"
+                    properties:
+                      agency:
+                        type: "object"
+                        properties:
+                          agencyId:
+                            type: integer
+                          name:
+                            type: string
+                          place:
+                            type: string
+                      ticket:
+                        type: "array"
+                        items:
+                          type: object
+                          properties:
+                            ticketId:
+                              type: integer
+                            busId:
+                              type: integer
+                            driverId:
+                              type: integer
+                            customerId:
+                              type: integer
+                            departurePlace:
+                              type: string
+                            arrivalPlace:
+                              type: string
+                            price:
+                              type: number
+                            date:
+                              type: string
+                            arrived:
+                              type: boolean
+          description: OK

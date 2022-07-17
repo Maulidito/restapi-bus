@@ -39,11 +39,32 @@ func InitializedControllerBus(db *sql.DB) controller.BusControllerInterface {
 	return busControllerInterface
 }
 
+func InitializedControllerDriver(db *sql.DB) controller.ControllerDriverInterface {
+	driverRepositoryInterface := repository.NewDiverRepository()
+	agencyRepositoryInterface := repository.NewAgencyRepository()
+	serviceDriverInterface := service.NewServiceDriver(db, driverRepositoryInterface, agencyRepositoryInterface)
+	controllerDriverInterface := controller.NewDriverController(serviceDriverInterface)
+	return controllerDriverInterface
+}
+
+func InitializedControllerTicket(db *sql.DB) controller.ControllerTicketInterface {
+	busRepositoryInterface := repository.NewBusRepository()
+	customerRepositoryInterface := repository.NewCustomerRepository()
+	driverRepositoryInterface := repository.NewDiverRepository()
+	ticketRepositoryInterface := repository.NewTicketRepository()
+	agencyRepositoryInterface := repository.NewAgencyRepository()
+	ticketServiceInterface := service.NewTicketService(db, busRepositoryInterface, customerRepositoryInterface, driverRepositoryInterface, ticketRepositoryInterface, agencyRepositoryInterface)
+	controllerTicketInterface := controller.NewTicketController(ticketServiceInterface)
+	return controllerTicketInterface
+}
+
 func InitializedServer() *gin.Engine {
 	db := app.NewDatabase()
 	customerControllerInterface := InitializedControllerCustomer(db)
 	agencyControllerInterface := InitializedControllerAgency(db)
 	busControllerInterface := InitializedControllerBus(db)
-	engine := app.Router(customerControllerInterface, agencyControllerInterface, busControllerInterface)
+	controllerDriverInterface := InitializedControllerDriver(db)
+	controllerTicketInterface := InitializedControllerTicket(db)
+	engine := app.Router(customerControllerInterface, agencyControllerInterface, busControllerInterface, controllerDriverInterface, controllerTicketInterface)
 	return engine
 }

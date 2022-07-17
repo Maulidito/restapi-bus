@@ -38,12 +38,34 @@ func InitializedControllerBus(db *sql.DB) controller.BusControllerInterface {
 	return nil
 }
 
+func InitializedControllerDriver(db *sql.DB) controller.ControllerDriverInterface {
+	wire.Build(repository.NewDiverRepository,
+		repository.NewAgencyRepository,
+		service.NewServiceDriver,
+		controller.NewDriverController)
+	return nil
+}
+
+func InitializedControllerTicket(db *sql.DB) controller.ControllerTicketInterface {
+	wire.Build(
+		repository.NewTicketRepository,
+		repository.NewCustomerRepository,
+		repository.NewDiverRepository,
+		repository.NewBusRepository,
+		repository.NewAgencyRepository,
+		service.NewTicketService,
+		controller.NewTicketController)
+	return nil
+}
+
 func InitializedServer() *gin.Engine {
 	wire.Build(
 		app.NewDatabase,
 		InitializedControllerCustomer,
 		InitializedControllerAgency,
 		InitializedControllerBus,
+		InitializedControllerDriver,
+		InitializedControllerTicket,
 		app.Router)
 	return nil
 }
