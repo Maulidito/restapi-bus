@@ -5,7 +5,6 @@ import (
 )
 
 func main() {
-
 	server := depedency.InitializedServer()
 
 	server.Run(":8080")
