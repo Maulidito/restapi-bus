@@ -14,7 +14,7 @@ func TestGetAllBus(t *testing.T) {
 	tx, err := db.Begin()
 	helper.PanicIfError(err)
 	repo := repository.NewBusRepository()
-	listBus := repo.GetAllBus(ctx, tx)
+	listBus := repo.GetAllBus(ctx, tx, "")
 
 	fmt.Println(listBus)
 	assert.NotEmpty(t, listBus)

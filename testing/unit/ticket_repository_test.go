@@ -15,7 +15,7 @@ func TestGetAllTicket(t *testing.T) {
 	helper.PanicIfError(err)
 
 	repo := repository.NewTicketRepository()
-	listTikcet := repo.GetAllTicket(tx, ctx)
+	listTikcet := repo.GetAllTicket(tx, ctx, "")
 
 	fmt.Println(listTikcet)
 	assert.NotEmpty(t, listTikcet)
@@ -25,6 +25,7 @@ func TestGetAllTicket(t *testing.T) {
 
 func TestGetOneTicket(t *testing.T) {
 	tx, err := db.Begin()
+
 	helper.PanicIfError(err)
 
 	ticket := entity.Ticket{TicketId: 1}

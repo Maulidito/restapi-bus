@@ -16,7 +16,7 @@ func TestAgencyGetAll(t *testing.T) {
 
 	repoAgency := repository.NewAgencyRepository()
 
-	allAgency := repoAgency.GetAllAgency(ctx, tx)
+	allAgency := repoAgency.GetAllAgency(ctx, tx, "")
 	fmt.Println(allAgency)
 	assert.Nil(t, err)
 	assert.NotNil(t, allAgency)
