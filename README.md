@@ -2,7 +2,7 @@
 
 - [version 1.0](https://github.com/Maulidito/restapi-bus/tree/e4a605c0f629203e73a3b60418968b3bf616bff8) (CRUD Data Entity)
 
-- [version 1.1](https://github.com/Maulidito/restapi-bus/tree/c6ceab26eb48411074642c1c1b6f0244fc22ef86) (adding all filter on http method GET)
+- [version 1.1](https://github.com/Maulidito/restapi-bus/tree/dd752fa446c5d6df6d9a797cd3eeacffc7647acc) (adding all filter on http method GET)
 
 ## Description
 
