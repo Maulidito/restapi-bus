@@ -11,7 +11,6 @@ func main() {
 	wg.Add(1)
 	go func() {
 		server := depedency.InitializedServer()
-
 		server.Run(":8080")
 		wg.Done()
 	}()

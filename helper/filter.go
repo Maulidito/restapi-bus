@@ -117,3 +117,34 @@ func RequestFilterTicketToString(request *request.TicketFilter) (result string) 
 	addFilterLimit(request.Limit, result)
 	return
 }
+
+func RequestFilterScheduleToString(request *request.ScheduleFilter) (result string) {
+	result += " WHERE 1=1 "
+
+	if request.Arrived != nil {
+		result += fmt.Sprintf(" AND arrived = %v", request.Arrived)
+	}
+
+	if request.FromAgency != 0 {
+		result += fmt.Sprintf(" AND to_agency = %d ", request.FromAgency)
+	}
+
+	if request.ToAgency != 0 {
+		result += fmt.Sprintf(" AND from_agency = %d ", request.ToAgency)
+	}
+
+	if request.OnDate != "" {
+		result += fmt.Sprintf(" AND date = %s ", request.OnDate)
+	}
+
+	if request.PriceBelow != 0 {
+		result += fmt.Sprintf(` AND price <  %v `, request.PriceBelow)
+	}
+
+	if request.PriceAbove != 0 {
+		result += fmt.Sprintf(` AND price >  "%v" `, request.PriceAbove)
+	}
+
+	addFilterLimit(request.Limit, result)
+	return
+}

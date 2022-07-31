@@ -47,6 +47,16 @@ func InitializedControllerDriver(db *sql.DB) controller.ControllerDriverInterfac
 	return controllerDriverInterface
 }
 
+func InitializedControllerSchedule(db *sql.DB) controller.ControllerScheduleInterface {
+	scheduleRepositoryInterface := repository.NewScheduleRepository()
+	agencyRepositoryInterface := repository.NewAgencyRepository()
+	driverRepositoryInterface := repository.NewDiverRepository()
+	busRepositoryInterface := repository.NewBusRepository()
+	scheduleServiceInterface := service.NewScheduleService(scheduleRepositoryInterface, agencyRepositoryInterface, driverRepositoryInterface, busRepositoryInterface, db)
+	controllerScheduleInterface := controller.NewScheduleController(scheduleServiceInterface)
+	return controllerScheduleInterface
+}
+
 func InitializedControllerTicket(db *sql.DB) controller.ControllerTicketInterface {
 	busRepositoryInterface := repository.NewBusRepository()
 	customerRepositoryInterface := repository.NewCustomerRepository()
@@ -65,6 +75,7 @@ func InitializedServer() *gin.Engine {
 	busControllerInterface := InitializedControllerBus(db)
 	controllerDriverInterface := InitializedControllerDriver(db)
 	controllerTicketInterface := InitializedControllerTicket(db)
-	engine := app.Router(customerControllerInterface, agencyControllerInterface, busControllerInterface, controllerDriverInterface, controllerTicketInterface)
+	controllerScheduleInterface := InitializedControllerSchedule(db)
+	engine := app.Router(customerControllerInterface, agencyControllerInterface, busControllerInterface, controllerDriverInterface, controllerTicketInterface, controllerScheduleInterface)
 	return engine
 }

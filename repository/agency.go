@@ -58,7 +58,13 @@ func (repo *AgencyRepositoryImplementation) AddAgency(ctx context.Context, tx *s
 
 func (repo *AgencyRepositoryImplementation) GetOneAgency(ctx context.Context, tx *sql.Tx, agency *entity.Agency) {
 	defer helper.ShouldRollback(tx)
-
+	defer func() {
+		err := recover()
+		if err != nil {
+			panic(err)
+		}
+	}()
+	fmt.Println("GET ONE AGENCY ", agency.AgencyId)
 	rows, err := tx.QueryContext(ctx, "SELECT name, place FROM agency where agency_id = ?", agency.AgencyId)
 
 	helper.PanicIfError(err)

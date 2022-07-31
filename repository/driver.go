@@ -59,7 +59,13 @@ func (repo *DriverRepositoryImplementation) GetAllDriverOnSpecificAgency(tx *sql
 }
 func (repo *DriverRepositoryImplementation) GetOneDriverOnSpecificAgency(tx *sql.Tx, ctx context.Context, driver *entity.Driver) {
 	defer helper.ShouldRollback(tx)
-
+	defer func() {
+		err := recover()
+		if err != nil {
+			panic(err)
+		}
+	}()
+	fmt.Println("GET ONE DRIVER ", driver.DriverId)
 	rows, err := tx.QueryContext(ctx, "SELECT name FROM driver WHERE driver_id = ?", driver.DriverId)
 	helper.PanicIfError(err)
 	defer rows.Close()

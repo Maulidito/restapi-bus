@@ -75,6 +75,13 @@ func (repo *BusRepositoryImplementation) AddBus(ctx context.Context, tx *sql.Tx,
 
 func (repo *BusRepositoryImplementation) GetOneBus(ctx context.Context, tx *sql.Tx, bus *entity.Bus) {
 	defer helper.ShouldRollback(tx)
+	defer func() {
+		err := recover()
+		if err != nil {
+			panic(err)
+		}
+	}()
+	fmt.Println("GET ONE BUS ", bus.BusId)
 	rows, err := tx.QueryContext(ctx, "SELECT agency_id,number_plate FROM bus where bus_id = ?", bus.BusId)
 
 	helper.PanicIfError(err)

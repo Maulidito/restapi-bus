@@ -1,7 +1,7 @@
 openapi: "3.0.2"
 info:
   title: Api Bus Travel
-  version: "1.1"
+  version: "1.1.1"
   contact:
     name: Maulidito Dwinandana
     email: maulidito@gmail.com
@@ -17,10 +17,25 @@ tags:
     description: "endpoint that related on data Customer"
   - name: Ticket
     description: "endpoint that related on data Ticket"
+  - name: Schedule
+    description: "endpoint that related on data Schedule"
   - name: Driver
     description: "endpoint that related on data Driver"
 components:
+  securitySchemes:
+    authAgency:
+      type: apiKey
+      in: cookie
+      name: x-api-key Agency
+      description: Authorization for agency
+
   parameters:
+    scheduleId:
+      in: path
+      name: scheduleId
+      schema:
+        type: integer
+      required: true
     busId:
       in: path
       name: busId
@@ -85,7 +100,7 @@ components:
         numberPlate:
           type: string
 
-    busAgen cyComponent:
+    busAgencyComponent:
       type: object
       properties:
         agency:
@@ -115,6 +130,25 @@ components:
           type: integer
         name:
           type: string
+    scheduleComponent:
+      type: object
+      properties:
+        scheduleId:
+          type: integer
+        fromAgencyId:
+          type: integer
+        toAgencyId:
+          type: integer
+        busId:
+          type: integer
+        driverId:
+          type: integer
+        price:
+          type: integer
+        date:
+          type: string
+        arrived:
+          type: boolean
 
     driverAgencyComponent:
       type: "object"
@@ -133,24 +167,13 @@ components:
       properties:
         ticketId:
           type: integer
-        agencyId:
-          type: integer
-        busId:
-          type: integer
-        driverId:
+        scheduleId:
           type: integer
         customerId:
           type: integer
-        departurePlace:
-          type: string
-        arrivalPlace:
-          type: string
-        price:
-          type: number
         date:
           type: string
-        arrived:
-          type: boolean
+
     responseBindingError:
       type: object
       properties:
@@ -242,6 +265,8 @@ paths:
           description: OK
     post:
       description: "Adding one Agency from request"
+      security:
+        - authAgency: []
       tags:
         - "Agency"
       parameters: []
@@ -294,6 +319,8 @@ paths:
 
           description: OK
     delete:
+      security:
+        - authAgency: []
       description: "Delete specific Agency with Id"
       tags:
         - "Agency"
@@ -355,6 +382,8 @@ paths:
                       $ref: "#/components/schemas/busComponent"
           description: OK
     post:
+      security:
+        - authAgency: []
       tags:
         - "Bus"
       description: ""
@@ -416,6 +445,8 @@ paths:
 
   /bus/{busId}:
     delete:
+      security:
+        - authAgency: []
       tags:
         - "Bus"
       description: "Delete specific Bus on Specific Agency"
@@ -507,6 +538,8 @@ paths:
                       $ref: "#/components/schemas/driverComponent"
           description: OK
     post:
+      security:
+        - authAgency: []
       tags:
         - "Driver"
       description: "Adding driver to specific Agency"
@@ -595,6 +628,8 @@ paths:
           description: Not Found
 
     delete:
+      security:
+        - authAgency: []
       tags:
         - "Driver"
       description: "delete specific driver from specific agency"
@@ -867,6 +902,8 @@ paths:
                       $ref: "#/components/schemas/ticketComponent"
           description: OK
     post:
+      security:
+        - authAgency: []
       tags:
         - "Ticket"
       description: "Adding a ticket"
@@ -936,6 +973,8 @@ paths:
 
   /ticket/agency/{agencyId}/price:
     get:
+      security:
+        - authAgency: []
       tags:
         - "Ticket"
       description: "sum all price from all ticket on specific agency"
@@ -966,6 +1005,8 @@ paths:
 
   /ticket/driver/{driverId}/price:
     get:
+      security:
+        - authAgency: []
       tags:
         - "Ticket"
       description: "sum all price from all ticket on specific driver"
@@ -1024,6 +1065,8 @@ paths:
           description: Not Found
 
     delete:
+      security:
+        - authAgency: []
       tags:
         - "Ticket"
       description: ""
@@ -1042,42 +1085,6 @@ paths:
                     type: string
                   data:
                     $ref: "#/components/schemas/ticketComponent"
-          description: OK
-        "404":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/responseError"
-          description: Not Found
-  /ticket/{ticketId}/arrived:
-    patch:
-      tags:
-        - "Ticket"
-      description: ""
-      parameters:
-        - $ref: "#/components/parameters/ticketId"
-      requestBody:
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              type: object
-              properties:
-                arrived:
-                  type: boolean
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  code:
-                    type: integer
-                  status:
-                    type: integer
-                  data:
-                    $ref: "#/components/schemas/ticketComponent"
-
           description: OK
         "404":
           content:
@@ -1300,4 +1307,201 @@ paths:
                               type: string
                             arrived:
                               type: boolean
+          description: OK
+  /schedule:
+    get:
+      tags:
+        - "Schedule"
+      description: "Get All Schedule Data"
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - in: query
+          name: arrived
+          schema:
+            type: boolean
+          description: "filter data with specific arrived"
+          example: false
+        - in: query
+          name: fromAgency
+          schema:
+            type: string
+          description: "filter data with from specific agency"
+        - in: query
+          name: toAgency
+          schema:
+            type: string
+          description: "filter data with to specific agency"
+        - in: query
+          name: priceAbove
+          schema:
+            type: integer
+          description: "Get All Schedule on specific price above parameter"
+
+        - in: query
+          name: priceBelow
+          schema:
+            type: integer
+          description: "Get All Schedule on specific price below parameter"
+        - in: query
+          name: OnDate
+          schema:
+            type: string
+          description: "Get All Schedule On Date"
+
+      responses:
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/responseError"
+          description: "Not Found Any Data"
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  status:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/scheduleComponent"
+
+          description: OK
+    post:
+      security:
+        - authAgency: []
+      tags:
+        - "Schedule"
+      description: "Add Schedule"
+      parameters: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                fromAgencyId:
+                  type: integer
+                toAgencyId:
+                  type: integer
+                busId:
+                  type: integer
+                driverId:
+                  type: integer
+                price:
+                  type: integer
+                date:
+                  type: string
+                arrived:
+                  type: boolean
+      responses:
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/responseBindingError"
+          description: "Bad Request"
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/responseNoData"
+          description: OK
+  /schedule/{scheduleId}:
+    get:
+      tags:
+        - "Schedule"
+      description: ""
+      parameters:
+        - $ref: "#/components/parameters/scheduleId"
+      responses:
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/responseError"
+          description: "Not Found Data"
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  status:
+                    type: string
+                  data:
+                    $ref: "#/components/schemas/scheduleComponent"
+          description: OK
+    delete:
+      security:
+        - authAgency: []
+      tags:
+        - "Schedule"
+      description: "Delete Schedule Data"
+      parameters:
+        - $ref: "#/components/parameters/scheduleId"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  status:
+                    type: string
+                  data:
+                    $ref: "#/components/schemas/scheduleComponent"
+          description: OK
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/responseError"
+          description: "Not Found Data"
+
+  /schedule/{scheduleId}/arrived:
+    patch:
+      security:
+        - authAgency: []
+      tags:
+        - "Schedule"
+      description: "Update Arrived Schedule"
+      parameters:
+        - $ref: "#/components/parameters/scheduleId"
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                arrived:
+                  type: boolean
+      responses:
+        "400":
+          description: "Bad Request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/responseBindingError"
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  status:
+                    type: string
+                  data:
+                    $ref: "#/components/schemas/scheduleComponent"
+
           description: OK

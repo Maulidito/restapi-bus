@@ -1,6 +1,7 @@
 package app
 
 import (
+	"io/fs"
 	"os"
 	"restapi-bus/controller"
 	"restapi-bus/helper"
@@ -12,6 +13,11 @@ import (
 )
 
 func configurationRouter() *gin.Engine {
+	_, err := os.ReadDir("./log")
+	if err != nil {
+		err = os.Mkdir("./log", fs.FileMode(int(0766)))
+	}
+	helper.PanicIfError(err)
 	fileLog, _ := os.OpenFile("./log/logging.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	fileRecovery, _ := os.OpenFile("./log/recoveryLog.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 
@@ -26,10 +32,11 @@ func configurationRouter() *gin.Engine {
 func IntializedCustomValidation() {
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		v.RegisterValidation("validatefromTodate", helper.ValidateFromToDate)
+		v.RegisterValidation("isbool", helper.IsBool)
 	}
 }
 
-func Router(customer controller.CustomerControllerInterface, agency controller.AgencyControllerInterface, bus controller.BusControllerInterface, driver controller.ControllerDriverInterface, ticket controller.ControllerTicketInterface) *gin.Engine {
+func Router(customer controller.CustomerControllerInterface, agency controller.AgencyControllerInterface, bus controller.BusControllerInterface, driver controller.ControllerDriverInterface, ticket controller.ControllerTicketInterface, schedule controller.ControllerScheduleInterface) *gin.Engine {
 
 	g := configurationRouter()
 
@@ -37,35 +44,13 @@ func Router(customer controller.CustomerControllerInterface, agency controller.A
 
 	grouter := g.Group("/v1")
 
-	grouterCustomer := grouter.Group("/customer")
+	customer.RouterMount(grouter)
 
-	grouterCustomer.GET("/", customer.GetAllCustomer)
-	grouterCustomer.POST("/", customer.AddCustomer)
-	grouterCustomer.GET("/:customerId", customer.GetOneCustomer)
-	grouterCustomer.DELETE("/:customerId", customer.DeleteOneCustomer)
+	driver.RouterMount(grouter)
 
-	grouterAgency := grouter.Group("/agency")
+	bus.RouterMount(grouter)
 
-	grouterAgency.GET("/", agency.GetAllAgency)
-	grouterAgency.POST("/", agency.AddAgency)
-	grouterAgency.GET("/:agencyId", agency.GetOneAgency)
-	grouterAgency.DELETE("/:agencyId", agency.DeleteOneAgency)
-
-	grouterBus := grouter.Group("/bus")
-
-	grouterBus.GET("/", bus.GetAllBus)
-	grouterBus.POST("/", bus.AddBus)
-	grouterBus.GET("/:busId", bus.GetOneBusOnSpecificAgency)
-	grouterBus.GET("/agency/:agencyId", bus.GetAllBusOnSpecificAgency)
-	grouterBus.DELETE("/:busId", bus.DeleteOneBus)
-
-	grouterDriver := grouter.Group("/driver")
-	grouterDriver.GET("/", driver.GetAllDriver)
-	grouterDriver.GET("/filter", driver.GetAllDriver)
-	grouterDriver.GET("/:driverId", driver.GetOneDriverOnSpecificAgency)
-	grouterDriver.POST("/", driver.AddDriver)
-	grouterDriver.GET("/agency/:agencyId", driver.GetAllDriverOnSpecificAgency)
-	grouterDriver.DELETE("/:driverId", driver.DeleteDriver)
+	agency.RouterMount(grouter)
 
 	grouterTicket := grouter.Group("/ticket")
 
@@ -83,6 +68,8 @@ func Router(customer controller.CustomerControllerInterface, agency controller.A
 	grouterTicket.DELETE("/:ticketId", ticket.DeleteTicket)
 
 	grouterTicket.PATCH("/:ticketId/arrived", ticket.UpdateArrivedTicket)
+
+	schedule.RouterMount(grouter)
 
 	return g
 }

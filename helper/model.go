@@ -152,3 +152,29 @@ func TicketEntityToResponseTicketNoCustomer(ticket *entity.Ticket) response.Tick
 		Date:           ticket.Date,
 	}
 }
+
+func ScheduleEntityToResponse(schedule *entity.Schedule) response.Schedule {
+	return response.Schedule{
+		ScheduleId:   schedule.ScheduleId,
+		FromAgencyId: schedule.FromAgencyId,
+		ToAgencyId:   schedule.ToAgencyId,
+		BusId:        schedule.BusId,
+		DriverId:     schedule.DriverId,
+		Price:        schedule.Price,
+		Date:         schedule.Date,
+		Arrived:      schedule.Arrived,
+	}
+}
+
+func ScheduleRequestToEntity(schedule *request.Schedule) entity.Schedule {
+	return entity.Schedule{
+
+		FromAgencyId: schedule.FromAgencyId,
+		ToAgencyId:   schedule.ToAgencyId,
+		BusId:        schedule.BusId,
+		DriverId:     schedule.DriverId,
+		Price:        schedule.Price,
+		Date:         schedule.Date,
+		Arrived:      schedule.Arrived,
+	}
+}

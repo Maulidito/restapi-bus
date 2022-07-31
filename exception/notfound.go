@@ -7,3 +7,7 @@ type NotFound struct {
 func NewNotFoundError(errMsg string) NotFound {
 	return NotFound{Message: errMsg}
 }
+
+func (notFound NotFound) Error() string {
+	return notFound.Message
+}
