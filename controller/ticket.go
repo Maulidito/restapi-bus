@@ -25,7 +25,7 @@ type ControllerTicketInterface interface {
 	GetTotalPriceAllTicket(ctx *gin.Context)
 	GetTotalPriceTicketFromSpecificAgency(ctx *gin.Context)
 	GetTotalPriceTicketFromSpecificDriver(ctx *gin.Context)
-	RouterMount(g *gin.RouterGroup)
+	RouterMount(g gin.IRouter)
 }
 
 type ControllerTicketImplementation struct {
@@ -36,7 +36,7 @@ func NewTicketController(serv service.TicketServiceInterface) ControllerTicketIn
 	return &ControllerTicketImplementation{service: serv}
 }
 
-func (ctrl *ControllerTicketImplementation) RouterMount(g *gin.RouterGroup) {
+func (ctrl *ControllerTicketImplementation) RouterMount(g gin.IRouter) {
 	grouterTicket := g.Group("/ticket")
 
 	grouterTicket.GET("/", ctrl.GetAllTicket)
@@ -165,19 +165,19 @@ func (ctrl *ControllerTicketImplementation) GetAllTicketOnSpecificAgency(ctx *gi
 
 }
 func (ctrl *ControllerTicketImplementation) GetAllTicketOnSpecificBus(ctx *gin.Context) {
-	driverId, isDriverId := ctx.Params.Get("busId")
+	busId, isBusId := ctx.Params.Get("busId")
 
-	if !isDriverId {
+	if !isBusId {
 		panic(exception.NewBadRequestError("ERROR BUS ID NOT FOUND"))
 	}
 
-	driverIdInt, err := strconv.Atoi(driverId)
+	busIdInt, err := strconv.Atoi(busId)
 
 	if err != nil {
 		panic(exception.NewBadRequestError("ERROR BUS ID NOT INTEGER"))
 	}
 
-	Ticket := ctrl.service.GetAllTicketOnDriver(ctx, driverIdInt)
+	Ticket := ctrl.service.GetAllTicketOnBus(ctx, busIdInt)
 	finalResponse := web.WebResponse{Code: http.StatusOK, Status: "OK", Data: Ticket}
 	ctx.JSON(http.StatusOK, &finalResponse)
 

@@ -19,7 +19,7 @@ type ControllerScheduleInterface interface {
 	AddSchedule(ctx *gin.Context)
 	DeleteSchedule(ctx *gin.Context)
 	UpdateArrivedSchedule(ctx *gin.Context)
-	RouterMount(g *gin.RouterGroup)
+	RouterMount(g gin.IRouter)
 }
 
 type ControllerScheduleImplementation struct {
@@ -30,7 +30,7 @@ func NewScheduleController(serv service.ScheduleServiceInterface) ControllerSche
 	return &ControllerScheduleImplementation{Service: serv}
 }
 
-func (controller *ControllerScheduleImplementation) RouterMount(g *gin.RouterGroup) {
+func (controller *ControllerScheduleImplementation) RouterMount(g gin.IRouter) {
 	grouterSchedule := g.Group("/schedule")
 	grouterSchedule.GET("", controller.GetAllSchedule)
 	grouterSchedule.POST("", controller.AddSchedule)
@@ -107,8 +107,8 @@ func (controller *ControllerScheduleImplementation) UpdateArrivedSchedule(ctx *g
 	wg := sync.WaitGroup{}
 	wg.Add(2)
 	var scheduleIdInt int
-	var isArrivedBool bool
 	var err error
+	scheduleArrived := request.ScheduleArrived{}
 	go func() {
 		defer wg.Done()
 		scheduleIdString, ok := ctx.Params.Get("scheduleId")
@@ -125,23 +125,15 @@ func (controller *ControllerScheduleImplementation) UpdateArrivedSchedule(ctx *g
 
 	go func() {
 		defer wg.Done()
-		isArrived, ok := ctx.GetPostForm("arrived")
-		if !ok {
-			panic(exception.NewBadRequestError("ERROR ARRIVED NOT FOUND"))
-		}
 
-		isArrivedBool, err = strconv.ParseBool(isArrived)
-
-		if err != nil {
-			panic(exception.NewBadRequestError("ERROR ARRIVED ID NOT BOOL"))
-		}
+		ctx.Bind(&scheduleArrived)
 	}()
 
 	wg.Wait()
 
 	helper.PanicIfError(err)
 
-	responseSchedule := controller.Service.UpdateArrivedSchedule(ctx, scheduleIdInt, isArrivedBool)
+	responseSchedule := controller.Service.UpdateArrivedSchedule(ctx, scheduleIdInt, *scheduleArrived.IsArrived)
 
 	finalResponse := web.WebResponse{Code: http.StatusOK, Status: "OK", Data: responseSchedule}
 

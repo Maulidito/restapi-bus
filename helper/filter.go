@@ -119,7 +119,7 @@ func RequestFilterScheduleToString(request *request.ScheduleFilter) (result stri
 	result += " WHERE 1=1 "
 
 	if request.Arrived != nil {
-		result += fmt.Sprintf(" AND arrived = %v", request.Arrived)
+		result += fmt.Sprintf(" AND arrived = %v", *request.Arrived)
 	}
 
 	if request.FromAgency != 0 {

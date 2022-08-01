@@ -66,12 +66,12 @@ func (repo *DriverRepositoryImplementation) GetOneDriverOnSpecificAgency(tx *sql
 		}
 	}()
 	fmt.Println("GET ONE DRIVER ", driver.DriverId)
-	rows, err := tx.QueryContext(ctx, "SELECT name FROM driver WHERE driver_id = ?", driver.DriverId)
+	rows, err := tx.QueryContext(ctx, "SELECT agency_id,name FROM driver WHERE driver_id = ?", driver.DriverId)
 	helper.PanicIfError(err)
 	defer rows.Close()
 
 	if rows.Next() {
-		err = rows.Scan(&driver.Name)
+		err = rows.Scan(&driver.AgencyId, &driver.Name)
 		helper.PanicIfError(err)
 		return
 	}

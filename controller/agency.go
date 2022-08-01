@@ -17,7 +17,7 @@ type AgencyControllerInterface interface {
 	AddAgency(ctx *gin.Context)
 	GetOneAgency(ctx *gin.Context)
 	DeleteOneAgency(ctx *gin.Context)
-	RouterMount(g *gin.RouterGroup)
+	RouterMount(g gin.IRouter)
 }
 
 type AgencyControllerImplementation struct {
@@ -28,7 +28,7 @@ func NewAgencyController(service service.AgencyServiceInterface) AgencyControlle
 	return &AgencyControllerImplementation{service: service}
 }
 
-func (ctrl *AgencyControllerImplementation) RouterMount(g *gin.RouterGroup) {
+func (ctrl *AgencyControllerImplementation) RouterMount(g gin.IRouter) {
 	grouterAgency := g.Group("/agency")
 
 	grouterAgency.GET("/", ctrl.GetAllAgency)

@@ -4,6 +4,8 @@
 
 - [version 1.1](https://github.com/Maulidito/restapi-bus/tree/dd752fa446c5d6df6d9a797cd3eeacffc7647acc) (adding all filter on http method GET)
 
+- [version 1.2]() (adding schedule entity and change attribute of ticket)
+
 ## Description
 
 My Portofolio Rest api with golang dan mysql for the database
@@ -19,6 +21,7 @@ the framework i use in this project is [Gin](https://github.com/gin-gonic/gin)
 - Bus
 - Ticket
 - Driver
+- Schedule
 
 <details><summary>  Entity Details</summary>
 <p>
@@ -57,17 +60,24 @@ the framework i use in this project is [Gin](https://github.com/gin-gonic/gin)
 
 - ### Ticket
 
-| Entity Name     | Type Data | Key         |
-| --------------- | --------- | ----------- |
-| ticket_id       | int       | **Primary** |
-| agency_id       | int       | Foreign     |
-| bus_id          | int       | Foreign     |
-| driver_id       | int       | Foreign     |
-| customer_id     | int       | Foreign     |
-| departure_place | string    | -           |
-| arrival_place   | string    | -           |
-| price           | int       | -           |
-| date            | timestamp | -           |
+| Entity Name | Type Data | Key         |
+| ----------- | --------- | ----------- |
+| ticket_id   | int       | **Primary** |
+| schedule_id | int       | Foreign     |
+| customer_id | int       | Foreign     |
+| date        | timestamp | -           |
+
+- ### Schedule
+
+| Entity Name    | Type Data | Key         |
+| -------------- | --------- | ----------- |
+| schedule_id    | int       | **Primary** |
+| from_agency_id | int       | Foreign     |
+| to_agency_id   | int       | Foreign     |
+| driver_id      | int       | Foreign     |
+| bus_id         | int       | Foreign     |
+| price          | int       | -           |
+| date           | timestamp | -           |
 
 </p>
 </details>

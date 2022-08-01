@@ -18,7 +18,7 @@ type BusControllerInterface interface {
 	GetOneBusOnSpecificAgency(ctx *gin.Context)
 	DeleteOneBus(ctx *gin.Context)
 	GetAllBusOnSpecificAgency(ctx *gin.Context)
-	RouterMount(g *gin.RouterGroup)
+	RouterMount(g gin.IRouter)
 }
 
 type BusControllerImplementation struct {
@@ -29,7 +29,7 @@ func NewBusController(service service.BusServiceInterface) BusControllerInterfac
 	return &BusControllerImplementation{service: service}
 }
 
-func (ctrl *BusControllerImplementation) RouterMount(g *gin.RouterGroup) {
+func (ctrl *BusControllerImplementation) RouterMount(g gin.IRouter) {
 	grouterBus := g.Group("/bus")
 
 	grouterBus.GET("/", ctrl.GetAllBus)

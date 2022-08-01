@@ -144,7 +144,7 @@ func (repo *TicketRepositoryImplementation) GetAllTicketOnBus(tx *sql.Tx, ctx co
 
 func (repo *TicketRepositoryImplementation) GetAllTicketOnAgency(tx *sql.Tx, ctx context.Context, agencyId int) []entity.Ticket {
 	defer helper.ShouldRollback(tx)
-	row, err := tx.QueryContext(ctx, "SELECT ticket.ticket_id,ticket.schedule_id,customer_id,ticket.date FROM ticket LEFT JOIN schedule ON ticket.schedule_id=schedule.schedule_id WHERE agency_id = ? ", agencyId)
+	row, err := tx.QueryContext(ctx, "SELECT ticket.ticket_id,ticket.schedule_id,customer_id,ticket.date FROM ticket LEFT JOIN schedule ON ticket.schedule_id=schedule.schedule_id WHERE from_agency_id = ? ", agencyId)
 
 	helper.PanicIfError(err)
 	defer row.Close()

@@ -1,7 +1,7 @@
 openapi: "3.0.2"
 info:
   title: Api Bus Travel
-  version: "1.1.1"
+  version: "1.2"
   contact:
     name: Maulidito Dwinandana
     email: maulidito@gmail.com
@@ -807,13 +807,13 @@ paths:
           name: fromDate
           schema:
             type: string
-          description: "Get All Customer from specific Name"
+          description: "Get All Ticket from specific Date"
 
         - in: query
           name: toDate
           schema:
             type: string
-          description: "Get All Customer from specific Name"
+          description: "Get All Ticket from specific Date"
 
         - in: query
           name: OnDate
@@ -822,22 +822,22 @@ paths:
           description: "Get All Ticket On Date, cannot join fromDate and ToDate"
 
         - in: query
-          name: departurePlace
+          name: fromAgency
           schema:
-            type: string
-          description: "Get All Customer from specific Name"
+            type: integer
+          description: "Get All Ticket from specific Agency"
 
         - in: query
-          name: arrivalPlace
+          name: toAgency
           schema:
-            type: string
-          description: "Get All Customer from specific Name"
+            type: integer
+          description: "Get All Ticket from specific Agency"
 
         - in: query
           name: arrived
           schema:
             type: boolean
-          description: "Get All Customer from specific Name"
+          description: "Get All Ticket from specific Arrived Status"
           example: false
 
         - in: query

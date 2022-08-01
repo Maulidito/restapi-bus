@@ -19,7 +19,7 @@ type ControllerDriverInterface interface {
 	GetOneDriverOnSpecificAgency(ctx *gin.Context)
 	AddDriver(ctx *gin.Context)
 	DeleteDriver(ctx *gin.Context)
-	RouterMount(g *gin.RouterGroup)
+	RouterMount(g gin.IRouter)
 }
 
 type ControllerDriverImplementation struct {
@@ -30,7 +30,7 @@ func NewDriverController(serv service.ServiceDriverInterface) ControllerDriverIn
 	return &ControllerDriverImplementation{service: serv}
 }
 
-func (ctrl *ControllerDriverImplementation) RouterMount(g *gin.RouterGroup) {
+func (ctrl *ControllerDriverImplementation) RouterMount(g gin.IRouter) {
 	grouterDriver := g.Group("/driver")
 	grouterDriver.GET("/", ctrl.GetAllDriver)
 	grouterDriver.GET("/:driverId", ctrl.GetOneDriverOnSpecificAgency)

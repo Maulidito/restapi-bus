@@ -18,7 +18,7 @@ type CustomerControllerInterface interface {
 	AddCustomer(ctx *gin.Context)
 	GetOneCustomer(ctx *gin.Context)
 	DeleteOneCustomer(ctx *gin.Context)
-	RouterMount(g *gin.RouterGroup)
+	RouterMount(g gin.IRouter)
 }
 
 type CustomerControllerImplementation struct {
@@ -29,7 +29,7 @@ func NewCustomerController(service service.CustomerServiceInterface) CustomerCon
 	return &CustomerControllerImplementation{service: service}
 }
 
-func (ctrl *CustomerControllerImplementation) RouterMount(g *gin.RouterGroup) {
+func (ctrl *CustomerControllerImplementation) RouterMount(g gin.IRouter) {
 	grouterCustomer := g.Group("/customer")
 
 	grouterCustomer.GET("/", ctrl.GetAllCustomer)
