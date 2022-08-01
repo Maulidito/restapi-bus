@@ -19,7 +19,6 @@ type TicketServiceInterface interface {
 	GetAllTicketOnCustomer(ctx context.Context, idCustomer int) response.AllTicketOnCustomer
 	GetAllTicketOnBus(ctx context.Context, idBus int) response.AllTicketOnBus
 	GetAllTicketOnAgency(ctx context.Context, idAgency int) response.AllTicketOnAgency
-	UpdateArrivedTicket(ctx context.Context, idTicket int, arrived bool) response.Ticket
 	GetTotalPriceAllTicket(ctx context.Context) response.AllTicketPrice
 	GetTotalPriceTicketFromSpecificAgency(ctx context.Context, idAgency int) response.AllTicketPriceSpecificAgency
 	GetTotalPriceTicketFromSpecificDriver(ctx context.Context, idDriver int) response.AllTicketPriceSpecificDriver
@@ -32,6 +31,7 @@ type TicketServiceImplementation struct {
 	RepoDriver   repository.DriverRepositoryInterface
 	RepoTicket   repository.TicketRepositoryInterface
 	RepoAgency   repository.AgencyRepositoryInterface
+	RepoSchedule repository.ScheduleRepositoryInterface
 }
 
 func NewTicketService(
@@ -41,9 +41,10 @@ func NewTicketService(
 	repoDriver repository.DriverRepositoryInterface,
 	repoTicket repository.TicketRepositoryInterface,
 	repoAgency repository.AgencyRepositoryInterface,
+	repoSchedule repository.ScheduleRepositoryInterface,
 ) TicketServiceInterface {
 
-	return &TicketServiceImplementation{Db: db, RepoBus: repoBus, RepoCustomer: repoCustomer, RepoDriver: repoDriver, RepoTicket: repoTicket, RepoAgency: repoAgency}
+	return &TicketServiceImplementation{Db: db, RepoBus: repoBus, RepoCustomer: repoCustomer, RepoDriver: repoDriver, RepoTicket: repoTicket, RepoAgency: repoAgency, RepoSchedule: repoSchedule}
 }
 
 func (service *TicketServiceImplementation) GetAllTicket(ctx context.Context, filter *request.TicketFilter) []response.Ticket {
@@ -67,13 +68,10 @@ func (service *TicketServiceImplementation) AddTicket(ctx context.Context, ticke
 	defer helper.DoCommit(tx)
 
 	ticketEntity := helper.TicketRequestToEntity(ticket)
-	busEntity := entity.Bus{BusId: ticket.BusId, AgencyId: ticket.AgecnyId}
-	driverEntity := entity.Driver{DriverId: ticket.DriverId, AgencyId: ticket.AgecnyId}
-	agencyEntity := entity.Agency{AgencyId: ticket.AgecnyId}
+	scheduleEntity := entity.Schedule{ScheduleId: ticket.ScheduleId}
 	customerEntity := entity.Customer{CustomerId: ticket.CustomerId}
 	chanErr := make(chan error, 1)
 
-	service.RepoAgency.GetOneAgency(ctx, tx, &agencyEntity)
 	go func() {
 		defer func() {
 			tempErr := recover()
@@ -85,8 +83,7 @@ func (service *TicketServiceImplementation) AddTicket(ctx context.Context, ticke
 			close(chanErr)
 		}()
 
-		service.RepoBus.GetOneBus(ctx, tx, &busEntity)
-		service.RepoDriver.GetOneDriverOnSpecificAgency(tx, ctx, &driverEntity)
+		service.RepoSchedule.GetOneSchedule(ctx, tx, &scheduleEntity)
 		service.RepoCustomer.GetOneCustomer(ctx, tx, &customerEntity)
 	}()
 
@@ -124,9 +121,9 @@ func (service *TicketServiceImplementation) GetAllTicketOnDriver(ctx context.Con
 
 	service.RepoDriver.GetOneDriverOnSpecificAgency(tx, ctx, &driverEntity)
 	listTicket := service.RepoTicket.GetAllTicketOnDriver(tx, ctx, idDriver)
-	responseListTicket := []response.TicketNoDriver{}
+	responseListTicket := []response.Ticket{}
 	for _, val := range listTicket {
-		responseListTicket = append(responseListTicket, helper.TicketEntityToResponseTicketNoDriver(&val))
+		responseListTicket = append(responseListTicket, helper.TicketEntityToResponse(&val))
 	}
 
 	responseDriver := helper.DriverEntityToResponse(&driverEntity)
@@ -150,9 +147,9 @@ func (service *TicketServiceImplementation) GetAllTicketOnCustomer(ctx context.C
 
 	customerResponse := helper.CustomerEntityToResponse(&customerEntity)
 
-	responseListCustomer := []response.TicketNoCustomer{}
+	responseListCustomer := []response.Ticket{}
 	for _, val := range listTicket {
-		responseListCustomer = append(responseListCustomer, helper.TicketEntityToResponseTicketNoCustomer(&val))
+		responseListCustomer = append(responseListCustomer, helper.TicketEntityToResponse(&val))
 	}
 
 	responseAllTicket := response.AllTicketOnCustomer{
@@ -175,9 +172,9 @@ func (service *TicketServiceImplementation) GetAllTicketOnBus(ctx context.Contex
 
 	busResponse := helper.BusEntityToResponse(&busEntity)
 
-	responseListBus := []response.TicketNoBus{}
+	responseListBus := []response.Ticket{}
 	for _, val := range listTicket {
-		responseListBus = append(responseListBus, helper.TicketEntityToResponseTicketNoBus(&val))
+		responseListBus = append(responseListBus, helper.TicketEntityToResponse(&val))
 	}
 
 	responseAllTicket := response.AllTicketOnBus{
@@ -201,9 +198,9 @@ func (service *TicketServiceImplementation) GetAllTicketOnAgency(ctx context.Con
 
 	agencyResponse := helper.AgencyEntityToResponse(&agencyEntity)
 
-	responseListAgency := []response.TicketNoAgency{}
+	responseListAgency := []response.Ticket{}
 	for _, val := range listTicket {
-		responseListAgency = append(responseListAgency, helper.TicketEntityToResponseTicketNoAgency(&val))
+		responseListAgency = append(responseListAgency, helper.TicketEntityToResponse(&val))
 	}
 
 	responseAllTicket := response.AllTicketOnAgency{
@@ -212,19 +209,6 @@ func (service *TicketServiceImplementation) GetAllTicketOnAgency(ctx context.Con
 	}
 
 	return responseAllTicket
-}
-
-func (service *TicketServiceImplementation) UpdateArrivedTicket(ctx context.Context, idTicket int, arrived bool) response.Ticket {
-	tx, err := service.Db.Begin()
-	helper.PanicIfError(err)
-	defer helper.DoCommit(tx)
-
-	entityTicket := entity.Ticket{TicketId: idTicket}
-	service.RepoTicket.GetOneTicket(tx, ctx, &entityTicket)
-	entityTicket.Arrived = arrived
-	service.RepoTicket.UpdateArrivedTicket(tx, ctx, &entityTicket)
-
-	return helper.TicketEntityToResponse(&entityTicket)
 }
 
 func (service *TicketServiceImplementation) GetTotalPriceAllTicket(ctx context.Context) response.AllTicketPrice {

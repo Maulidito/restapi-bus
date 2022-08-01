@@ -64,6 +64,7 @@ func InitializedControllerTicket(db *sql.DB) controller.ControllerTicketInterfac
 		repository.NewCustomerRepository,
 		repository.NewDiverRepository,
 		repository.NewBusRepository,
+		repository.NewScheduleRepository,
 		repository.NewAgencyRepository,
 		service.NewTicketService,
 		controller.NewTicketController)

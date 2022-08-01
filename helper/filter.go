@@ -46,8 +46,7 @@ func RequestFilterAgencyToString(request *request.AgencyFilter) (result string) 
 
 	}
 
-	addFilterLimit(request.Limit, result)
-	return
+	return addFilterLimit(request.Limit, result)
 }
 
 func RequestFilterCustomerToString(request *request.CustomerFilter) (result string) {
@@ -70,36 +69,35 @@ func RequestFilterDriverToString(request *request.DriverFilter) (result string) 
 		result += fmt.Sprintf(` AND LEFT(name,%d) = "%s"`, len(request.Name), request.Name)
 	}
 
-	addFilterLimit(request.Limit, result)
-	return
+	return addFilterLimit(request.Limit, result)
 }
 
 func RequestFilterTicketToString(request *request.TicketFilter) (result string) {
-	result += "WHERE 1 = 1 "
+	result += "LEFT JOIN schedule ON ticket.schedule_id = schedule.schedule_id WHERE 1 = 1 "
 
 	if request.FromDate != "" && request.ToDate != "" {
-		result += fmt.Sprintf(` AND date BETWEEN "%s" AND "%s" `, request.FromDate, request.ToDate)
+		result += fmt.Sprintf(` AND ticket.date BETWEEN "%s" AND "%s" `, request.FromDate, request.ToDate)
 	} else {
 
 		if request.FromDate != "" {
-			result += fmt.Sprintf(` AND date >  "%s" `, request.FromDate)
+			result += fmt.Sprintf(` AND ticket.date >  "%s" `, request.FromDate)
 		}
 
 		if request.ToDate != "" {
-			result += fmt.Sprintf(` AND date >  "%s" `, request.FromDate)
+			result += fmt.Sprintf(` AND ticket.date >  "%s" `, request.FromDate)
 		}
 	}
 
 	if request.OnDate != "" {
-		result += fmt.Sprintf(` AND LEFT(date,%d) = "%s" `, len(request.OnDate), request.OnDate)
+		result += fmt.Sprintf(` AND LEFT(ticket.date,%d) = "%s" `, len(request.OnDate), request.OnDate)
 	}
 
-	if request.DeparturePlace != "" {
-		result += fmt.Sprintf(` AND LEFT(departure_place,%d) = "%s" `, len(request.DeparturePlace), request.DeparturePlace)
+	if request.FromAgency != 0 {
+		result += fmt.Sprintf(` AND from_agency_id = "%d" `, request.FromAgency)
 	}
 
-	if request.ArrivalPlace != "" {
-		result += fmt.Sprintf(` AND LEFT(arrival_place,%d) ="%s" `, len(request.ArrivalPlace), request.ArrivalPlace)
+	if request.ToAgency != 0 {
+		result += fmt.Sprintf(` AND to_agency_id ="%d" `, request.ToAgency)
 	}
 	if request.Arrived != nil {
 
@@ -114,8 +112,7 @@ func RequestFilterTicketToString(request *request.TicketFilter) (result string) 
 		result += fmt.Sprintf(` AND price >  "%v" `, request.PriceAbove)
 	}
 
-	addFilterLimit(request.Limit, result)
-	return
+	return addFilterLimit(request.Limit, result)
 }
 
 func RequestFilterScheduleToString(request *request.ScheduleFilter) (result string) {
@@ -145,6 +142,5 @@ func RequestFilterScheduleToString(request *request.ScheduleFilter) (result stri
 		result += fmt.Sprintf(` AND price >  "%v" `, request.PriceAbove)
 	}
 
-	addFilterLimit(request.Limit, result)
-	return
+	return addFilterLimit(request.Limit, result)
 }

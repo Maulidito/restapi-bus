@@ -1,12 +1,12 @@
 package request
 
 type Schedule struct {
-	FromAgencyId int    `form:"fromAgencyId" binding:"required,number"`
+	FromAgencyId int    `form:"fromAgencyId" binding:"required,number,nefield=ToAgencyId"`
 	ToAgencyId   int    `form:"toAgencyId" binding:"required,number"`
 	BusId        int    `form:"busId" binding:"required,number"`
 	DriverId     int    `form:"driverId" binding:"required,number"`
 	Price        int    `form:"price" binding:"required,number"`
-	Date         string `form:"date" binding:"required,datetime=2006-01-02"`
+	Date         string `form:"date" binding:"required,datetime=2006-01-02,validatedateafternow"`
 	Arrived      bool   `default:"false" form:"arrived" binding:"omitempty" `
 }
 
@@ -21,5 +21,5 @@ type ScheduleFilter struct {
 }
 
 type ScheduleArrived struct {
-	IsArrived *bool `form:"arrived" binding:"required,isbool"`
+	IsArrived *bool `form:"arrived" binding:"required"`
 }

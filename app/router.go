@@ -32,7 +32,7 @@ func configurationRouter() *gin.Engine {
 func IntializedCustomValidation() {
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		v.RegisterValidation("validatefromTodate", helper.ValidateFromToDate)
-		v.RegisterValidation("isbool", helper.IsBool)
+		v.RegisterValidation("validatedateafternow", helper.ValidateDateAfterNow)
 	}
 }
 
@@ -52,22 +52,7 @@ func Router(customer controller.CustomerControllerInterface, agency controller.A
 
 	agency.RouterMount(grouter)
 
-	grouterTicket := grouter.Group("/ticket")
-
-	grouterTicket.GET("/", ticket.GetAllTicket)
-	grouterTicket.GET("/:ticketId", ticket.GetOneTicket)
-	grouterTicket.GET("/driver/:driverId", ticket.GetAllTicketOnSpecificDriver)
-	grouterTicket.GET("/customer/:customerId", ticket.GetAllTicketOnSpecificCustomer)
-	grouterTicket.GET("/bus/:busId", ticket.GetAllTicketOnSpecificBus)
-	grouterTicket.GET("/agency/:agencyId", ticket.GetAllTicketOnSpecificAgency)
-	grouterTicket.GET("/price", ticket.GetTotalPriceAllTicket)
-	grouterTicket.GET("/agency/:agencyId/price", ticket.GetTotalPriceTicketFromSpecificAgency)
-	grouterTicket.GET("/driver/:driverId/price", ticket.GetTotalPriceTicketFromSpecificDriver)
-
-	grouterTicket.POST("/", ticket.AddTicket)
-	grouterTicket.DELETE("/:ticketId", ticket.DeleteTicket)
-
-	grouterTicket.PATCH("/:ticketId/arrived", ticket.UpdateArrivedTicket)
+	ticket.RouterMount(grouter)
 
 	schedule.RouterMount(grouter)
 

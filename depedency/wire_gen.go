@@ -63,7 +63,8 @@ func InitializedControllerTicket(db *sql.DB) controller.ControllerTicketInterfac
 	driverRepositoryInterface := repository.NewDiverRepository()
 	ticketRepositoryInterface := repository.NewTicketRepository()
 	agencyRepositoryInterface := repository.NewAgencyRepository()
-	ticketServiceInterface := service.NewTicketService(db, busRepositoryInterface, customerRepositoryInterface, driverRepositoryInterface, ticketRepositoryInterface, agencyRepositoryInterface)
+	scheduleRepositoryInterface := repository.NewScheduleRepository()
+	ticketServiceInterface := service.NewTicketService(db, busRepositoryInterface, customerRepositoryInterface, driverRepositoryInterface, ticketRepositoryInterface, agencyRepositoryInterface, scheduleRepositoryInterface)
 	controllerTicketInterface := controller.NewTicketController(ticketServiceInterface)
 	return controllerTicketInterface
 }

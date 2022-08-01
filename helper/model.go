@@ -40,16 +40,11 @@ func BusEntityToResponse(bus *entity.Bus) response.Bus {
 
 func TicketEntityToResponse(ticket *entity.Ticket) response.Ticket {
 	return response.Ticket{
-		TicketId:       ticket.TicketId,
-		AgencyId:       ticket.AgencyId,
-		BusId:          ticket.BusId,
-		DriverId:       ticket.DriverId,
-		CustomerId:     ticket.CustomerId,
-		DeparturePlace: ticket.DeparturePlace,
-		ArrivalPlace:   ticket.ArrivalPlace,
-		Price:          ticket.Price,
-		Date:           ticket.Date,
-		Arrived:        ticket.Arrived,
+		TicketId:   ticket.TicketId,
+		ScheduleId: ticket.ScheduleId,
+		CustomerId: ticket.CustomerId,
+
+		Date: ticket.Date,
 	}
 }
 
@@ -86,70 +81,8 @@ func DriverRequestToEntity(driver *request.Driver) entity.Driver {
 
 func TicketRequestToEntity(ticket *request.Ticket) entity.Ticket {
 	return entity.Ticket{
-		AgencyId:       ticket.AgecnyId,
-		BusId:          ticket.BusId,
-		DriverId:       ticket.DriverId,
-		CustomerId:     ticket.CustomerId,
-		DeparturePlace: ticket.DeparturePlace,
-		ArrivalPlace:   ticket.ArrivalPlace,
-		Price:          ticket.Price,
-		Arrived:        ticket.Arrived,
-	}
-}
-
-func TicketEntityToResponseTicketNoBus(ticket *entity.Ticket) response.TicketNoBus {
-	return response.TicketNoBus{
-		TicketId:       ticket.AgencyId,
-		AgencyId:       ticket.AgencyId,
-		DriverId:       ticket.DriverId,
-		CustomerId:     ticket.CustomerId,
-		DeparturePlace: ticket.DeparturePlace,
-		ArrivalPlace:   ticket.ArrivalPlace,
-		Price:          ticket.Price,
-		Date:           ticket.Date,
-		Arrived:        ticket.Arrived,
-	}
-}
-
-func TicketEntityToResponseTicketNoDriver(ticket *entity.Ticket) response.TicketNoDriver {
-	return response.TicketNoDriver{
-		TicketId:       ticket.TicketId,
-		BusId:          ticket.BusId,
-		AgencyId:       ticket.AgencyId,
-		CustomerId:     ticket.CustomerId,
-		DeparturePlace: ticket.DeparturePlace,
-		ArrivalPlace:   ticket.ArrivalPlace,
-		Price:          ticket.Price,
-		Arrived:        ticket.Arrived,
-		Date:           ticket.Date,
-	}
-}
-
-func TicketEntityToResponseTicketNoAgency(ticket *entity.Ticket) response.TicketNoAgency {
-	return response.TicketNoAgency{
-		TicketId:       ticket.TicketId,
-		BusId:          ticket.BusId,
-		DriverId:       ticket.DriverId,
-		CustomerId:     ticket.CustomerId,
-		DeparturePlace: ticket.DeparturePlace,
-		ArrivalPlace:   ticket.ArrivalPlace,
-		Price:          ticket.Price,
-		Arrived:        ticket.Arrived,
-		Date:           ticket.Date,
-	}
-}
-
-func TicketEntityToResponseTicketNoCustomer(ticket *entity.Ticket) response.TicketNoCustomer {
-	return response.TicketNoCustomer{
-		TicketId:       ticket.TicketId,
-		AgencyId:       ticket.AgencyId,
-		BusId:          ticket.BusId,
-		DriverId:       ticket.DriverId,
-		DeparturePlace: ticket.DeparturePlace,
-		ArrivalPlace:   ticket.ArrivalPlace,
-		Price:          ticket.Price,
-		Arrived:        ticket.Arrived,
-		Date:           ticket.Date,
+		ScheduleId: ticket.ScheduleId,
+		CustomerId: ticket.CustomerId,
 	}
 }
 

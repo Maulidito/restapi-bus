@@ -2,41 +2,42 @@ package helper
 
 import (
 	"errors"
-	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/go-playground/validator/v10"
 )
 
 var ValidateFromToDate validator.Func = func(fl validator.FieldLevel) bool {
-
-	date := fl.Field().String()
-
-	fromDate, err := time.Parse("2006-01-02", date)
-	PanicIfError(err)
-
 	param := fl.Param()
-	if param == "" {
-		panic(errors.New("no Parameter on tag"))
-	}
+	if toDateString := fl.Parent().FieldByName(param).String(); toDateString != "" {
 
-	toDate, err := time.Parse("2006-01-02", fl.Parent().FieldByName(param).String())
+		date := fl.Field().String()
 
-	PanicIfError(err)
+		fromDate, err := time.Parse("2006-01-02", date)
+		PanicIfError(err)
 
-	return fromDate.Before(toDate)
+		if param == "" {
+			panic(errors.New("no Parameter on tag"))
+		}
 
-}
+		toDate, err := time.Parse("2006-01-02", fl.Parent().FieldByName(param).String())
 
-var IsBool validator.Func = func(fl validator.FieldLevel) bool {
-	fmt.Println("CHECK IN VALIDATOR IS BOOL")
-	dataBool := fl.Field().String()
+		PanicIfError(err)
 
-	_, err := strconv.ParseBool(dataBool)
-	fmt.Println("CHECK DATA BOOL", fl.Field().String())
-	if err != nil {
-		return false
+		return fromDate.Before(toDate)
 	}
 	return true
+}
+
+var ValidateDateAfterNow validator.Func = func(fl validator.FieldLevel) bool {
+	date := fl.Field().String()
+	if date == "" {
+		return false
+	}
+
+	dateData, err := time.Parse("2006-01-02", date)
+	PanicIfError(err)
+
+	return dateData.After(time.Now())
+
 }

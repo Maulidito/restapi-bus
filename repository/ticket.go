@@ -19,7 +19,6 @@ type TicketRepositoryInterface interface {
 	GetAllTicketOnCustomer(tx *sql.Tx, ctx context.Context, idCustomer int) []entity.Ticket
 	GetAllTicketOnBus(tx *sql.Tx, ctx context.Context, idBus int) []entity.Ticket
 	GetAllTicketOnAgency(tx *sql.Tx, ctx context.Context, idBus int) []entity.Ticket
-	UpdateArrivedTicket(tx *sql.Tx, ctx context.Context, ticket *entity.Ticket)
 	GetTotalPriceAllTicket(tx *sql.Tx, ctx context.Context, response *response.AllTicketPrice)
 	GetTotalPriceTicketFromSpecificAgency(tx *sql.Tx, ctx context.Context, response *response.AllTicketPriceSpecificAgency)
 	GetTotalPriceTicketFromSpecificDriver(tx *sql.Tx, ctx context.Context, response *response.AllTicketPriceSpecificDriver)
@@ -34,7 +33,7 @@ func NewTicketRepository() TicketRepositoryInterface {
 
 func (repo *TicketRepositoryImplementation) GetAllTicket(tx *sql.Tx, ctx context.Context, filter string) []entity.Ticket {
 	defer helper.ShouldRollback(tx)
-	row, err := tx.QueryContext(ctx, "SELECT * FROM ticket "+filter)
+	row, err := tx.QueryContext(ctx, "SELECT ticket_id,ticket.schedule_id,customer_id,ticket.date FROM ticket "+filter)
 
 	fmt.Println("CHECK SQL FILTER", filter)
 
@@ -45,10 +44,9 @@ func (repo *TicketRepositoryImplementation) GetAllTicket(tx *sql.Tx, ctx context
 	listEntityTicket := []entity.Ticket{}
 
 	for row.Next() {
-		err := row.Scan(&entityTicket.TicketId, &entityTicket.AgencyId, &entityTicket.BusId, &entityTicket.DriverId, &entityTicket.CustomerId, &entityTicket.DeparturePlace, &entityTicket.ArrivalPlace, &entityTicket.Price, &entityTicket.Date, &entityTicket.Arrived)
+		err := row.Scan(&entityTicket.TicketId, &entityTicket.ScheduleId, &entityTicket.CustomerId, &entityTicket.Date)
 		helper.PanicIfError(err)
 		listEntityTicket = append(listEntityTicket, entityTicket)
-
 	}
 
 	return listEntityTicket
@@ -56,26 +54,26 @@ func (repo *TicketRepositoryImplementation) GetAllTicket(tx *sql.Tx, ctx context
 
 func (repo *TicketRepositoryImplementation) AddTicket(tx *sql.Tx, ctx context.Context, ticket *entity.Ticket) {
 	defer helper.ShouldRollback(tx)
-	res, err := tx.ExecContext(ctx, "INSERT INTO ticket(agency_id,bus_id,driver_id,customer_id,departure_place,arrival_place,price,arrived) VALUES (?,?,?,?,?,?,?,?)", ticket.AgencyId, ticket.BusId, ticket.DriverId, ticket.CustomerId, ticket.DeparturePlace, ticket.ArrivalPlace, ticket.Price, ticket.Arrived)
+	res, err := tx.ExecContext(ctx, "INSERT INTO ticket(schedule_id,customer_id) VALUES (?,?)", &ticket.ScheduleId, &ticket.CustomerId)
 	helper.PanicIfError(err)
 	ticketId, err := res.LastInsertId()
 	helper.PanicIfError(err)
 	ticket.TicketId = int(ticketId)
 }
-func (repo *TicketRepositoryImplementation) GetOneTicket(tx *sql.Tx, ctx context.Context, ticket *entity.Ticket) {
+func (repo *TicketRepositoryImplementation) GetOneTicket(tx *sql.Tx, ctx context.Context, entityTicket *entity.Ticket) {
 	defer helper.ShouldRollback(tx)
-	row, err := tx.QueryContext(ctx, "SELECT * FROM ticket WHERE ticket_id = ?", ticket.TicketId)
+	row, err := tx.QueryContext(ctx, "SELECT * FROM ticket WHERE ticket_id = ?", entityTicket.TicketId)
 
 	helper.PanicIfError(err)
 	defer row.Close()
 
 	if row.Next() {
-		err := row.Scan(&ticket.TicketId, &ticket.AgencyId, &ticket.BusId, &ticket.DriverId, &ticket.CustomerId, &ticket.DeparturePlace, &ticket.ArrivalPlace, &ticket.Price, &ticket.Date, &ticket.Arrived)
+		err := row.Scan(&entityTicket.TicketId, &entityTicket.ScheduleId, &entityTicket.CustomerId, &entityTicket.Date)
 		helper.PanicIfError(err)
 		return
 	}
 
-	panic(exception.NewNotFoundError(fmt.Sprintf("TICKET ID %d NOT FOUND", ticket.TicketId)))
+	panic(exception.NewNotFoundError(fmt.Sprintf("TICKET ID %d NOT FOUND", entityTicket.TicketId)))
 }
 func (repo *TicketRepositoryImplementation) DeleteTicket(tx *sql.Tx, ctx context.Context, ticket *entity.Ticket) {
 	defer helper.ShouldRollback(tx)
@@ -87,7 +85,7 @@ func (repo *TicketRepositoryImplementation) DeleteTicket(tx *sql.Tx, ctx context
 }
 func (repo *TicketRepositoryImplementation) GetAllTicketOnDriver(tx *sql.Tx, ctx context.Context, idDriver int) []entity.Ticket {
 	defer helper.ShouldRollback(tx)
-	row, err := tx.QueryContext(ctx, "SELECT * FROM ticket WHERE driver_id = ?", idDriver)
+	row, err := tx.QueryContext(ctx, "SELECT ticket.ticket_id,ticket.schedule_id,customer_id,ticket.date FROM ticket LEFT JOIN schedule ON ticket.schedule_id=schedule.schedule_id WHERE driver_id = ?", idDriver)
 
 	helper.PanicIfError(err)
 	defer row.Close()
@@ -96,7 +94,7 @@ func (repo *TicketRepositoryImplementation) GetAllTicketOnDriver(tx *sql.Tx, ctx
 	listEntityTicket := []entity.Ticket{}
 
 	for row.Next() {
-		err := row.Scan(&entityTicket.TicketId, &entityTicket.AgencyId, &entityTicket.BusId, &entityTicket.DriverId, &entityTicket.CustomerId, &entityTicket.DeparturePlace, &entityTicket.ArrivalPlace, &entityTicket.Price, &entityTicket.Date, &entityTicket.Arrived)
+		err := row.Scan(&entityTicket.TicketId, &entityTicket.ScheduleId, &entityTicket.CustomerId, &entityTicket.Date)
 		helper.PanicIfError(err)
 		listEntityTicket = append(listEntityTicket, entityTicket)
 
@@ -115,7 +113,7 @@ func (repo *TicketRepositoryImplementation) GetAllTicketOnCustomer(tx *sql.Tx, c
 	listEntityTicket := []entity.Ticket{}
 
 	for row.Next() {
-		err := row.Scan(&entityTicket.TicketId, &entityTicket.AgencyId, &entityTicket.BusId, &entityTicket.DriverId, &entityTicket.CustomerId, &entityTicket.DeparturePlace, &entityTicket.ArrivalPlace, &entityTicket.Price, &entityTicket.Date, &entityTicket.Arrived)
+		err := row.Scan(&entityTicket.TicketId, &entityTicket.ScheduleId, &entityTicket.CustomerId, &entityTicket.Date)
 		helper.PanicIfError(err)
 		listEntityTicket = append(listEntityTicket, entityTicket)
 
@@ -126,7 +124,7 @@ func (repo *TicketRepositoryImplementation) GetAllTicketOnCustomer(tx *sql.Tx, c
 }
 func (repo *TicketRepositoryImplementation) GetAllTicketOnBus(tx *sql.Tx, ctx context.Context, idBus int) []entity.Ticket {
 	defer helper.ShouldRollback(tx)
-	row, err := tx.QueryContext(ctx, "SELECT * FROM ticket WHERE bus_id = ?", idBus)
+	row, err := tx.QueryContext(ctx, "SELECT ticket.ticket_id,ticket.schedule_id,customer_id,ticket.date FROM ticket LEFT JOIN schedule ON ticket.schedule_id=schedule.schedule_id WHERE bus_id = ?", idBus)
 
 	helper.PanicIfError(err)
 	defer row.Close()
@@ -135,7 +133,7 @@ func (repo *TicketRepositoryImplementation) GetAllTicketOnBus(tx *sql.Tx, ctx co
 	listEntityTicket := []entity.Ticket{}
 
 	for row.Next() {
-		err := row.Scan(&entityTicket.TicketId, &entityTicket.AgencyId, &entityTicket.BusId, &entityTicket.DriverId, &entityTicket.CustomerId, &entityTicket.DeparturePlace, &entityTicket.ArrivalPlace, &entityTicket.Price, &entityTicket.Date, &entityTicket.Arrived)
+		err := row.Scan(&entityTicket.TicketId, &entityTicket.ScheduleId, &entityTicket.CustomerId, &entityTicket.Date)
 		helper.PanicIfError(err)
 		listEntityTicket = append(listEntityTicket, entityTicket)
 
@@ -146,7 +144,7 @@ func (repo *TicketRepositoryImplementation) GetAllTicketOnBus(tx *sql.Tx, ctx co
 
 func (repo *TicketRepositoryImplementation) GetAllTicketOnAgency(tx *sql.Tx, ctx context.Context, agencyId int) []entity.Ticket {
 	defer helper.ShouldRollback(tx)
-	row, err := tx.QueryContext(ctx, "SELECT * FROM ticket WHERE agency_id =? ", agencyId)
+	row, err := tx.QueryContext(ctx, "SELECT ticket.ticket_id,ticket.schedule_id,customer_id,ticket.date FROM ticket LEFT JOIN schedule ON ticket.schedule_id=schedule.schedule_id WHERE agency_id = ? ", agencyId)
 
 	helper.PanicIfError(err)
 	defer row.Close()
@@ -155,7 +153,7 @@ func (repo *TicketRepositoryImplementation) GetAllTicketOnAgency(tx *sql.Tx, ctx
 	listEntityTicket := []entity.Ticket{}
 
 	for row.Next() {
-		err := row.Scan(&entityTicket.TicketId, &entityTicket.AgencyId, &entityTicket.BusId, &entityTicket.DriverId, &entityTicket.CustomerId, &entityTicket.DeparturePlace, &entityTicket.ArrivalPlace, &entityTicket.Price, &entityTicket.Date, &entityTicket.Arrived)
+		err := row.Scan(&entityTicket.TicketId, &entityTicket.ScheduleId, &entityTicket.CustomerId, &entityTicket.Date)
 		helper.PanicIfError(err)
 		listEntityTicket = append(listEntityTicket, entityTicket)
 
@@ -164,21 +162,15 @@ func (repo *TicketRepositoryImplementation) GetAllTicketOnAgency(tx *sql.Tx, ctx
 	return listEntityTicket
 }
 
-func (repo *TicketRepositoryImplementation) UpdateArrivedTicket(tx *sql.Tx, ctx context.Context, ticket *entity.Ticket) {
-	defer helper.ShouldRollback(tx)
-	_, err := tx.ExecContext(ctx, "UPDATE ticket SET arrived = ? WHERE ticket_id =? ", ticket.Arrived, ticket.TicketId)
-	helper.PanicIfError(err)
-}
-
 func (repo *TicketRepositoryImplementation) GetTotalPriceAllTicket(tx *sql.Tx, ctx context.Context, response *response.AllTicketPrice) {
 	defer helper.ShouldRollback(tx)
 
-	rows, err := tx.QueryContext(ctx, "SELECT SUM(price) as TotalPrice ,COUNT(price) as TicketCount FROM ticket ")
+	rows, err := tx.QueryContext(ctx, "SELECT COUNT(ticket.schedule_id) as ticket_count ,SUM(price) as total_price  FROM ticket LEFT JOIN schedule ON ticket.schedule_id = schedule.schedule_id")
 	helper.PanicIfError(err)
 	defer rows.Close()
 
 	if rows.Next() {
-		err := rows.Scan(&response.TotalPrice, &response.TicketCount)
+		err := rows.Scan(&response.TicketCount, &response.TotalPrice)
 
 		helper.PanicIfError(err)
 
@@ -195,17 +187,16 @@ func (repo *TicketRepositoryImplementation) GetTotalPriceAllTicket(tx *sql.Tx, c
 func (repo *TicketRepositoryImplementation) GetTotalPriceTicketFromSpecificAgency(tx *sql.Tx, ctx context.Context, response *response.AllTicketPriceSpecificAgency) {
 	defer helper.ShouldRollback(tx)
 
-	rows, err := tx.QueryContext(ctx, "SELECT SUM(price) as TotalPrice ,COUNT(price) as TicketCount FROM ticket WHERE agency_id = ?", response.Agency.AgencyId)
+	rows, err := tx.QueryContext(ctx, "SELECT COUNT(ticket.schedule_id) as ticket_count ,SUM(price) as total_price  FROM ticket LEFT JOIN schedule ON ticket.schedule_id = schedule.schedule_id GROUP BY schedule.from_agency_id HAVING schedule.from_agency_id = ?", response.Agency.AgencyId)
 	helper.PanicIfError(err)
 	defer rows.Close()
 
 	if rows.Next() {
 
-		err := rows.Scan(&response.TotalPrice, &response.TicketCount)
+		err := rows.Scan(&response.TicketCount, &response.TotalPrice)
 		helper.PanicIfError(err)
 
 	}
-	fmt.Println("CHCEK TOTAL PRICE", response.TotalPrice)
 
 	if response.TotalPrice == nil {
 		errMsg := fmt.Sprintf(`Not Found Single Ticket From "%s" Agency With Id = %d`, response.Agency.Name, response.Agency.AgencyId)
@@ -218,12 +209,12 @@ func (repo *TicketRepositoryImplementation) GetTotalPriceTicketFromSpecificAgenc
 func (repo *TicketRepositoryImplementation) GetTotalPriceTicketFromSpecificDriver(tx *sql.Tx, ctx context.Context, response *response.AllTicketPriceSpecificDriver) {
 	defer helper.ShouldRollback(tx)
 
-	rows, err := tx.QueryContext(ctx, "SELECT SUM(price) as TotalPrice ,COUNT(price) as TicketCount FROM ticket WHERE driver_id = ?", response.Driver.DriverId)
+	rows, err := tx.QueryContext(ctx, "SELECT COUNT(ticket.schedule_id) as ticket_count ,SUM(price) as total_price FROM ticket LEFT JOIN schedule ON ticket.schedule_id = schedule.schedule_id GROUP BY schedule.driver_id HAVING schedule.driver_id = ?", response.Driver.DriverId)
 	helper.PanicIfError(err)
 	defer rows.Close()
 
 	if rows.Next() {
-		err := rows.Scan(&response.TotalPrice, &response.TicketCount)
+		err := rows.Scan(&response.TicketCount, &response.TotalPrice)
 		helper.PanicIfError(err)
 
 	}

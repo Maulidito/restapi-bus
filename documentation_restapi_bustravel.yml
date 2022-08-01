@@ -874,28 +874,6 @@ paths:
                     type: integer
                   status:
                     type: string
-                  filter:
-                    type: object
-                    properties:
-                      fromDate:
-                        type: string
-                      toDate:
-                        type: string
-                      onDate:
-                        type: string
-                      departurePlace:
-                        type: string
-                      arrivalPlace:
-                        type: string
-                      arrived:
-                        type: boolean
-                      priceAbove:
-                        type: integer
-                      priceBelow:
-                        type: integer
-                      limit:
-                        type: integer
-
                   data:
                     type: array
                     items:
@@ -914,22 +892,11 @@ paths:
             schema:
               type: object
               properties:
-                agencyId:
-                  type: integer
-                busId:
-                  type: integer
-                driverId:
+                scheduleId:
                   type: integer
                 customerId:
                   type: integer
-                departurePlace:
-                  type: string
-                arrivalPlace:
-                  type: string
-                price:
-                  type: integer
-                arrived:
-                  type: boolean
+
       responses:
         "200":
           content:
@@ -1120,25 +1087,7 @@ paths:
                         type: "array"
                         items:
                           type: object
-                          properties:
-                            ticketId:
-                              type: integer
-                            agencyId:
-                              type: integer
-                            busId:
-                              type: integer
-                            customerId:
-                              type: integer
-                            departurePlace:
-                              type: string
-                            arrivalPlace:
-                              type: string
-                            price:
-                              type: number
-                            date:
-                              type: string
-                            arrived:
-                              type: boolean
+                          $ref: "#/components/schemas/ticketComponent"
           description: OK
         "404":
           content:
@@ -1174,25 +1123,7 @@ paths:
                         type: "array"
                         items:
                           type: object
-                          properties:
-                            ticketId:
-                              type: integer
-                            agencyId:
-                              type: integer
-                            busId:
-                              type: integer
-                            driverId:
-                              type: integer
-                            departurePlace:
-                              type: string
-                            arrivalPlace:
-                              type: string
-                            price:
-                              type: number
-                            date:
-                              type: string
-                            arrived:
-                              type: boolean
+                          $ref: "#/components/schemas/ticketComponent"
           description: OK
         "404":
           content:
@@ -1228,25 +1159,7 @@ paths:
                         type: "array"
                         items:
                           type: object
-                          properties:
-                            ticketId:
-                              type: integer
-                            agencyId:
-                              type: integer
-                            driverId:
-                              type: integer
-                            customerId:
-                              type: integer
-                            departurePlace:
-                              type: string
-                            arrivalPlace:
-                              type: string
-                            price:
-                              type: number
-                            date:
-                              type: string
-                            arrived:
-                              type: boolean
+                          $ref: "#/components/schemas/ticketComponent"
           description: OK
         "404":
           content:
@@ -1288,25 +1201,7 @@ paths:
                         type: "array"
                         items:
                           type: object
-                          properties:
-                            ticketId:
-                              type: integer
-                            busId:
-                              type: integer
-                            driverId:
-                              type: integer
-                            customerId:
-                              type: integer
-                            departurePlace:
-                              type: string
-                            arrivalPlace:
-                              type: string
-                            price:
-                              type: number
-                            date:
-                              type: string
-                            arrived:
-                              type: boolean
+                          $ref: "#/components/schemas/ticketComponent"
           description: OK
   /schedule:
     get:
