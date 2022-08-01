@@ -4,7 +4,7 @@
 
 - [version 1.1](https://github.com/Maulidito/restapi-bus/tree/dd752fa446c5d6df6d9a797cd3eeacffc7647acc) (adding all filter on http method GET)
 
-- [version 1.2]() (adding schedule entity and change attribute of ticket)
+- [version 1.2](https://github.com/Maulidito/restapi-bus/tree/aab5e04d8f2148dfd83e14cfa56b73ddf88f2dd3) (adding schedule entity and change attribute of ticket)
 
 ## Description
 
