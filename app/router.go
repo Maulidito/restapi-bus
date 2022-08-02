@@ -33,6 +33,7 @@ func IntializedCustomValidation() {
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		v.RegisterValidation("validatefromTodate", helper.ValidateFromToDate)
 		v.RegisterValidation("validatedateafternow", helper.ValidateDateAfterNow)
+		v.RegisterValidation("validateoneuppercase", helper.AtLeastOneUppercase)
 	}
 }
 

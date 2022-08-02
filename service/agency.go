@@ -3,11 +3,13 @@ package service
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"restapi-bus/helper"
 	"restapi-bus/models/entity"
 	"restapi-bus/models/request"
 	"restapi-bus/models/response"
 	"restapi-bus/repository"
+	"time"
 )
 
 type AgencyServiceInterface interface {
@@ -45,8 +47,11 @@ func (service *AgencyServiceImplemtation) GetAllAgency(ctx context.Context, filt
 func (service *AgencyServiceImplemtation) AddAgency(ctx context.Context, agency *request.Agency) {
 	tx, err := service.Db.Begin()
 	defer helper.DoCommit(tx)
+	salt := fmt.Sprint(time.Now().UnixNano())
+	agency.Password = helper.HashPassword(agency.Password, salt)
 	helper.PanicIfError(err)
 	agencyEntity := helper.AgencyRequestToEntity(agency)
+	agencyEntity.Salt = salt
 	service.Repo.AddAgency(ctx, tx, &agencyEntity)
 
 }

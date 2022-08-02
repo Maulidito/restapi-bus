@@ -1,8 +1,10 @@
 package request
 
 type Agency struct {
-	Name  string `json:"name" form:"name" binding:"required"`
-	Place string `json:"place" form:"place" binding:"required"`
+	Name     string `json:"name" form:"name" binding:"required"`
+	Place    string `json:"place" form:"place" binding:"required"`
+	Username string `form:"username" binding:"required,email"`
+	Password string `form:"password" binding:"required,min=8,validateoneuppercase"`
 }
 
 type AgencyFilter struct {

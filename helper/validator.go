@@ -2,6 +2,7 @@ package helper
 
 import (
 	"errors"
+	"regexp"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -39,5 +40,18 @@ var ValidateDateAfterNow validator.Func = func(fl validator.FieldLevel) bool {
 	PanicIfError(err)
 
 	return dateData.After(time.Now())
+
+}
+
+var AtLeastOneUppercase validator.Func = func(fl validator.FieldLevel) bool {
+	data := fl.Field().String()
+	if data == "" {
+		return false
+	}
+
+	regex, err := regexp.Compile(`[A-Z]+`)
+	PanicIfError(err)
+
+	return regex.MatchString(data)
 
 }

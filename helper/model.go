@@ -50,9 +50,10 @@ func TicketEntityToResponse(ticket *entity.Ticket) response.Ticket {
 
 func AgencyRequestToEntity(agency *request.Agency) entity.Agency {
 	return entity.Agency{
-
-		Name:  agency.Name,
-		Place: agency.Place,
+		Name:     agency.Name,
+		Place:    agency.Place,
+		Username: agency.Username,
+		Password: agency.Password,
 	}
 }
 func BusRequestToEntity(bus *request.Bus) entity.Bus {

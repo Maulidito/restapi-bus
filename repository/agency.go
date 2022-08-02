@@ -45,7 +45,7 @@ func (repo *AgencyRepositoryImplementation) GetAllAgency(ctx context.Context, tx
 
 func (repo *AgencyRepositoryImplementation) AddAgency(ctx context.Context, tx *sql.Tx, agency *entity.Agency) {
 	defer helper.ShouldRollback(tx)
-	res, err := tx.ExecContext(ctx, "Insert Into agency( name , place ) Values (?,?)", agency.Name, agency.Place)
+	res, err := tx.ExecContext(ctx, "Insert Into agency( name , place, username, password, salt ) Values (?,?,?,?,?)", agency.Name, agency.Place, agency.Username, agency.Password, agency.Salt)
 
 	helper.PanicIfError(err)
 
