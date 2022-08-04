@@ -265,8 +265,6 @@ paths:
           description: OK
     post:
       description: "Adding one Agency from request"
-      security:
-        - authAgency: []
       tags:
         - "Agency"
       parameters: []
@@ -280,8 +278,15 @@ paths:
                   type: string
                 place:
                   type: string
+                username:
+                  type: string
+                  uniqueItems: true
+                password:
+                  type: string
+                  minimum: 8
+
         description: "Request Body"
-      summary: "adding agency"
+      summary: "Register Agency"
       responses:
         "200":
           content:
@@ -348,6 +353,12 @@ paths:
               schema:
                 $ref: "#/components/schemas/responseError"
           description: Not Found
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/responseError"
+          description: Not Authorization
 
   /bus:
     get:
@@ -412,6 +423,12 @@ paths:
               schema:
                 $ref: "#/components/schemas/responseBindingError"
           description: BAD REQUEST
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/responseError"
+          description: Not Authorization
 
   /bus/agency/{agencyId}:
     get:
@@ -472,6 +489,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/responseError"
           description: Not Found
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/responseError"
+          description: Not Authorization
+
     get:
       tags:
         - "Bus"
@@ -567,6 +591,12 @@ paths:
               schema:
                 $ref: "#/components/schemas/responseBindingError"
           description: BAD REQUEST
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/responseError"
+          description: Not Authorization
 
   /driver/agency/{agencyId}:
     get:
@@ -657,6 +687,12 @@ paths:
               schema:
                 $ref: "#/components/schemas/responseError"
           description: Not Found
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/responseError"
+          description: Not Authorization
 
   /customer:
     get:
@@ -910,6 +946,12 @@ paths:
               schema:
                 $ref: "#/components/schemas/responseBindingError"
           description: BAD REQUEST
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/responseError"
+          description: Not Authorization
 
   /ticket/price:
     get:
@@ -969,6 +1011,12 @@ paths:
                         type: integer
 
           description: OK
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/responseError"
+          description: Not Authorization
 
   /ticket/driver/{driverId}/price:
     get:
@@ -1001,6 +1049,12 @@ paths:
                         type: integer
 
           description: OK
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/responseError"
+          description: Not Authorization
 
   /ticket/{ticketId}:
     get:
@@ -1059,6 +1113,12 @@ paths:
               schema:
                 $ref: "#/components/schemas/responseError"
           description: Not Found
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/responseError"
+          description: Not Authorization
 
   /ticket/driver/{driverId}:
     get:
@@ -1306,6 +1366,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/responseNoData"
           description: OK
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/responseError"
+          description: Not Authorization
+
   /schedule/{scheduleId}:
     get:
       tags:
@@ -1361,6 +1428,12 @@ paths:
               schema:
                 $ref: "#/components/schemas/responseError"
           description: "Not Found Data"
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/responseError"
+          description: Not Authorization
 
   /schedule/{scheduleId}/arrived:
     patch:
@@ -1400,3 +1473,56 @@ paths:
                     $ref: "#/components/schemas/scheduleComponent"
 
           description: OK
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/responseError"
+          description: Not Authorization
+
+  /agency/login:
+    post:
+      tags:
+        - "Agency"
+      description: "Get Token For Authorization"
+      parameters: []
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+                  minLength: 8
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  status:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      token:
+                        type: string
+          description: OK
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/responseError"
+          description: Not Found Email
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/responseError"
+          description: Wrong Password

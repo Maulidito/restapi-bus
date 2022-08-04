@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"restapi-bus/exception"
 	"restapi-bus/helper"
+	"restapi-bus/middleware"
 	"restapi-bus/models/request"
 	"restapi-bus/models/web"
 	"restapi-bus/service"
@@ -31,12 +32,12 @@ func NewBusController(service service.BusServiceInterface) BusControllerInterfac
 
 func (ctrl *BusControllerImplementation) RouterMount(g gin.IRouter) {
 	grouterBus := g.Group("/bus")
-
+	grouterBusAuth := grouterBus.Group("", middleware.MiddlewareAuth)
 	grouterBus.GET("/", ctrl.GetAllBus)
-	grouterBus.POST("/", ctrl.AddBus)
+	grouterBusAuth.POST("/", ctrl.AddBus)
 	grouterBus.GET("/:busId", ctrl.GetOneBusOnSpecificAgency)
 	grouterBus.GET("/agency/:agencyId", ctrl.GetAllBusOnSpecificAgency)
-	grouterBus.DELETE("/:busId", ctrl.DeleteOneBus)
+	grouterBusAuth.DELETE("/:busId", ctrl.DeleteOneBus)
 }
 
 func (ctrl *BusControllerImplementation) GetAllBus(ctx *gin.Context) {

@@ -48,6 +48,7 @@ func (service *BusServiceImplemtation) AddBus(ctx context.Context, bus *request.
 	tx, err := service.Db.Begin()
 	defer helper.DoCommit(tx)
 	helper.PanicIfError(err)
+	service.RepoAgency.GetOneAgency(ctx, tx, &entity.Agency{AgencyId: bus.AgencyId})
 	busEntity := helper.BusRequestToEntity(bus)
 	service.RepoBus.AddBus(ctx, tx, &busEntity)
 

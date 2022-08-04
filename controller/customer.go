@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"restapi-bus/exception"
 	"restapi-bus/helper"
+	"restapi-bus/middleware"
 	"restapi-bus/models/request"
 	"restapi-bus/models/web"
 	"restapi-bus/service"
@@ -31,11 +32,11 @@ func NewCustomerController(service service.CustomerServiceInterface) CustomerCon
 
 func (ctrl *CustomerControllerImplementation) RouterMount(g gin.IRouter) {
 	grouterCustomer := g.Group("/customer")
-
+	grouterCustomerAuth := grouterCustomer.Group("", middleware.MiddlewareAuth)
 	grouterCustomer.GET("/", ctrl.GetAllCustomer)
-	grouterCustomer.POST("/", ctrl.AddCustomer)
+	grouterCustomerAuth.POST("/", ctrl.AddCustomer)
 	grouterCustomer.GET("/:customerId", ctrl.GetOneCustomer)
-	grouterCustomer.DELETE("/:customerId", ctrl.DeleteOneCustomer)
+	grouterCustomerAuth.DELETE("/:customerId", ctrl.DeleteOneCustomer)
 }
 
 func (ctrl *CustomerControllerImplementation) GetAllCustomer(ctx *gin.Context) {

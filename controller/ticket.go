@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"restapi-bus/exception"
 	"restapi-bus/helper"
+	"restapi-bus/middleware"
 	"restapi-bus/models/request"
 	"restapi-bus/models/web"
 	"restapi-bus/service"
@@ -38,7 +39,7 @@ func NewTicketController(serv service.TicketServiceInterface) ControllerTicketIn
 
 func (ctrl *ControllerTicketImplementation) RouterMount(g gin.IRouter) {
 	grouterTicket := g.Group("/ticket")
-
+	grouterTicketAuth := grouterTicket.Group("", middleware.MiddlewareAuth)
 	grouterTicket.GET("/", ctrl.GetAllTicket)
 	grouterTicket.GET("/:ticketId", ctrl.GetOneTicket)
 	grouterTicket.GET("/driver/:driverId", ctrl.GetAllTicketOnSpecificDriver)
@@ -46,10 +47,10 @@ func (ctrl *ControllerTicketImplementation) RouterMount(g gin.IRouter) {
 	grouterTicket.GET("/bus/:busId", ctrl.GetAllTicketOnSpecificBus)
 	grouterTicket.GET("/agency/:agencyId", ctrl.GetAllTicketOnSpecificAgency)
 	grouterTicket.GET("/price", ctrl.GetTotalPriceAllTicket)
-	grouterTicket.GET("/agency/:agencyId/price", ctrl.GetTotalPriceTicketFromSpecificAgency)
-	grouterTicket.GET("/driver/:driverId/price", ctrl.GetTotalPriceTicketFromSpecificDriver)
-	grouterTicket.POST("/", ctrl.AddTicket)
-	grouterTicket.DELETE("/:ticketId", ctrl.DeleteTicket)
+	grouterTicketAuth.GET("/agency/:agencyId/price", ctrl.GetTotalPriceTicketFromSpecificAgency)
+	grouterTicketAuth.GET("/driver/:driverId/price", ctrl.GetTotalPriceTicketFromSpecificDriver)
+	grouterTicketAuth.POST("/", ctrl.AddTicket)
+	grouterTicketAuth.DELETE("/:ticketId", ctrl.DeleteTicket)
 }
 
 func (ctrl *ControllerTicketImplementation) GetAllTicket(ctx *gin.Context) {

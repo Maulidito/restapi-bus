@@ -52,8 +52,8 @@ func AgencyRequestToEntity(agency *request.Agency) entity.Agency {
 	return entity.Agency{
 		Name:     agency.Name,
 		Place:    agency.Place,
-		Username: agency.Username,
-		Password: agency.Password,
+		Username: agency.Auth.Username,
+		Password: agency.Auth.Password,
 	}
 }
 func BusRequestToEntity(bus *request.Bus) entity.Bus {

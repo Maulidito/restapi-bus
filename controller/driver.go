@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"restapi-bus/exception"
 	"restapi-bus/helper"
+	"restapi-bus/middleware"
 	"restapi-bus/models/request"
 	"restapi-bus/models/web"
 	"restapi-bus/service"
@@ -32,11 +33,12 @@ func NewDriverController(serv service.ServiceDriverInterface) ControllerDriverIn
 
 func (ctrl *ControllerDriverImplementation) RouterMount(g gin.IRouter) {
 	grouterDriver := g.Group("/driver")
+	grouterDriverAuth := grouterDriver.Group("", middleware.MiddlewareAuth)
 	grouterDriver.GET("/", ctrl.GetAllDriver)
 	grouterDriver.GET("/:driverId", ctrl.GetOneDriverOnSpecificAgency)
-	grouterDriver.POST("/", ctrl.AddDriver)
+	grouterDriverAuth.POST("/", ctrl.AddDriver)
 	grouterDriver.GET("/agency/:agencyId", ctrl.GetAllDriverOnSpecificAgency)
-	grouterDriver.DELETE("/:driverId", ctrl.DeleteDriver)
+	grouterDriverAuth.DELETE("/:driverId", ctrl.DeleteDriver)
 }
 
 func (controller *ControllerDriverImplementation) GetAllDriver(ctx *gin.Context) {

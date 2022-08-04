@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"restapi-bus/exception"
 	"restapi-bus/helper"
+	"restapi-bus/middleware"
 	"restapi-bus/models/request"
 	"restapi-bus/models/web"
 	"restapi-bus/service"
@@ -32,11 +33,12 @@ func NewScheduleController(serv service.ScheduleServiceInterface) ControllerSche
 
 func (controller *ControllerScheduleImplementation) RouterMount(g gin.IRouter) {
 	grouterSchedule := g.Group("/schedule")
+	grouterScheduleAuth := grouterSchedule.Group("", middleware.MiddlewareAuth)
 	grouterSchedule.GET("", controller.GetAllSchedule)
-	grouterSchedule.POST("", controller.AddSchedule)
+	grouterScheduleAuth.POST("", controller.AddSchedule)
 	grouterSchedule.GET("/:scheduleId", controller.GetOneSchedule)
-	grouterSchedule.DELETE("/:scheduleId", controller.DeleteSchedule)
-	grouterSchedule.PATCH("/:scheduleId/arrived", controller.UpdateArrivedSchedule)
+	grouterScheduleAuth.DELETE("/:scheduleId", controller.DeleteSchedule)
+	grouterScheduleAuth.PATCH("/:scheduleId/arrived", controller.UpdateArrivedSchedule)
 }
 
 func (controller *ControllerScheduleImplementation) GetAllSchedule(ctx *gin.Context) {

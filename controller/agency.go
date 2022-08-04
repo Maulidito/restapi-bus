@@ -1,9 +1,12 @@
 package controller
 
 import (
+	"fmt"
 	"net/http"
+	"restapi-bus/constant"
 	"restapi-bus/exception"
 	"restapi-bus/helper"
+	"restapi-bus/middleware"
 	"restapi-bus/models/request"
 	"restapi-bus/models/web"
 	"restapi-bus/service"
@@ -14,9 +17,10 @@ import (
 
 type AgencyControllerInterface interface {
 	GetAllAgency(ctx *gin.Context)
-	AddAgency(ctx *gin.Context)
+	RegisterAgency(ctx *gin.Context)
 	GetOneAgency(ctx *gin.Context)
 	DeleteOneAgency(ctx *gin.Context)
+	LoginAgency(ctx *gin.Context)
 	RouterMount(g gin.IRouter)
 }
 
@@ -29,12 +33,14 @@ func NewAgencyController(service service.AgencyServiceInterface) AgencyControlle
 }
 
 func (ctrl *AgencyControllerImplementation) RouterMount(g gin.IRouter) {
-	grouterAgency := g.Group("/agency")
 
+	grouterAgency := g.Group("/agency")
+	grouterAgencyAuth := grouterAgency.Group("", middleware.MiddlewareAuth)
+	grouterAgency.POST("/login", ctrl.LoginAgency)
 	grouterAgency.GET("/", ctrl.GetAllAgency)
-	grouterAgency.POST("/", ctrl.AddAgency)
+	grouterAgency.POST("/", ctrl.RegisterAgency)
 	grouterAgency.GET("/:agencyId", ctrl.GetOneAgency)
-	grouterAgency.DELETE("/:agencyId", ctrl.DeleteOneAgency)
+	grouterAgencyAuth.DELETE("/:agencyId", ctrl.DeleteOneAgency)
 }
 
 func (ctrl *AgencyControllerImplementation) GetAllAgency(ctx *gin.Context) {
@@ -53,12 +59,16 @@ func (ctrl *AgencyControllerImplementation) GetAllAgency(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, finalResponse)
 }
-func (ctrl *AgencyControllerImplementation) AddAgency(ctx *gin.Context) {
+func (ctrl *AgencyControllerImplementation) RegisterAgency(ctx *gin.Context) {
 
 	agencyRequest := request.Agency{}
+	agencyAuth := request.AgencyAuth{}
 	err := ctx.ShouldBind(&agencyRequest)
 	helper.PanicIfError(err)
-	ctrl.service.AddAgency(ctx, &agencyRequest)
+	ctx.ShouldBind(&agencyAuth)
+	helper.PanicIfError(err)
+	agencyRequest.Auth = &agencyAuth
+	ctrl.service.RegisterAgency(ctx, &agencyRequest)
 	helper.PanicIfError(err)
 
 	finalResponse := web.WebResponseNoData{Code: http.StatusOK, Status: "OK"}
@@ -84,6 +94,7 @@ func (ctrl *AgencyControllerImplementation) GetOneAgency(ctx *gin.Context) {
 }
 func (ctrl *AgencyControllerImplementation) DeleteOneAgency(ctx *gin.Context) {
 	id, idBool := ctx.Params.Get("agencyId")
+	fmt.Println("DELETE IN")
 
 	if !idBool {
 		panic(exception.NewBadRequestError("ERROR AGENCY ID NOT FOUND"))
@@ -99,4 +110,15 @@ func (ctrl *AgencyControllerImplementation) DeleteOneAgency(ctx *gin.Context) {
 	finalResponse := web.WebResponse{Code: http.StatusOK, Status: "OK", Data: agencyResponse}
 
 	ctx.JSON(http.StatusOK, finalResponse)
+}
+
+func (ctrl *AgencyControllerImplementation) LoginAgency(ctx *gin.Context) {
+	agencyAuth := request.AgencyAuth{}
+	err := ctx.Bind(&agencyAuth)
+	helper.PanicIfError(err)
+	token, _ := ctrl.service.LoginAgency(ctx, &agencyAuth)
+	ctx.SetCookie(constant.X_API_KEY, token, 3600, "127.0.0.1", "/", true, true)
+	webToken := web.Token{Token: token}
+
+	ctx.JSON(http.StatusOK, web.WebResponseToken{Code: http.StatusOK, Status: "OK", Data: &webToken})
 }
