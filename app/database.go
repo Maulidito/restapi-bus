@@ -2,15 +2,17 @@ package app
 
 import (
 	"database/sql"
+	"fmt"
 	"restapi-bus/helper"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func NewDatabase() *sql.DB {
+func NewDatabase(username string, password string, dbName string) *sql.DB {
 
-	db, err := sql.Open("mysql", "root:@/db_bus")
+	dataSourceName := fmt.Sprintf("%s:%s@/%s", username, password, dbName)
+	db, err := sql.Open("mysql", dataSourceName)
 
 	helper.PanicIfError(err)
 

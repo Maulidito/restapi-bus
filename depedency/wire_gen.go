@@ -69,8 +69,7 @@ func InitializedControllerTicket(db *sql.DB) controller.ControllerTicketInterfac
 	return controllerTicketInterface
 }
 
-func InitializedServer() *gin.Engine {
-	db := app.NewDatabase()
+func InitializedServer(db *sql.DB) *gin.Engine {
 	customerControllerInterface := InitializedControllerCustomer(db)
 	agencyControllerInterface := InitializedControllerAgency(db)
 	busControllerInterface := InitializedControllerBus(db)

@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"restapi-bus/constant"
+	"os"
 	"restapi-bus/exception"
 	"restapi-bus/helper"
 	"restapi-bus/models/entity"
@@ -105,8 +105,9 @@ func (service *AgencyServiceImplemtation) LoginAgency(ctx context.Context, agenc
 	}
 
 	jwToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claim)
+	secret := os.Getenv("SECRET_KEY_AUTH")
 
-	token, err := jwToken.SignedString([]byte(constant.SECRET_KEY_AUTH))
+	token, err := jwToken.SignedString([]byte(secret))
 
 	helper.PanicIfError(err)
 

@@ -1,20 +1,26 @@
 package main
 
 import (
+	"os"
+	"restapi-bus/app"
 	"restapi-bus/depedency"
-	"sync"
+	"restapi-bus/helper"
+
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	err := godotenv.Load()
+	helper.PanicIfError(err)
 
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-	go func() {
-		server := depedency.InitializedServer()
-		server.Run(":8080")
-		wg.Done()
-	}()
+	port := os.Getenv("PORT")
+	usernameDb := os.Getenv("USERNAME_DB")
+	passDb := os.Getenv("PASSWORD_DB")
+	nameDb := os.Getenv("NAME_DB")
+	db := app.NewDatabase(usernameDb, passDb, nameDb)
 
-	wg.Wait()
+	server := depedency.InitializedServer(db)
+
+	server.Run(port)
 
 }

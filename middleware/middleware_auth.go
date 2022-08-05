@@ -3,6 +3,7 @@ package middleware
 import (
 	"errors"
 	"net/http"
+	"os"
 	"time"
 
 	"restapi-bus/constant"
@@ -50,8 +51,8 @@ func MiddlewareAuth(ctx *gin.Context) {
 			return nil, errors.New("error signing method")
 		}
 		claim.ExpiresAt = jwt.NewNumericDate(claim.ExpiresAt.Add(time.Minute * 1))
-
-		return []byte(constant.SECRET_KEY_AUTH), nil
+		secret := os.Getenv("SECRET_KEY_AUTH")
+		return []byte(secret), nil
 	})
 
 	if err != nil {

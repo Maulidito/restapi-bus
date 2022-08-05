@@ -71,9 +71,8 @@ func InitializedControllerTicket(db *sql.DB) controller.ControllerTicketInterfac
 	return nil
 }
 
-func InitializedServer() *gin.Engine {
+func InitializedServer(*sql.DB) *gin.Engine {
 	wire.Build(
-		app.NewDatabase,
 		InitializedControllerCustomer,
 		InitializedControllerAgency,
 		InitializedControllerBus,
