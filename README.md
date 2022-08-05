@@ -57,6 +57,8 @@ the framework i use in this project is [Gin](https://github.com/gin-gonic/gin)
 | agency_id   | int       | **Primary** |
 | name        | string    | -           |
 | place       | string    | -           |
+| username    | string    | -           |
+| password    | string    | -           |
 
 - ### Ticket
 
