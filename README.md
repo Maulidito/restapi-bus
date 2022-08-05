@@ -6,6 +6,8 @@
 
 - [version 1.2](https://github.com/Maulidito/restapi-bus/tree/aab5e04d8f2148dfd83e14cfa56b73ddf88f2dd3) (adding schedule entity and change attribute of ticket)
 
+- [version 1.3]()(adding authentication for agency entity)
+
 ## Description
 
 My Portofolio Rest api with golang dan mysql for the database
