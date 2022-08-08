@@ -36,7 +36,7 @@ func NewScheduleService(repoSchedule repository.ScheduleRepositoryInterface, rep
 func (service *ScheduleServiceImplementation) GetAllSchedule(ctx context.Context, filter *request.ScheduleFilter) []response.Schedule {
 	tx, err := service.Db.Begin()
 	helper.PanicIfError(err)
-	defer helper.DoCommit(tx)
+	defer helper.DoCommitOrRollback(tx)
 
 	listSchedule := service.RepoSchedule.GetAllSchedule(ctx, tx, helper.RequestFilterScheduleToString(filter))
 
@@ -55,7 +55,7 @@ func (service *ScheduleServiceImplementation) GetAllSchedule(ctx context.Context
 func (service *ScheduleServiceImplementation) GetOneSchedule(ctx context.Context, scheduleId int) response.Schedule {
 	tx, err := service.Db.Begin()
 	helper.PanicIfError(err)
-	defer helper.DoCommit(tx)
+	defer helper.DoCommitOrRollback(tx)
 	entitySchedule := entity.Schedule{ScheduleId: scheduleId}
 	wg := sync.WaitGroup{}
 	wg.Add(1)
@@ -72,7 +72,7 @@ func (service *ScheduleServiceImplementation) GetOneSchedule(ctx context.Context
 func (service *ScheduleServiceImplementation) AddSchedule(ctx context.Context, schedule *request.Schedule) {
 	tx, err := service.Db.Begin()
 	helper.PanicIfError(err)
-	defer helper.DoCommit(tx)
+	defer helper.DoCommitOrRollback(tx)
 	chanErr := make(chan error, 1)
 
 	go func() {
@@ -108,7 +108,7 @@ func (service *ScheduleServiceImplementation) AddSchedule(ctx context.Context, s
 func (service *ScheduleServiceImplementation) DeleteSchedule(ctx context.Context, scheduleId int) response.Schedule {
 	tx, err := service.Db.Begin()
 	helper.PanicIfError(err)
-	defer helper.DoCommit(tx)
+	defer helper.DoCommitOrRollback(tx)
 
 	entitySchedule := entity.Schedule{ScheduleId: scheduleId}
 
@@ -122,7 +122,7 @@ func (service *ScheduleServiceImplementation) DeleteSchedule(ctx context.Context
 func (service *ScheduleServiceImplementation) UpdateArrivedSchedule(ctx context.Context, scheduleId int, isArrived bool) response.Schedule {
 	tx, err := service.Db.Begin()
 	helper.PanicIfError(err)
-	defer helper.DoCommit(tx)
+	defer helper.DoCommitOrRollback(tx)
 
 	entitySchedule := entity.Schedule{ScheduleId: scheduleId}
 

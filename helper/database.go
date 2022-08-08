@@ -4,20 +4,7 @@ import (
 	"database/sql"
 )
 
-func ShouldRollback(tx *sql.Tx) {
-	err := recover()
-
-	if err != nil {
-
-		errRollback := tx.Rollback()
-		PanicIfError(errRollback)
-
-		panic(err)
-	}
-
-}
-
-func DoCommit(tx *sql.Tx) {
+func DoCommitOrRollback(tx *sql.Tx) {
 	err := recover()
 	if err == nil {
 		err := tx.Commit()
@@ -25,5 +12,7 @@ func DoCommit(tx *sql.Tx) {
 		PanicIfError(err)
 		return
 	}
+	errRollback := tx.Rollback()
+	PanicIfError(errRollback)
 	panic(err)
 }

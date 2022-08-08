@@ -25,7 +25,7 @@ func NewDiverRepository() DriverRepositoryInterface {
 }
 
 func (repo *DriverRepositoryImplementation) GetAllDriver(tx *sql.Tx, ctx context.Context, filter string) []entity.Driver {
-	defer helper.ShouldRollback(tx)
+
 	rows, err := tx.QueryContext(ctx, "SELECT driver_id,agency_id,name FROM driver "+filter)
 	helper.PanicIfError(err)
 
@@ -41,7 +41,6 @@ func (repo *DriverRepositoryImplementation) GetAllDriver(tx *sql.Tx, ctx context
 
 }
 func (repo *DriverRepositoryImplementation) GetAllDriverOnSpecificAgency(tx *sql.Tx, ctx context.Context, agencyId int) []entity.Driver {
-	defer helper.ShouldRollback(tx)
 
 	rows, err := tx.QueryContext(ctx, "SELECT driver_id,agency_id,name FROM driver WHERE agency_id = ?", agencyId)
 	helper.PanicIfError(err)
@@ -58,28 +57,17 @@ func (repo *DriverRepositoryImplementation) GetAllDriverOnSpecificAgency(tx *sql
 
 }
 func (repo *DriverRepositoryImplementation) GetOneDriverOnSpecificAgency(tx *sql.Tx, ctx context.Context, driver *entity.Driver) {
-	defer helper.ShouldRollback(tx)
-	defer func() {
-		err := recover()
-		if err != nil {
-			panic(err)
-		}
-	}()
-	fmt.Println("GET ONE DRIVER ", driver.DriverId)
-	rows, err := tx.QueryContext(ctx, "SELECT agency_id,name FROM driver WHERE driver_id = ?", driver.DriverId)
-	helper.PanicIfError(err)
-	defer rows.Close()
 
-	if rows.Next() {
-		err = rows.Scan(&driver.AgencyId, &driver.Name)
-		helper.PanicIfError(err)
-		return
+	err := tx.QueryRowContext(ctx, "SELECT agency_id,name FROM driver WHERE driver_id = ?", driver.DriverId).
+		Scan(&driver.AgencyId, &driver.Name)
+
+	if err != nil {
+
+		panic(exception.NewNotFoundError(fmt.Sprintf("ERROR NOT FOUND DRIVER ID %d", driver.DriverId)))
 	}
-	panic(exception.NewNotFoundError(fmt.Sprintf("ERROR NOT FOUND DRIVER ID %d", driver.DriverId)))
 
 }
 func (repo *DriverRepositoryImplementation) AddDriver(tx *sql.Tx, ctx context.Context, driver *entity.Driver) {
-	defer helper.ShouldRollback(tx)
 
 	res, err := tx.ExecContext(ctx, "INSERT INTO driver(agency_id,name) VALUES (? ,?)", driver.AgencyId, driver.Name)
 
@@ -91,7 +79,6 @@ func (repo *DriverRepositoryImplementation) AddDriver(tx *sql.Tx, ctx context.Co
 
 }
 func (repo *DriverRepositoryImplementation) DeleteDriver(tx *sql.Tx, ctx context.Context, driver *entity.Driver) {
-	defer helper.ShouldRollback(tx)
 
 	_, err := tx.ExecContext(ctx, "DELETE FROM driver WHERE driver_id = ?", driver.DriverId)
 

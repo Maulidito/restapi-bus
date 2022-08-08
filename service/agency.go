@@ -36,7 +36,7 @@ func NewAgencyService(db *sql.DB, repo repository.AgencyRepositoryInterface) Age
 
 func (service *AgencyServiceImplemtation) GetAllAgency(ctx context.Context, filter *request.AgencyFilter) []response.Agency {
 	tx, err := service.Db.Begin()
-	defer helper.DoCommit(tx)
+	defer helper.DoCommitOrRollback(tx)
 	helper.PanicIfError(err)
 
 	listAgency := service.Repo.GetAllAgency(ctx, tx, helper.RequestFilterAgencyToString(filter))
@@ -52,7 +52,7 @@ func (service *AgencyServiceImplemtation) GetAllAgency(ctx context.Context, filt
 }
 func (service *AgencyServiceImplemtation) RegisterAgency(ctx context.Context, agency *request.Agency) {
 	tx, err := service.Db.Begin()
-	defer helper.DoCommit(tx)
+	defer helper.DoCommitOrRollback(tx)
 	if service.Repo.IsUsenameAgencyExist(ctx, tx, agency.Auth.Username) {
 		panic(exception.NewBadRequestError("email already registered"))
 	}
@@ -66,7 +66,7 @@ func (service *AgencyServiceImplemtation) RegisterAgency(ctx context.Context, ag
 }
 func (service *AgencyServiceImplemtation) GetOneAgency(ctx context.Context, id int) response.Agency {
 	tx, err := service.Db.Begin()
-	defer helper.DoCommit(tx)
+	defer helper.DoCommitOrRollback(tx)
 	helper.PanicIfError(err)
 	agencyEntity := entity.Agency{AgencyId: id}
 	service.Repo.GetOneAgency(ctx, tx, &agencyEntity)
@@ -75,7 +75,7 @@ func (service *AgencyServiceImplemtation) GetOneAgency(ctx context.Context, id i
 }
 func (service *AgencyServiceImplemtation) DeleteOneAgency(ctx context.Context, id int) response.Agency {
 	tx, err := service.Db.Begin()
-	defer helper.DoCommit(tx)
+	defer helper.DoCommitOrRollback(tx)
 	helper.PanicIfError(err)
 	agencyEntity := entity.Agency{AgencyId: id}
 	service.Repo.GetOneAgency(ctx, tx, &agencyEntity)
@@ -87,7 +87,7 @@ func (service *AgencyServiceImplemtation) DeleteOneAgency(ctx context.Context, i
 func (service *AgencyServiceImplemtation) LoginAgency(ctx context.Context, agencyAuth *request.AgencyAuth) (string, int, response.Agency) {
 	tx, err := service.Db.Begin()
 	helper.PanicIfError(err)
-	defer helper.DoCommit(tx)
+	defer helper.DoCommitOrRollback(tx)
 
 	salt := service.Repo.GetSaltAgencyWithUsername(ctx, tx, agencyAuth.Username)
 

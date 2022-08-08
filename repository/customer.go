@@ -24,7 +24,7 @@ func NewCustomerRepository() CustomerRepositoryInterface {
 }
 
 func (repo *CustomerRepositoryImplementation) GetAllCustomer(ctx context.Context, tx *sql.Tx, filter string) []entity.Customer {
-	defer helper.ShouldRollback(tx)
+
 	fmt.Println("CHECK FILTER SQL ", filter)
 	row, err := tx.QueryContext(ctx, "SELECT customer_id,name,phone_number FROM customer "+filter)
 	helper.PanicIfError(err)
@@ -43,7 +43,7 @@ func (repo *CustomerRepositoryImplementation) GetAllCustomer(ctx context.Context
 }
 
 func (repo *CustomerRepositoryImplementation) AddCustomer(ctx context.Context, tx *sql.Tx, customer *entity.Customer) {
-	defer helper.ShouldRollback(tx)
+
 	res, err := tx.ExecContext(ctx, "Insert Into customer( name , phone_number ) Values (?,?)", customer.Name, customer.PhoneNumber)
 	helper.PanicIfError(err)
 	id, err := res.LastInsertId()
@@ -54,22 +54,16 @@ func (repo *CustomerRepositoryImplementation) AddCustomer(ctx context.Context, t
 }
 
 func (repo *CustomerRepositoryImplementation) GetOneCustomer(ctx context.Context, tx *sql.Tx, customer *entity.Customer) {
-	defer helper.ShouldRollback(tx)
-	rows, err := tx.QueryContext(ctx, "SELECT name, phone_number FROM customer where customer_id = ?", customer.CustomerId)
 
-	helper.PanicIfError(err)
-	defer rows.Close()
+	err := tx.QueryRowContext(ctx, "SELECT name, phone_number FROM customer where customer_id = ?", customer.CustomerId).
+		Scan(&customer.Name, &customer.PhoneNumber)
 
-	if rows.Next() {
-		err = rows.Scan(&customer.Name, &customer.PhoneNumber)
-		helper.PanicIfError(err)
-		return
+	if err != nil {
+		panic(exception.NewNotFoundError(fmt.Sprintf("ID Customer %d Not Found", customer.CustomerId)))
 	}
-	panic(exception.NewNotFoundError(fmt.Sprintf("ID Customer %d Not Found", customer.CustomerId)))
 
 }
 func (repo *CustomerRepositoryImplementation) DeleteOneCustomer(ctx context.Context, tx *sql.Tx, customer *entity.Customer) {
-	defer helper.ShouldRollback(tx)
 
 	_, err := tx.ExecContext(ctx, "DELETE FROM customer WHERE customer_id = ?", customer.CustomerId)
 

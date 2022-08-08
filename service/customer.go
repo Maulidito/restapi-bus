@@ -28,7 +28,7 @@ func NewCustomerService(db *sql.DB, repo repository.CustomerRepositoryInterface)
 
 func (service *CustomerServiceImplemtation) GetAllCustomer(ctx context.Context, filter *request.CustomerFilter) []response.Customer {
 	tx, err := service.Db.Begin()
-	defer helper.DoCommit(tx)
+	defer helper.DoCommitOrRollback(tx)
 	helper.PanicIfError(err)
 
 	listCustomer := service.Repo.GetAllCustomer(ctx, tx, helper.RequestFilterCustomerToString(filter))
@@ -44,7 +44,7 @@ func (service *CustomerServiceImplemtation) GetAllCustomer(ctx context.Context, 
 }
 func (service *CustomerServiceImplemtation) AddCustomer(ctx context.Context, customer *request.Customer) {
 	tx, err := service.Db.Begin()
-	defer helper.DoCommit(tx)
+	defer helper.DoCommitOrRollback(tx)
 	helper.PanicIfError(err)
 	customerEntity := helper.CustomerRequestToEntity(customer)
 	service.Repo.AddCustomer(ctx, tx, &customerEntity)
@@ -52,7 +52,7 @@ func (service *CustomerServiceImplemtation) AddCustomer(ctx context.Context, cus
 }
 func (service *CustomerServiceImplemtation) GetOneCustomer(ctx context.Context, id int) response.Customer {
 	tx, err := service.Db.Begin()
-	defer helper.DoCommit(tx)
+	defer helper.DoCommitOrRollback(tx)
 	helper.PanicIfError(err)
 	customer := entity.Customer{CustomerId: id}
 	service.Repo.GetOneCustomer(ctx, tx, &customer)
@@ -62,7 +62,7 @@ func (service *CustomerServiceImplemtation) GetOneCustomer(ctx context.Context, 
 }
 func (service *CustomerServiceImplemtation) DeleteOneCustomer(ctx context.Context, id int) response.Customer {
 	tx, err := service.Db.Begin()
-	defer helper.DoCommit(tx)
+	defer helper.DoCommitOrRollback(tx)
 	helper.PanicIfError(err)
 	customer := entity.Customer{CustomerId: id}
 	service.Repo.GetOneCustomer(ctx, tx, &customer)

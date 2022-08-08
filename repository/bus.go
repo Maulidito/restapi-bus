@@ -25,7 +25,6 @@ func NewBusRepository() BusRepositoryInterface {
 }
 
 func (repo *BusRepositoryImplementation) GetAllBus(ctx context.Context, tx *sql.Tx, filter string) []entity.Bus {
-	defer helper.ShouldRollback(tx)
 
 	row, err := tx.QueryContext(ctx, "SELECT bus_id,agency_id,number_plate FROM bus "+filter)
 	helper.PanicIfError(err)
@@ -43,7 +42,7 @@ func (repo *BusRepositoryImplementation) GetAllBus(ctx context.Context, tx *sql.
 }
 
 func (repo *BusRepositoryImplementation) GetAllBusSpecificAgency(ctx context.Context, tx *sql.Tx, agencyId int) []entity.Bus {
-	defer helper.ShouldRollback(tx)
+
 	row, err := tx.QueryContext(ctx, "SELECT bus_id,agency_id,number_plate FROM bus WHERE agency_id = ?", agencyId)
 
 	helper.PanicIfError(err)
@@ -61,7 +60,7 @@ func (repo *BusRepositoryImplementation) GetAllBusSpecificAgency(ctx context.Con
 }
 
 func (repo *BusRepositoryImplementation) AddBus(ctx context.Context, tx *sql.Tx, bus *entity.Bus) {
-	defer helper.ShouldRollback(tx)
+
 	res, err := tx.ExecContext(ctx, "Insert Into bus( agency_id , number_plate ) Values (?,?)", bus.AgencyId, bus.NumberPlate)
 
 	helper.PanicIfError(err)
@@ -74,30 +73,17 @@ func (repo *BusRepositoryImplementation) AddBus(ctx context.Context, tx *sql.Tx,
 }
 
 func (repo *BusRepositoryImplementation) GetOneBus(ctx context.Context, tx *sql.Tx, bus *entity.Bus) {
-	defer helper.ShouldRollback(tx)
-	defer func() {
-		err := recover()
-		if err != nil {
-			panic(err)
-		}
-	}()
-	fmt.Println("GET ONE BUS ", bus.BusId)
-	rows, err := tx.QueryContext(ctx, "SELECT agency_id,number_plate FROM bus where bus_id = ?", bus.BusId)
 
-	helper.PanicIfError(err)
-	defer rows.Close()
+	err := tx.QueryRowContext(ctx, "SELECT agency_id,number_plate FROM bus where bus_id = ?", bus.BusId).
+		Scan(&bus.AgencyId, &bus.NumberPlate)
 
-	if rows.Next() {
-		err = rows.Scan(&bus.AgencyId, &bus.NumberPlate)
-		helper.PanicIfError(err)
-		return
+	if err != nil {
+		panic(exception.NewNotFoundError(fmt.Sprintf("id bus %d not found ", bus.BusId)))
 	}
-
-	panic(exception.NewNotFoundError(fmt.Sprintf("id bus %d not found ", bus.BusId)))
 
 }
 func (repo *BusRepositoryImplementation) DeleteOneBus(ctx context.Context, tx *sql.Tx, bus *entity.Bus) {
-	defer helper.ShouldRollback(tx)
+
 	repo.GetOneBus(ctx, tx, bus)
 	_, err := tx.ExecContext(ctx, "DELETE FROM bus WHERE bus_id = ?", bus.BusId)
 

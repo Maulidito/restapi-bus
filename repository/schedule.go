@@ -25,7 +25,7 @@ func NewScheduleRepository() ScheduleRepositoryInterface {
 }
 
 func (repo *ScheduleRepositoryImplementation) GetAllSchedule(ctx context.Context, tx *sql.Tx, filter string) []entity.Schedule {
-	defer helper.ShouldRollback(tx)
+
 	defer func() {
 		err := recover()
 		if err != nil {
@@ -52,37 +52,18 @@ func (repo *ScheduleRepositoryImplementation) GetAllSchedule(ctx context.Context
 }
 
 func (repo *ScheduleRepositoryImplementation) GetOneSchedule(ctx context.Context, tx *sql.Tx, schedule *entity.Schedule) {
-	defer helper.ShouldRollback(tx)
-	defer func() {
-		err := recover()
-		if err != nil {
-			panic(err)
-		}
-	}()
-	row, err := tx.QueryContext(ctx, "SELECT * FROM schedule WHERE schedule_id = ?", schedule.ScheduleId)
 
-	helper.PanicIfError(err)
-	defer row.Close()
-
-	if row.Next() {
-		err := row.Scan(&schedule.ScheduleId, &schedule.FromAgencyId, &schedule.ToAgencyId, &schedule.BusId,
+	err := tx.QueryRowContext(ctx, "SELECT * FROM schedule WHERE schedule_id = ?", schedule.ScheduleId).
+		Scan(&schedule.ScheduleId, &schedule.FromAgencyId, &schedule.ToAgencyId, &schedule.BusId,
 			&schedule.DriverId, &schedule.Price, &schedule.Date, &schedule.Arrived)
-		helper.PanicIfError(err)
-		return
-	}
 
-	panic(exception.NewNotFoundError(fmt.Sprintf("SCHEDULE ID %d NOT FOUND", schedule.ScheduleId)))
+	if err != nil {
+		panic(exception.NewNotFoundError(fmt.Sprintf("SCHEDULE ID %d NOT FOUND", schedule.ScheduleId)))
+	}
 }
 
 func (repo *ScheduleRepositoryImplementation) AddSchedule(ctx context.Context, tx *sql.Tx, schedule *entity.Schedule) {
-	defer helper.ShouldRollback(tx)
-	defer func() {
-		err := recover()
-		fmt.Println("DEFER HIT RECOVER ", err)
-		if err != nil {
-			panic(err)
-		}
-	}()
+
 	res, err := tx.ExecContext(ctx, "INSERT INTO schedule(from_agency_id,to_agency_id,bus_id,driver_id,price,date,arrived) VALUES (?,?,?,?,?,?,?)", schedule.FromAgencyId, schedule.ToAgencyId, schedule.BusId, schedule.DriverId, schedule.Price, schedule.Date, schedule.Arrived)
 	helper.PanicIfError(err)
 	scheduleId, err := res.LastInsertId()
@@ -91,26 +72,14 @@ func (repo *ScheduleRepositoryImplementation) AddSchedule(ctx context.Context, t
 }
 
 func (repo *ScheduleRepositoryImplementation) DeleteSchedule(ctx context.Context, tx *sql.Tx, schedule *entity.Schedule) {
-	defer helper.ShouldRollback(tx)
-	defer func() {
-		err := recover()
-		if err != nil {
-			panic(err)
-		}
-	}()
+
 	_, err := tx.ExecContext(ctx, "DELETE FROM schedule WHERE schedule_id = ?", schedule.ScheduleId)
 	helper.PanicIfError(err)
 
 }
 
 func (repo *ScheduleRepositoryImplementation) UpdateArrivedSchedule(ctx context.Context, tx *sql.Tx, schedule *entity.Schedule) {
-	defer helper.ShouldRollback(tx)
-	defer func() {
-		err := recover()
-		if err != nil {
-			panic(err)
-		}
-	}()
+
 	_, err := tx.ExecContext(ctx, "UPDATE schedule SET arrived = ? WHERE schedule_id = ?", schedule.Arrived, schedule.ScheduleId)
 	helper.PanicIfError(err)
 }

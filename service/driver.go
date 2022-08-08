@@ -31,7 +31,7 @@ func NewServiceDriver(db *sql.DB, repoDriver repository.DriverRepositoryInterfac
 func (service *ServiceDriverImplementation) GetAllDriver(ctx context.Context, filter *request.DriverFilter) []response.Driver {
 
 	tx, err := service.Db.Begin()
-	defer helper.DoCommit(tx)
+	defer helper.DoCommitOrRollback(tx)
 	helper.PanicIfError(err)
 
 	listDriver := service.RepoDriver.GetAllDriver(tx, ctx, helper.RequestFilterDriverToString(filter))
@@ -46,7 +46,7 @@ func (service *ServiceDriverImplementation) GetAllDriver(ctx context.Context, fi
 }
 func (service *ServiceDriverImplementation) GetAllDriverOnSpecificAgency(ctx context.Context, agencyId int) []response.Driver {
 	tx, err := service.Db.Begin()
-	defer helper.DoCommit(tx)
+	defer helper.DoCommitOrRollback(tx)
 	helper.PanicIfError(err)
 
 	agency := entity.Agency{AgencyId: agencyId}
@@ -78,7 +78,7 @@ func (service *ServiceDriverImplementation) GetAllDriverOnSpecificAgency(ctx con
 }
 func (service *ServiceDriverImplementation) GetOneDriverOnSpecificAgency(ctx context.Context, driverId int) response.Driver {
 	tx, err := service.Db.Begin()
-	defer helper.DoCommit(tx)
+	defer helper.DoCommitOrRollback(tx)
 	helper.PanicIfError(err)
 
 	driver := entity.Driver{DriverId: driverId}
@@ -90,7 +90,7 @@ func (service *ServiceDriverImplementation) GetOneDriverOnSpecificAgency(ctx con
 }
 func (service *ServiceDriverImplementation) AddDriver(ctx context.Context, driver *request.Driver) {
 	tx, err := service.Db.Begin()
-	defer helper.DoCommit(tx)
+	defer helper.DoCommitOrRollback(tx)
 	helper.PanicIfError(err)
 
 	service.RepoAgency.GetOneAgency(ctx, tx, &entity.Agency{AgencyId: driver.AgencyId})
@@ -100,7 +100,7 @@ func (service *ServiceDriverImplementation) AddDriver(ctx context.Context, drive
 }
 func (service *ServiceDriverImplementation) DeleteDriver(ctx context.Context, driverId int) response.Driver {
 	tx, err := service.Db.Begin()
-	defer helper.DoCommit(tx)
+	defer helper.DoCommitOrRollback(tx)
 	helper.PanicIfError(err)
 
 	driverEntity := entity.Driver{DriverId: driverId}

@@ -50,7 +50,7 @@ func NewTicketService(
 func (service *TicketServiceImplementation) GetAllTicket(ctx context.Context, filter *request.TicketFilter) []response.Ticket {
 	tx, err := service.Db.Begin()
 	helper.PanicIfError(err)
-	defer helper.DoCommit(tx)
+	defer helper.DoCommitOrRollback(tx)
 
 	listAllTicket := service.RepoTicket.GetAllTicket(tx, ctx, helper.RequestFilterTicketToString(filter))
 
@@ -65,7 +65,7 @@ func (service *TicketServiceImplementation) GetAllTicket(ctx context.Context, fi
 func (service *TicketServiceImplementation) AddTicket(ctx context.Context, ticket *request.Ticket) {
 	tx, err := service.Db.Begin()
 	helper.PanicIfError(err)
-	defer helper.DoCommit(tx)
+	defer helper.DoCommitOrRollback(tx)
 
 	ticketEntity := helper.TicketRequestToEntity(ticket)
 	scheduleEntity := entity.Schedule{ScheduleId: ticket.ScheduleId}
@@ -94,7 +94,7 @@ func (service *TicketServiceImplementation) AddTicket(ctx context.Context, ticke
 func (service *TicketServiceImplementation) GetOneTicket(ctx context.Context, ticketId int) response.Ticket {
 	tx, err := service.Db.Begin()
 	helper.PanicIfError(err)
-	defer helper.DoCommit(tx)
+	defer helper.DoCommitOrRollback(tx)
 	ticketEntity := entity.Ticket{TicketId: ticketId}
 	service.RepoTicket.GetOneTicket(tx, ctx, &ticketEntity)
 
@@ -104,7 +104,7 @@ func (service *TicketServiceImplementation) GetOneTicket(ctx context.Context, ti
 func (service *TicketServiceImplementation) DeleteTicket(ctx context.Context, ticketId int) response.Ticket {
 	tx, err := service.Db.Begin()
 	helper.PanicIfError(err)
-	defer helper.DoCommit(tx)
+	defer helper.DoCommitOrRollback(tx)
 	ticketEntity := entity.Ticket{TicketId: ticketId}
 
 	service.RepoTicket.GetOneTicket(tx, ctx, &ticketEntity)
@@ -115,7 +115,7 @@ func (service *TicketServiceImplementation) DeleteTicket(ctx context.Context, ti
 func (service *TicketServiceImplementation) GetAllTicketOnDriver(ctx context.Context, idDriver int) response.AllTicketOnDriver {
 	tx, err := service.Db.Begin()
 	helper.PanicIfError(err)
-	defer helper.DoCommit(tx)
+	defer helper.DoCommitOrRollback(tx)
 
 	driverEntity := entity.Driver{DriverId: idDriver}
 
@@ -138,7 +138,7 @@ func (service *TicketServiceImplementation) GetAllTicketOnDriver(ctx context.Con
 func (service *TicketServiceImplementation) GetAllTicketOnCustomer(ctx context.Context, idCustomer int) response.AllTicketOnCustomer {
 	tx, err := service.Db.Begin()
 	helper.PanicIfError(err)
-	defer helper.DoCommit(tx)
+	defer helper.DoCommitOrRollback(tx)
 
 	customerEntity := entity.Customer{CustomerId: idCustomer}
 	service.RepoCustomer.GetOneCustomer(ctx, tx, &customerEntity)
@@ -163,7 +163,7 @@ func (service *TicketServiceImplementation) GetAllTicketOnCustomer(ctx context.C
 func (service *TicketServiceImplementation) GetAllTicketOnBus(ctx context.Context, idBus int) response.AllTicketOnBus {
 	tx, err := service.Db.Begin()
 	helper.PanicIfError(err)
-	defer helper.DoCommit(tx)
+	defer helper.DoCommitOrRollback(tx)
 
 	busEntity := entity.Bus{BusId: idBus}
 	service.RepoBus.GetOneBus(ctx, tx, &busEntity)
@@ -189,7 +189,7 @@ func (service *TicketServiceImplementation) GetAllTicketOnBus(ctx context.Contex
 func (service *TicketServiceImplementation) GetAllTicketOnAgency(ctx context.Context, idAgency int) response.AllTicketOnAgency {
 	tx, err := service.Db.Begin()
 	helper.PanicIfError(err)
-	defer helper.DoCommit(tx)
+	defer helper.DoCommitOrRollback(tx)
 
 	agencyEntity := entity.Agency{AgencyId: idAgency}
 	service.RepoAgency.GetOneAgency(ctx, tx, &agencyEntity)
@@ -214,7 +214,7 @@ func (service *TicketServiceImplementation) GetAllTicketOnAgency(ctx context.Con
 func (service *TicketServiceImplementation) GetTotalPriceAllTicket(ctx context.Context) response.AllTicketPrice {
 	tx, err := service.Db.Begin()
 	helper.PanicIfError(err)
-	defer helper.DoCommit(tx)
+	defer helper.DoCommitOrRollback(tx)
 
 	response := response.AllTicketPrice{}
 
@@ -225,7 +225,7 @@ func (service *TicketServiceImplementation) GetTotalPriceAllTicket(ctx context.C
 func (service *TicketServiceImplementation) GetTotalPriceTicketFromSpecificAgency(ctx context.Context, idAgency int) response.AllTicketPriceSpecificAgency {
 	tx, err := service.Db.Begin()
 	helper.PanicIfError(err)
-	defer helper.DoCommit(tx)
+	defer helper.DoCommitOrRollback(tx)
 
 	agencyEntity := entity.Agency{AgencyId: idAgency}
 	service.RepoAgency.GetOneAgency(ctx, tx, &agencyEntity)
@@ -237,7 +237,7 @@ func (service *TicketServiceImplementation) GetTotalPriceTicketFromSpecificAgenc
 func (service *TicketServiceImplementation) GetTotalPriceTicketFromSpecificDriver(ctx context.Context, idDriver int) response.AllTicketPriceSpecificDriver {
 	tx, err := service.Db.Begin()
 	helper.PanicIfError(err)
-	defer helper.DoCommit(tx)
+	defer helper.DoCommitOrRollback(tx)
 
 	driverEntity := entity.Driver{DriverId: idDriver}
 	service.RepoDriver.GetOneDriverOnSpecificAgency(tx, ctx, &driverEntity)
