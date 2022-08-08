@@ -78,7 +78,6 @@ func (controller *ControllerScheduleImplementation) AddSchedule(ctx *gin.Context
 	requestSchedule := request.Schedule{}
 	err := ctx.Bind(&requestSchedule)
 	helper.PanicIfError(err)
-
 	controller.Service.AddSchedule(ctx, &requestSchedule)
 
 	finalResponse := web.WebResponseNoData{Code: http.StatusOK, Status: "OK"}

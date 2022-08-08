@@ -34,9 +34,9 @@ func NewDriverController(serv service.ServiceDriverInterface) ControllerDriverIn
 func (ctrl *ControllerDriverImplementation) RouterMount(g gin.IRouter) {
 	grouterDriver := g.Group("/driver")
 	grouterDriverAuth := grouterDriver.Group("", middleware.MiddlewareAuth)
-	grouterDriver.GET("/", ctrl.GetAllDriver)
+	grouterDriver.GET("", ctrl.GetAllDriver)
 	grouterDriver.GET("/:driverId", ctrl.GetOneDriverOnSpecificAgency)
-	grouterDriverAuth.POST("/", ctrl.AddDriver)
+	grouterDriverAuth.POST("", ctrl.AddDriver)
 	grouterDriver.GET("/agency/:agencyId", ctrl.GetAllDriverOnSpecificAgency)
 	grouterDriverAuth.DELETE("/:driverId", ctrl.DeleteDriver)
 }

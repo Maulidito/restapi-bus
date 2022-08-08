@@ -1,8 +1,8 @@
 package request
 
 type Ticket struct {
-	ScheduleId int `form:"scheduleId" binding:"required, numeric"`
-	CustomerId int `form:"customerId" binding:"required, numeric" `
+	ScheduleId int `form:"scheduleId" binding:"required,numeric"`
+	CustomerId int `form:"customerId" binding:"required,numeric"`
 }
 
 type TicketFilter struct {

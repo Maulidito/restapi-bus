@@ -22,7 +22,7 @@ type AgencyServiceInterface interface {
 	RegisterAgency(ctx context.Context, agency *request.Agency)
 	GetOneAgency(ctx context.Context, id int) response.Agency
 	DeleteOneAgency(ctx context.Context, id int) response.Agency
-	LoginAgency(ctx context.Context, agencyAuth *request.AgencyAuth) (string, response.Agency)
+	LoginAgency(ctx context.Context, agencyAuth *request.AgencyAuth) (string, int, response.Agency)
 }
 
 type AgencyServiceImplemtation struct {
@@ -84,7 +84,7 @@ func (service *AgencyServiceImplemtation) DeleteOneAgency(ctx context.Context, i
 	return helper.AgencyEntityToResponse(&agencyEntity)
 }
 
-func (service *AgencyServiceImplemtation) LoginAgency(ctx context.Context, agencyAuth *request.AgencyAuth) (string, response.Agency) {
+func (service *AgencyServiceImplemtation) LoginAgency(ctx context.Context, agencyAuth *request.AgencyAuth) (string, int, response.Agency) {
 	tx, err := service.Db.Begin()
 	helper.PanicIfError(err)
 	defer helper.DoCommit(tx)
@@ -99,7 +99,7 @@ func (service *AgencyServiceImplemtation) LoginAgency(ctx context.Context, agenc
 
 	claim := web.Claim{
 		RegisteredClaims: &jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 1)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 2)),
 		},
 		Username: agency.Username,
 	}
@@ -111,6 +111,6 @@ func (service *AgencyServiceImplemtation) LoginAgency(ctx context.Context, agenc
 
 	helper.PanicIfError(err)
 
-	return token, helper.AgencyEntityToResponse(&agency)
+	return token, claim.ExpiresAt.Second(), helper.AgencyEntityToResponse(&agency)
 
 }

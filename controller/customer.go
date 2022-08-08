@@ -33,8 +33,8 @@ func NewCustomerController(service service.CustomerServiceInterface) CustomerCon
 func (ctrl *CustomerControllerImplementation) RouterMount(g gin.IRouter) {
 	grouterCustomer := g.Group("/customer")
 	grouterCustomerAuth := grouterCustomer.Group("", middleware.MiddlewareAuth)
-	grouterCustomer.GET("/", ctrl.GetAllCustomer)
-	grouterCustomerAuth.POST("/", ctrl.AddCustomer)
+	grouterCustomer.GET("", ctrl.GetAllCustomer)
+	grouterCustomerAuth.POST("", ctrl.AddCustomer)
 	grouterCustomer.GET("/:customerId", ctrl.GetOneCustomer)
 	grouterCustomerAuth.DELETE("/:customerId", ctrl.DeleteOneCustomer)
 }

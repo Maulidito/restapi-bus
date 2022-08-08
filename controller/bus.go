@@ -33,8 +33,8 @@ func NewBusController(service service.BusServiceInterface) BusControllerInterfac
 func (ctrl *BusControllerImplementation) RouterMount(g gin.IRouter) {
 	grouterBus := g.Group("/bus")
 	grouterBusAuth := grouterBus.Group("", middleware.MiddlewareAuth)
-	grouterBus.GET("/", ctrl.GetAllBus)
-	grouterBusAuth.POST("/", ctrl.AddBus)
+	grouterBus.GET("", ctrl.GetAllBus)
+	grouterBusAuth.POST("", ctrl.AddBus)
 	grouterBus.GET("/:busId", ctrl.GetOneBusOnSpecificAgency)
 	grouterBus.GET("/agency/:agencyId", ctrl.GetAllBusOnSpecificAgency)
 	grouterBusAuth.DELETE("/:busId", ctrl.DeleteOneBus)

@@ -40,7 +40,7 @@ func NewTicketController(serv service.TicketServiceInterface) ControllerTicketIn
 func (ctrl *ControllerTicketImplementation) RouterMount(g gin.IRouter) {
 	grouterTicket := g.Group("/ticket")
 	grouterTicketAuth := grouterTicket.Group("", middleware.MiddlewareAuth)
-	grouterTicket.GET("/", ctrl.GetAllTicket)
+	grouterTicket.GET("", ctrl.GetAllTicket)
 	grouterTicket.GET("/:ticketId", ctrl.GetOneTicket)
 	grouterTicket.GET("/driver/:driverId", ctrl.GetAllTicketOnSpecificDriver)
 	grouterTicket.GET("/customer/:customerId", ctrl.GetAllTicketOnSpecificCustomer)
@@ -49,7 +49,7 @@ func (ctrl *ControllerTicketImplementation) RouterMount(g gin.IRouter) {
 	grouterTicket.GET("/price", ctrl.GetTotalPriceAllTicket)
 	grouterTicketAuth.GET("/agency/:agencyId/price", ctrl.GetTotalPriceTicketFromSpecificAgency)
 	grouterTicketAuth.GET("/driver/:driverId/price", ctrl.GetTotalPriceTicketFromSpecificDriver)
-	grouterTicketAuth.POST("/", ctrl.AddTicket)
+	grouterTicketAuth.POST("", ctrl.AddTicket)
 	grouterTicketAuth.DELETE("/:ticketId", ctrl.DeleteTicket)
 }
 
@@ -70,7 +70,7 @@ func (ctrl *ControllerTicketImplementation) GetAllTicket(ctx *gin.Context) {
 }
 func (ctrl *ControllerTicketImplementation) AddTicket(ctx *gin.Context) {
 	ticketRequest := request.Ticket{}
-	err := ctx.ShouldBind(&ticketRequest)
+	err := ctx.Bind(&ticketRequest)
 	helper.PanicIfError(err)
 	ctrl.service.AddTicket(ctx, &ticketRequest)
 

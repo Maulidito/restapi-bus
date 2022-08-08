@@ -37,8 +37,8 @@ func (ctrl *AgencyControllerImplementation) RouterMount(g gin.IRouter) {
 	grouterAgency := g.Group("/agency")
 	grouterAgencyAuth := grouterAgency.Group("", middleware.MiddlewareAuth)
 	grouterAgency.POST("/login", ctrl.LoginAgency)
-	grouterAgency.GET("/", ctrl.GetAllAgency)
-	grouterAgency.POST("/", ctrl.RegisterAgency)
+	grouterAgency.GET("", ctrl.GetAllAgency)
+	grouterAgency.POST("", ctrl.RegisterAgency)
 	grouterAgency.GET("/:agencyId", ctrl.GetOneAgency)
 	grouterAgencyAuth.DELETE("/:agencyId", ctrl.DeleteOneAgency)
 }
@@ -113,11 +113,14 @@ func (ctrl *AgencyControllerImplementation) DeleteOneAgency(ctx *gin.Context) {
 }
 
 func (ctrl *AgencyControllerImplementation) LoginAgency(ctx *gin.Context) {
+
 	agencyAuth := request.AgencyAuth{}
 	err := ctx.Bind(&agencyAuth)
+
+	fmt.Println("CHECK HEADER ", agencyAuth)
 	helper.PanicIfError(err)
-	token, _ := ctrl.service.LoginAgency(ctx, &agencyAuth)
-	ctx.SetCookie(constant.X_API_KEY, token, 3600, "127.0.0.1", "/", true, true)
+	token, maxAge, _ := ctrl.service.LoginAgency(ctx, &agencyAuth)
+	ctx.SetCookie(constant.X_API_KEY, token, maxAge, "/", "localhost", true, true)
 	webToken := web.Token{Token: token}
 
 	ctx.JSON(http.StatusOK, web.WebResponseToken{Code: http.StatusOK, Status: "OK", Data: &webToken})

@@ -27,6 +27,9 @@ func MiddlewarePanic(ctx *gin.Context, panicErr any) {
 		if BadRequestHandle(ctx, panicErr) {
 			return
 		}
+		if UnauthorizedHandle(ctx, panicErr) {
+			return
+		}
 
 		if Error(ctx, panicErr) {
 			return
@@ -97,6 +100,19 @@ func BadRequestHandle(c *gin.Context, err interface{}) bool {
 
 	}
 	return false
+}
+func UnauthorizedHandle(c *gin.Context, err interface{}) bool {
+	dataErr, isErr := err.(exception.Unauthorized)
+	fmt.Println("ERROR UNAUTORIZE")
+	if !isErr {
+		return false
+	}
+	errMsg := web.ErrorMessage{ErrorMessage: dataErr.Error()}
+
+	response := web.ResponseError{Code: http.StatusUnauthorized, Status: "UNAUTHORIZED", Data: errMsg}
+
+	c.JSON(response.Code, response)
+	return true
 }
 
 func Error(c *gin.Context, err interface{}) bool {
