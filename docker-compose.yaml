@@ -1,0 +1,22 @@
+version: "3.9"  # optional since v1.27.0
+services:
+  restapi:
+    container_name: restapibus
+    build: .
+    ports:
+      - 8080:8080
+    environment:
+      - HOST_DB=mysql
+    env_file:
+      - .env
+  mysql:
+    container_name: db_mysql_bus
+    image: mysql:latest
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=db_bus
+  
+    restart: always
+    volumes:
+      - ${PWD}/dump_db:/docker-entrypoint-initdb.d
+  
