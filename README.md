@@ -105,3 +105,40 @@ This image show workflow from client send request and get response in REST API
 ## Documentation Rest Api
 
 Using [OpenApi](https://app.swaggerhub.com/apis/Maulidito/api-bus_travel) For Documentation
+
+## How To Run with Docker Images
+
+- You can just download or copy the [docker-compose.yaml](https://github.com/Maulidito/restapi-bus/blob/main/docker-compose.yaml)
+
+- make .env file, example in this [file](https://github.com/Maulidito/restapi-bus/blob/main/.env.example). the .env file must same directory with docker-compose
+
+- make sure port restapibus in [env](https://github.com/Maulidito/restapi-bus/blob/main/.env.example) same with [docker-compose](https://github.com/Maulidito/restapi-bus/blob/main/docker-compose.yaml)
+
+example
+
+.env
+
+```
+PORT=:8888
+```
+
+docker-compose
+
+```yaml
+restapi:
+  container_name: restapibus
+  image: maulidito/restapibus:v1.3
+  ports:
+    - 8080:8888
+  environment:
+    - HOST_DB=mysql
+  env_file:
+    - .env
+```
+
+\*note : 8080 means port in host or your computer and 8888 means port in container on docker
+
+- Command "docker-compose up" on CLI
+- Check if docker container have been build, command "docker container ls -a"
+- If the container exist and the container not have been start, command "docker container start restapibus" and "docker container start db_mysql_bus"
+- The Service starting
