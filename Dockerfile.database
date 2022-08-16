@@ -1,5 +1,5 @@
 FROM mysql:latest
 LABEL key="mysql_restapibus"
 WORKDIR /
-ADD ${PWD}/dump_db/* /docker-entrypoint-initdb.d
+ADD ${PWD}/dump_db/ /docker-entrypoint-initdb.d
 EXPOSE 3306
