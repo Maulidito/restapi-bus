@@ -6,7 +6,6 @@ setup:
     USERNAME_DB: root
     PASSWORD_DB: root
     NAME_DB: db_bus
-
 build:
   docker:
     web: Dockerfile
