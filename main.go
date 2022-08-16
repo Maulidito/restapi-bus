@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"restapi-bus/app"
 	"restapi-bus/depedency"
@@ -18,7 +19,7 @@ func main() {
 	db := app.NewDatabase(usernameDb, passDb, nameDb, hostDb)
 
 	server := depedency.InitializedServer(db)
-
-	server.Run(port)
+	fmt.Println("SERVER RUNNING ON PORT ", port)
+	server.Run(":" + port)
 
 }
