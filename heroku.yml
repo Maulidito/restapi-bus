@@ -1,8 +1,6 @@
 build:
   docker:
-    restapi:
-      image: maulidito/restapibus:v1.3
-    database:
-      image: maulidito/db_mysql_restapibus:v1.3
+    restapi: Dockerfile
+    restapi_db: Dockerfile.database
 run:
   web: bundle exec puma -C config/puma.rb
