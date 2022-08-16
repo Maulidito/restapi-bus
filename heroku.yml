@@ -1,14 +1,16 @@
+setup:
+  config:
+    MYSQL_ROOT_PASSWORD: root
+    PORT: :8080
+    SECRET_KEY_AUTH: TESTING
+    USERNAME_DB: root
+    PASSWORD_DB: root
+    NAME_DB: db_bus
+
 build:
   docker:
     web: Dockerfile
     restapidb: Dockerfile.database
-    config:
-      MYSQL_ROOT_PASSWORD: root
-      PORT: :8080
-      SECRET_KEY_AUTH: TESTING
-      USERNAME_DB: root
-      PASSWORD_DB: root
-      NAME_DB: db_bus
 
 run:
   web: bundle exec puma -C config/puma.rb
