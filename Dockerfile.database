@@ -1,7 +1,5 @@
 FROM mysql:latest
 LABEL key="mysql_restapibus"
-ENV MYSQL_ROOT_PASSWORD=root
-ENV MYSQL_DATABASE=db_bus
 WORKDIR /
 ADD ${PWD}/dump_db/ /docker-entrypoint-initdb.d
 EXPOSE 3306
