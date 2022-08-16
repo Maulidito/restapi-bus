@@ -4,14 +4,11 @@ import (
 	"os"
 	"restapi-bus/app"
 	"restapi-bus/depedency"
-	"restapi-bus/helper"
-
-	"github.com/joho/godotenv"
 )
 
 func main() {
-	err := godotenv.Load()
-	helper.PanicIfError(err)
+	//err := godotenv.Load()
+	//helper.PanicIfError(err)
 
 	port := os.Getenv("PORT")
 	usernameDb := os.Getenv("USERNAME_DB")
