@@ -1,6 +1,6 @@
 build:
   docker:
-    restapi: Dockerfile
-    database: Dockerfile.database
+    web: Dockerfile
+    #database: Dockerfile.database
 run:
   web: bundle exec puma -C config/puma.rb
