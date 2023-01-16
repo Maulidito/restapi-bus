@@ -8,6 +8,8 @@
 
 - [version 1.3](https://github.com/Maulidito/restapi-bus/tree/563cc904ae091aafb2ee33744e2d10ed1082fa1e)(adding authentication for agency entity)
 
+- [version 1.4]()(adding redis database for optimization)
+
 ## Description
 
 My Portofolio Rest api with golang dan mysql for the database
