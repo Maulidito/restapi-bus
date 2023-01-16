@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"fmt"
 	"net/http"
 	"restapi-bus/constant"
 	"restapi-bus/exception"
@@ -37,10 +36,11 @@ func (ctrl *AgencyControllerImplementation) RouterMount(g gin.IRouter) {
 
 	grouterAgency := g.Group("/agency")
 	grouterAgencyAuth := grouterAgency.Group("", middleware.MiddlewareAuth)
+	grouterAgencyRdb := grouterAgency.Group("", ctrl.Rdb.MiddlewareGetDataRedis)
 	grouterAgency.POST("/login", ctrl.LoginAgency)
 	grouterAgency.GET("", ctrl.GetAllAgency)
 	grouterAgency.POST("", ctrl.RegisterAgency)
-	grouterAgency.GET("/:agencyId", ctrl.Rdb.MiddlewareGetDataRedis, ctrl.GetOneAgency, ctrl.Rdb.MiddlewareSetDataRedis)
+	grouterAgencyRdb.GET("/:agencyId", ctrl.GetOneAgency, ctrl.Rdb.MiddlewareSetDataRedis)
 	grouterAgencyAuth.DELETE("/:agencyId", ctrl.DeleteOneAgency)
 }
 
@@ -119,7 +119,6 @@ func (ctrl *AgencyControllerImplementation) LoginAgency(ctx *gin.Context) {
 	agencyAuth := request.AgencyAuth{}
 	err := ctx.Bind(&agencyAuth)
 
-	fmt.Println("CHECK HEADER ", agencyAuth)
 	helper.PanicIfError(err)
 	token, maxAge, _ := ctrl.service.LoginAgency(ctx, &agencyAuth)
 	ctx.SetCookie(constant.X_API_KEY, token, maxAge, "/", "localhost", true, true)

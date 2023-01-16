@@ -96,6 +96,16 @@ From the image We Know
 - One Service can have many repository
 - One Repository only communicate with one database
 
+## Middleware Pipeline
+
+![Diagram Project](./image/middleware_pipeline.png)
+
+1. The First is the base middleware of the router, every error in controller will catch in middleware error using panic function and recover to catch
+
+2. The Second is the Authentication Middleware, so when the endpoint need an account, the request need to pass the auth middleware
+
+3. The Third is the Redis Middleware, the redis middleware just implented in specific router for example in get one agency, get one bus, get one schedule, etc. The redis middleware will always get the data first from the redis, if the data didn't exist then move to the controller but if exist then send to user.
+
 ## Workflow Project
 
 ![Workflow Project](./image/rest%20api%20bus%20diagram-WorkFlow.drawio.png)
@@ -130,8 +140,6 @@ restapi:
   image: maulidito/restapibus:v1.3
   ports:
     - 8080:8888
-  environment:
-    - HOST_DB=mysql
   env_file:
     - .env
 ```
