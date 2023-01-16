@@ -51,7 +51,7 @@ func validatorErrorHandle(c *gin.Context, err interface{}) bool {
 	FieldErrMessage := []web.ErrorMessage{}
 
 	for _, v := range validatorErr {
-		message := web.ErrorMessage{ErrorMessage: fmt.Sprintf("ERROR BINDING DATA, WHAT = %s, WHERE = %s ", v.ActualTag(), v.Field())}
+		message := web.ErrorMessage{ErrorMessage: fmt.Sprintf("ERROR LACK OF DATA , WHAT = %s, WHERE = %s ", v.ActualTag(), v.Field())}
 		FieldErrMessage = append(FieldErrMessage, message)
 	}
 

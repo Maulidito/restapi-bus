@@ -24,18 +24,20 @@ type BusControllerInterface interface {
 
 type BusControllerImplementation struct {
 	service service.BusServiceInterface
+	Rdb     *middleware.RedisClientDb
 }
 
-func NewBusController(service service.BusServiceInterface) BusControllerInterface {
-	return &BusControllerImplementation{service: service}
+func NewBusController(service service.BusServiceInterface, rdb *middleware.RedisClientDb) BusControllerInterface {
+	return &BusControllerImplementation{service: service, Rdb: rdb}
 }
 
 func (ctrl *BusControllerImplementation) RouterMount(g gin.IRouter) {
 	grouterBus := g.Group("/bus")
 	grouterBusAuth := grouterBus.Group("", middleware.MiddlewareAuth)
+	grouterBusRdb := grouterBus.Group("", ctrl.Rdb.MiddlewareGetDataRedis)
 	grouterBus.GET("", ctrl.GetAllBus)
 	grouterBusAuth.POST("", ctrl.AddBus)
-	grouterBus.GET("/:busId", ctrl.GetOneBusOnSpecificAgency)
+	grouterBusRdb.GET("/:busId", ctrl.GetOneBusOnSpecificAgency, ctrl.Rdb.MiddlewareSetDataRedis)
 	grouterBus.GET("/agency/:agencyId", ctrl.GetAllBusOnSpecificAgency)
 	grouterBusAuth.DELETE("/:busId", ctrl.DeleteOneBus)
 }
@@ -75,6 +77,8 @@ func (ctrl *BusControllerImplementation) GetOneBusOnSpecificAgency(ctx *gin.Cont
 	busResponse := ctrl.service.GetOneBusSpecificAgency(ctx, idIntBus)
 
 	finalResponse := web.WebResponse{Code: http.StatusOK, Status: "OK", Data: busResponse}
+
+	ctx.Set("response", finalResponse)
 
 	ctx.JSON(http.StatusOK, finalResponse)
 

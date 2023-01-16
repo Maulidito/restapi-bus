@@ -24,18 +24,20 @@ type CustomerControllerInterface interface {
 
 type CustomerControllerImplementation struct {
 	service service.CustomerServiceInterface
+	Rdb     *middleware.RedisClientDb
 }
 
-func NewCustomerController(service service.CustomerServiceInterface) CustomerControllerInterface {
-	return &CustomerControllerImplementation{service: service}
+func NewCustomerController(service service.CustomerServiceInterface, rdb *middleware.RedisClientDb) CustomerControllerInterface {
+	return &CustomerControllerImplementation{service: service, Rdb: rdb}
 }
 
 func (ctrl *CustomerControllerImplementation) RouterMount(g gin.IRouter) {
 	grouterCustomer := g.Group("/customer")
 	grouterCustomerAuth := grouterCustomer.Group("", middleware.MiddlewareAuth)
+	grouterCustomerRdb := g.Group("", ctrl.Rdb.MiddlewareGetDataRedis)
 	grouterCustomer.GET("", ctrl.GetAllCustomer)
 	grouterCustomerAuth.POST("", ctrl.AddCustomer)
-	grouterCustomer.GET("/:customerId", ctrl.GetOneCustomer)
+	grouterCustomerRdb.GET("/:customerId", ctrl.GetOneCustomer, ctrl.Rdb.MiddlewareSetDataRedis)
 	grouterCustomerAuth.DELETE("/:customerId", ctrl.DeleteOneCustomer)
 }
 
@@ -74,6 +76,8 @@ func (ctrl *CustomerControllerImplementation) GetOneCustomer(ctx *gin.Context) {
 	customerResponse := ctrl.service.GetOneCustomer(ctx, idInt)
 
 	finalResponse := web.WebResponse{Code: http.StatusOK, Status: "OK", Data: customerResponse}
+
+	ctx.Set("response", finalResponse)
 
 	ctx.JSON(http.StatusOK, finalResponse)
 

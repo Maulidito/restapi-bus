@@ -25,17 +25,19 @@ type ControllerDriverInterface interface {
 
 type ControllerDriverImplementation struct {
 	service service.ServiceDriverInterface
+	Rdb     *middleware.RedisClientDb
 }
 
-func NewDriverController(serv service.ServiceDriverInterface) ControllerDriverInterface {
-	return &ControllerDriverImplementation{service: serv}
+func NewDriverController(serv service.ServiceDriverInterface, rdb *middleware.RedisClientDb) ControllerDriverInterface {
+	return &ControllerDriverImplementation{service: serv, Rdb: rdb}
 }
 
 func (ctrl *ControllerDriverImplementation) RouterMount(g gin.IRouter) {
 	grouterDriver := g.Group("/driver")
 	grouterDriverAuth := grouterDriver.Group("", middleware.MiddlewareAuth)
+	grouterDriverRdb := grouterDriver.Group("", ctrl.Rdb.MiddlewareGetDataRedis)
 	grouterDriver.GET("", ctrl.GetAllDriver)
-	grouterDriver.GET("/:driverId", ctrl.GetOneDriverOnSpecificAgency)
+	grouterDriverRdb.GET("/:driverId", ctrl.GetOneDriverOnSpecificAgency, ctrl.Rdb.MiddlewareSetDataRedis)
 	grouterDriverAuth.POST("", ctrl.AddDriver)
 	grouterDriver.GET("/agency/:agencyId", ctrl.GetAllDriverOnSpecificAgency)
 	grouterDriverAuth.DELETE("/:driverId", ctrl.DeleteDriver)
@@ -81,6 +83,8 @@ func (controller *ControllerDriverImplementation) GetOneDriverOnSpecificAgency(c
 	helper.PanicIfError(err)
 
 	finalResponse := controller.service.GetOneDriverOnSpecificAgency(ctx, idDriverInt)
+
+	ctx.Set("response", finalResponse)
 
 	ctx.JSON(http.StatusOK, &web.WebResponse{Code: http.StatusOK, Status: "OK", Data: finalResponse})
 }

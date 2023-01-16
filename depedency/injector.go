@@ -7,6 +7,7 @@ import (
 	"database/sql"
 	"restapi-bus/app"
 	"restapi-bus/controller"
+	"restapi-bus/middleware"
 	"restapi-bus/repository"
 	"restapi-bus/service"
 
@@ -14,7 +15,7 @@ import (
 	"github.com/google/wire"
 )
 
-func InitializedControllerCustomer(db *sql.DB) controller.CustomerControllerInterface {
+func InitializedControllerCustomer(db *sql.DB, rdb *middleware.RedisClientDb) controller.CustomerControllerInterface {
 	wire.Build(
 		repository.NewCustomerRepository,
 		service.NewCustomerService,
@@ -22,7 +23,7 @@ func InitializedControllerCustomer(db *sql.DB) controller.CustomerControllerInte
 	return nil
 }
 
-func InitializedControllerAgency(db *sql.DB) controller.AgencyControllerInterface {
+func InitializedControllerAgency(db *sql.DB, rdb *middleware.RedisClientDb) controller.AgencyControllerInterface {
 	wire.Build(
 		repository.NewAgencyRepository,
 		service.NewAgencyService,
@@ -30,7 +31,7 @@ func InitializedControllerAgency(db *sql.DB) controller.AgencyControllerInterfac
 	return nil
 }
 
-func InitializedControllerBus(db *sql.DB) controller.BusControllerInterface {
+func InitializedControllerBus(db *sql.DB, rdb *middleware.RedisClientDb) controller.BusControllerInterface {
 	wire.Build(repository.NewBusRepository,
 		repository.NewAgencyRepository,
 		service.NewBusService,
@@ -38,7 +39,7 @@ func InitializedControllerBus(db *sql.DB) controller.BusControllerInterface {
 	return nil
 }
 
-func InitializedControllerDriver(db *sql.DB) controller.ControllerDriverInterface {
+func InitializedControllerDriver(db *sql.DB, rdb *middleware.RedisClientDb) controller.ControllerDriverInterface {
 	wire.Build(repository.NewDiverRepository,
 		repository.NewAgencyRepository,
 		service.NewServiceDriver,
@@ -46,7 +47,7 @@ func InitializedControllerDriver(db *sql.DB) controller.ControllerDriverInterfac
 	return nil
 }
 
-func InitializedControllerSchedule(db *sql.DB) controller.ControllerScheduleInterface {
+func InitializedControllerSchedule(db *sql.DB, rdb *middleware.RedisClientDb) controller.ControllerScheduleInterface {
 	wire.Build(
 		repository.NewScheduleRepository,
 		repository.NewBusRepository,
@@ -58,7 +59,7 @@ func InitializedControllerSchedule(db *sql.DB) controller.ControllerScheduleInte
 	return nil
 }
 
-func InitializedControllerTicket(db *sql.DB) controller.ControllerTicketInterface {
+func InitializedControllerTicket(db *sql.DB, rdb *middleware.RedisClientDb) controller.ControllerTicketInterface {
 	wire.Build(
 		repository.NewTicketRepository,
 		repository.NewCustomerRepository,
@@ -71,7 +72,7 @@ func InitializedControllerTicket(db *sql.DB) controller.ControllerTicketInterfac
 	return nil
 }
 
-func InitializedServer(*sql.DB) *gin.Engine {
+func InitializedServer(*sql.DB, *middleware.RedisClientDb) *gin.Engine {
 	wire.Build(
 		InitializedControllerCustomer,
 		InitializedControllerAgency,

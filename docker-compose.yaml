@@ -1,20 +1,27 @@
-version: "3.9"  # optional since v1.27.0
+version: "3.9" # optional since v1.27.0
 services:
   restapi:
     container_name: restapibus
-    image: maulidito/restapibus:v1.3
+    #image: maulidito/restapibus:v1.3
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
       - 8080:8080
-    environment:
-      - HOST_DB=mysql
     env_file:
       - .env
   mysql:
     container_name: db_mysql_bus
-    image: maulidito/db_mysql_restapibus:v1.3
+    #image: maulidito/db_mysql_restapibus:v1.3
+    build:
+      context: .
+      dockerfile: Dockerfile.database
+
     environment:
       - MYSQL_ROOT_PASSWORD=root
       - MYSQL_DATABASE=db_bus
     restart: always
-
-  
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"

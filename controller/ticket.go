@@ -31,17 +31,20 @@ type ControllerTicketInterface interface {
 
 type ControllerTicketImplementation struct {
 	service service.TicketServiceInterface
+	Rdb     *middleware.RedisClientDb
 }
 
-func NewTicketController(serv service.TicketServiceInterface) ControllerTicketInterface {
-	return &ControllerTicketImplementation{service: serv}
+func NewTicketController(serv service.TicketServiceInterface, rdb *middleware.RedisClientDb) ControllerTicketInterface {
+	return &ControllerTicketImplementation{service: serv, Rdb: rdb}
 }
 
 func (ctrl *ControllerTicketImplementation) RouterMount(g gin.IRouter) {
+
 	grouterTicket := g.Group("/ticket")
 	grouterTicketAuth := grouterTicket.Group("", middleware.MiddlewareAuth)
+	grouterTicketRdb := grouterTicket.Group("", ctrl.Rdb.MiddlewareGetDataRedis)
 	grouterTicket.GET("", ctrl.GetAllTicket)
-	grouterTicket.GET("/:ticketId", ctrl.GetOneTicket)
+	grouterTicketRdb.GET("/:ticketId", ctrl.GetOneTicket, ctrl.Rdb.MiddlewareSetDataRedis)
 	grouterTicket.GET("/driver/:driverId", ctrl.GetAllTicketOnSpecificDriver)
 	grouterTicket.GET("/customer/:customerId", ctrl.GetAllTicketOnSpecificCustomer)
 	grouterTicket.GET("/bus/:busId", ctrl.GetAllTicketOnSpecificBus)
@@ -57,7 +60,6 @@ func (ctrl *ControllerTicketImplementation) GetAllTicket(ctx *gin.Context) {
 	filter := request.TicketFilter{}
 
 	err := ctx.BindQuery(&filter)
-	//checkBool, _ := strconv.ParseBool(filter.Arrived)
 	fmt.Println("CHECK FILTER ", filter.Arrived, "err", err)
 	if err != nil {
 
@@ -93,6 +95,7 @@ func (ctrl *ControllerTicketImplementation) GetOneTicket(ctx *gin.Context) {
 
 	Ticket := ctrl.service.GetOneTicket(ctx, ticketIdInt)
 	finalResponse := web.WebResponse{Code: http.StatusOK, Status: "OK", Data: Ticket}
+	ctx.Set("response", finalResponse)
 	ctx.JSON(http.StatusOK, &finalResponse)
 }
 func (ctrl *ControllerTicketImplementation) DeleteTicket(ctx *gin.Context) {

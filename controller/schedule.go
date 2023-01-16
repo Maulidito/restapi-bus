@@ -25,18 +25,20 @@ type ControllerScheduleInterface interface {
 
 type ControllerScheduleImplementation struct {
 	Service service.ScheduleServiceInterface
+	Rdb     *middleware.RedisClientDb
 }
 
-func NewScheduleController(serv service.ScheduleServiceInterface) ControllerScheduleInterface {
-	return &ControllerScheduleImplementation{Service: serv}
+func NewScheduleController(serv service.ScheduleServiceInterface, rdb *middleware.RedisClientDb) ControllerScheduleInterface {
+	return &ControllerScheduleImplementation{Service: serv, Rdb: rdb}
 }
 
 func (controller *ControllerScheduleImplementation) RouterMount(g gin.IRouter) {
 	grouterSchedule := g.Group("/schedule")
 	grouterScheduleAuth := grouterSchedule.Group("", middleware.MiddlewareAuth)
+	grouterScheduleRdb := grouterSchedule.Group("", controller.Rdb.MiddlewareGetDataRedis)
 	grouterSchedule.GET("", controller.GetAllSchedule)
 	grouterScheduleAuth.POST("", controller.AddSchedule)
-	grouterSchedule.GET("/:scheduleId", controller.GetOneSchedule)
+	grouterScheduleRdb.GET("/:scheduleId", controller.GetOneSchedule, controller.Rdb.MiddlewareSetDataRedis)
 	grouterScheduleAuth.DELETE("/:scheduleId", controller.DeleteSchedule)
 	grouterScheduleAuth.PATCH("/:scheduleId/arrived", controller.UpdateArrivedSchedule)
 }
@@ -71,6 +73,7 @@ func (controller *ControllerScheduleImplementation) GetOneSchedule(ctx *gin.Cont
 	responseSchedule := controller.Service.GetOneSchedule(ctx, scheduleIdInt)
 
 	finalResponse := web.WebResponse{Code: http.StatusOK, Status: "OK", Data: responseSchedule}
+	ctx.Set("response", finalResponse)
 	ctx.JSON(http.StatusOK, finalResponse)
 }
 

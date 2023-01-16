@@ -26,10 +26,11 @@ type AgencyControllerInterface interface {
 
 type AgencyControllerImplementation struct {
 	service service.AgencyServiceInterface
+	Rdb     *middleware.RedisClientDb
 }
 
-func NewAgencyController(service service.AgencyServiceInterface) AgencyControllerInterface {
-	return &AgencyControllerImplementation{service: service}
+func NewAgencyController(service service.AgencyServiceInterface, rdb *middleware.RedisClientDb) AgencyControllerInterface {
+	return &AgencyControllerImplementation{service: service, Rdb: rdb}
 }
 
 func (ctrl *AgencyControllerImplementation) RouterMount(g gin.IRouter) {
@@ -39,7 +40,7 @@ func (ctrl *AgencyControllerImplementation) RouterMount(g gin.IRouter) {
 	grouterAgency.POST("/login", ctrl.LoginAgency)
 	grouterAgency.GET("", ctrl.GetAllAgency)
 	grouterAgency.POST("", ctrl.RegisterAgency)
-	grouterAgency.GET("/:agencyId", ctrl.GetOneAgency)
+	grouterAgency.GET("/:agencyId", ctrl.Rdb.MiddlewareGetDataRedis, ctrl.GetOneAgency, ctrl.Rdb.MiddlewareSetDataRedis)
 	grouterAgencyAuth.DELETE("/:agencyId", ctrl.DeleteOneAgency)
 }
 
@@ -89,12 +90,13 @@ func (ctrl *AgencyControllerImplementation) GetOneAgency(ctx *gin.Context) {
 
 	finalResponse := web.WebResponse{Code: http.StatusOK, Status: "OK", Data: agencyResponse}
 
+	ctx.Set("response", finalResponse)
+
 	ctx.JSON(http.StatusOK, finalResponse)
 
 }
 func (ctrl *AgencyControllerImplementation) DeleteOneAgency(ctx *gin.Context) {
 	id, idBool := ctx.Params.Get("agencyId")
-	fmt.Println("DELETE IN")
 
 	if !idBool {
 		panic(exception.NewBadRequestError("ERROR AGENCY ID NOT FOUND"))
