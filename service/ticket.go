@@ -3,11 +3,14 @@ package service
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"restapi-bus/helper"
 	"restapi-bus/models/entity"
 	"restapi-bus/models/request"
 	"restapi-bus/models/response"
 	"restapi-bus/repository"
+
+	"github.com/rabbitmq/amqp091-go"
 )
 
 type TicketServiceInterface interface {
@@ -32,6 +35,7 @@ type TicketServiceImplementation struct {
 	RepoTicket   repository.TicketRepositoryInterface
 	RepoAgency   repository.AgencyRepositoryInterface
 	RepoSchedule repository.ScheduleRepositoryInterface
+	RepoMq       repository.IMessageChannel
 }
 
 func NewTicketService(
@@ -42,9 +46,10 @@ func NewTicketService(
 	repoTicket repository.TicketRepositoryInterface,
 	repoAgency repository.AgencyRepositoryInterface,
 	repoSchedule repository.ScheduleRepositoryInterface,
+	RepoMq repository.IMessageChannel,
 ) TicketServiceInterface {
 
-	return &TicketServiceImplementation{Db: db, RepoBus: repoBus, RepoCustomer: repoCustomer, RepoDriver: repoDriver, RepoTicket: repoTicket, RepoAgency: repoAgency, RepoSchedule: repoSchedule}
+	return &TicketServiceImplementation{Db: db, RepoBus: repoBus, RepoCustomer: repoCustomer, RepoDriver: repoDriver, RepoTicket: repoTicket, RepoAgency: repoAgency, RepoSchedule: repoSchedule, RepoMq: RepoMq}
 }
 
 func (service *TicketServiceImplementation) GetAllTicket(ctx context.Context, filter *request.TicketFilter) []response.Ticket {
@@ -68,8 +73,10 @@ func (service *TicketServiceImplementation) AddTicket(ctx context.Context, ticke
 	defer helper.DoCommitOrRollback(tx)
 
 	ticketEntity := helper.TicketRequestToEntity(ticket)
+
 	scheduleEntity := entity.Schedule{ScheduleId: ticket.ScheduleId}
 	customerEntity := entity.Customer{CustomerId: ticket.CustomerId}
+
 	chanErr := make(chan error, 1)
 
 	go func() {
@@ -86,9 +93,21 @@ func (service *TicketServiceImplementation) AddTicket(ctx context.Context, ticke
 		service.RepoSchedule.GetOneSchedule(ctx, tx, &scheduleEntity)
 		service.RepoCustomer.GetOneCustomer(ctx, tx, &customerEntity)
 	}()
-
 	helper.PanicIfError(<-chanErr)
+	// rabbitmq
+	respDetailSchedule := response.DetailSchedule{ScheduleId: scheduleEntity.ScheduleId, FromAgency: response.Agency{AgencyId: scheduleEntity.FromAgencyId}, ToAgency: response.Agency{AgencyId: scheduleEntity.ToAgencyId}, Driver: response.Driver{DriverId: scheduleEntity.DriverId}, Bus: response.Bus{BusId: scheduleEntity.BusId}}
+
+	service.RepoSchedule.GetOneDetailSchedule(ctx, tx, &respDetailSchedule)
+
 	service.RepoTicket.AddTicket(tx, ctx, &ticketEntity)
+
+	respDetailTicket := response.DetailTicket{TicketId: ticketEntity.TicketId, Customer: helper.CustomerEntityToResponse(&customerEntity), Schedule: respDetailSchedule}
+
+	respDetailTicketByte, err := json.Marshal(respDetailTicket)
+	helper.PanicIfError(err)
+
+	service.RepoMq.PublishToEmailService(ctx, &amqp091.Publishing{Body: respDetailTicketByte})
+	//
 
 }
 func (service *TicketServiceImplementation) GetOneTicket(ctx context.Context, ticketId int) response.Ticket {

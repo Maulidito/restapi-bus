@@ -12,6 +12,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/rabbitmq/amqp091-go"
 )
 
 type ControllerTicketInterface interface {
@@ -30,12 +31,13 @@ type ControllerTicketInterface interface {
 }
 
 type ControllerTicketImplementation struct {
-	service service.TicketServiceInterface
-	Rdb     *middleware.RedisClientDb
+	service  service.TicketServiceInterface
+	Rdb      *middleware.RedisClientDb
+	Rabbitmq *amqp091.Channel
 }
 
-func NewTicketController(serv service.TicketServiceInterface, rdb *middleware.RedisClientDb) ControllerTicketInterface {
-	return &ControllerTicketImplementation{service: serv, Rdb: rdb}
+func NewTicketController(serv service.TicketServiceInterface, rdb *middleware.RedisClientDb, rmq *amqp091.Channel) ControllerTicketInterface {
+	return &ControllerTicketImplementation{service: serv, Rdb: rdb, Rabbitmq: rmq}
 }
 
 func (ctrl *ControllerTicketImplementation) RouterMount(g gin.IRouter) {
@@ -77,6 +79,18 @@ func (ctrl *ControllerTicketImplementation) AddTicket(ctx *gin.Context) {
 	ctrl.service.AddTicket(ctx, &ticketRequest)
 
 	finalResponse := web.WebResponseNoData{Code: http.StatusOK, Status: "OK"}
+
+	// finalResponseByte, err := json.Marshal(finalResponse)
+	// helper.PanicIfError(err)
+	// queue, err := ctrl.Rabbitmq.QueueDeclare("busTicket", false, true, false, true, nil)
+	// helper.PanicIfError(err)
+	// err = ctrl.Rabbitmq.QueueBind(queue.Name, "info", "amq.direct", false, nil)
+
+	// helper.PanicIfError(err)
+
+	// go func() {
+	// 	ctrl.Rabbitmq.PublishWithContext(ctx, "amq.direct", "info", false, false, amqp091.Publishing{Body: finalResponseByte})
+	// }()
 	ctx.JSON(http.StatusOK, &finalResponse)
 
 }

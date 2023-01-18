@@ -15,12 +15,16 @@ import (
 )
 
 func main() {
-	err := godotenv.Load()
+	err := godotenv.Load("../../.env")
 	helper.PanicIfError(err)
 
 	gob.Register(web.WebResponse{})
 	gob.Register(response.Agency{})
 	gob.Register(response.Bus{})
+	gob.Register(response.Ticket{})
+	gob.Register(response.Driver{})
+	gob.Register(response.Customer{})
+	gob.Register(response.Schedule{})
 
 	port := os.Getenv("PORT")
 	usernameDb := os.Getenv("USERNAME_DB")
@@ -30,12 +34,18 @@ func main() {
 	hostRdb := os.Getenv("HOST_RDB")
 	passRdb := os.Getenv("PASSWORD_RDB")
 	portRdb := os.Getenv("PORT_RDB")
+	usernameRmq := os.Getenv("USERNAME_RMQ")
+	passwordRmq := os.Getenv("PASSWORD_RMQ")
+	hostRmq := os.Getenv("HOST_RMQ")
+	portRmq := os.Getenv("PORT_RMQ")
 	db := app.NewDatabase(usernameDb, passDb, nameDb, hostDb)
 
 	rdb := app.NewRedis(hostRdb, portRdb, passRdb)
 	middlewareRedis := middleware.RedisClientDb{Client: rdb}
+	Rabbitmq, err := app.NewRabbitMqConn(usernameRmq, passwordRmq, hostRmq, portRmq).Channel()
+	helper.PanicIfError(err)
 
-	server := depedency.InitializedServer(db, &middlewareRedis)
+	server := depedency.InitializedServer(db, &middlewareRedis, Rabbitmq)
 	fmt.Println("SERVER RUNNING ON PORT ", port)
 	server.Run(":" + port)
 

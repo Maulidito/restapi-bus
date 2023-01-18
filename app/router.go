@@ -12,7 +12,7 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-func configurationRouter() *gin.Engine {
+func DefaultConfigurationRouter() *gin.Engine {
 	_, err := os.ReadDir("./log")
 	if err != nil {
 		err = os.Mkdir("./log", fs.FileMode(int(0766)))
@@ -39,7 +39,7 @@ func IntializedCustomValidation() {
 
 func Router(customer controller.CustomerControllerInterface, agency controller.AgencyControllerInterface, bus controller.BusControllerInterface, driver controller.ControllerDriverInterface, ticket controller.ControllerTicketInterface, schedule controller.ControllerScheduleInterface) *gin.Engine {
 
-	g := configurationRouter()
+	g := DefaultConfigurationRouter()
 
 	IntializedCustomValidation()
 

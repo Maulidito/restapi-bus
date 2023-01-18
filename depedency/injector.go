@@ -13,6 +13,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/wire"
+	"github.com/rabbitmq/amqp091-go"
 )
 
 func InitializedControllerCustomer(db *sql.DB, rdb *middleware.RedisClientDb) controller.CustomerControllerInterface {
@@ -59,7 +60,7 @@ func InitializedControllerSchedule(db *sql.DB, rdb *middleware.RedisClientDb) co
 	return nil
 }
 
-func InitializedControllerTicket(db *sql.DB, rdb *middleware.RedisClientDb) controller.ControllerTicketInterface {
+func InitializedControllerTicket(db *sql.DB, rdb *middleware.RedisClientDb, rmq *amqp091.Channel) controller.ControllerTicketInterface {
 	wire.Build(
 		repository.NewTicketRepository,
 		repository.NewCustomerRepository,
@@ -67,12 +68,13 @@ func InitializedControllerTicket(db *sql.DB, rdb *middleware.RedisClientDb) cont
 		repository.NewBusRepository,
 		repository.NewScheduleRepository,
 		repository.NewAgencyRepository,
+		repository.BindMqChannel,
 		service.NewTicketService,
 		controller.NewTicketController)
 	return nil
 }
 
-func InitializedServer(*sql.DB, *middleware.RedisClientDb) *gin.Engine {
+func InitializedServer(*sql.DB, *middleware.RedisClientDb, *amqp091.Channel) *gin.Engine {
 	wire.Build(
 		InitializedControllerCustomer,
 		InitializedControllerAgency,

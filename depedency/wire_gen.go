@@ -9,6 +9,7 @@ package depedency
 import (
 	"database/sql"
 	"github.com/gin-gonic/gin"
+	"github.com/rabbitmq/amqp091-go"
 	"restapi-bus/app"
 	"restapi-bus/controller"
 	"restapi-bus/middleware"
@@ -58,24 +59,25 @@ func InitializedControllerSchedule(db *sql.DB, rdb *middleware.RedisClientDb) co
 	return controllerScheduleInterface
 }
 
-func InitializedControllerTicket(db *sql.DB, rdb *middleware.RedisClientDb) controller.ControllerTicketInterface {
+func InitializedControllerTicket(db *sql.DB, rdb *middleware.RedisClientDb, rmq *amqp091.Channel) controller.ControllerTicketInterface {
 	busRepositoryInterface := repository.NewBusRepository()
 	customerRepositoryInterface := repository.NewCustomerRepository()
 	driverRepositoryInterface := repository.NewDiverRepository()
 	ticketRepositoryInterface := repository.NewTicketRepository()
 	agencyRepositoryInterface := repository.NewAgencyRepository()
 	scheduleRepositoryInterface := repository.NewScheduleRepository()
-	ticketServiceInterface := service.NewTicketService(db, busRepositoryInterface, customerRepositoryInterface, driverRepositoryInterface, ticketRepositoryInterface, agencyRepositoryInterface, scheduleRepositoryInterface)
-	controllerTicketInterface := controller.NewTicketController(ticketServiceInterface, rdb)
+	iMessageChannel := repository.BindMqChannel(rmq)
+	ticketServiceInterface := service.NewTicketService(db, busRepositoryInterface, customerRepositoryInterface, driverRepositoryInterface, ticketRepositoryInterface, agencyRepositoryInterface, scheduleRepositoryInterface, iMessageChannel)
+	controllerTicketInterface := controller.NewTicketController(ticketServiceInterface, rdb, rmq)
 	return controllerTicketInterface
 }
 
-func InitializedServer(db *sql.DB, redisClientDb *middleware.RedisClientDb) *gin.Engine {
+func InitializedServer(db *sql.DB, redisClientDb *middleware.RedisClientDb, channel *amqp091.Channel) *gin.Engine {
 	customerControllerInterface := InitializedControllerCustomer(db, redisClientDb)
 	agencyControllerInterface := InitializedControllerAgency(db, redisClientDb)
 	busControllerInterface := InitializedControllerBus(db, redisClientDb)
 	controllerDriverInterface := InitializedControllerDriver(db, redisClientDb)
-	controllerTicketInterface := InitializedControllerTicket(db, redisClientDb)
+	controllerTicketInterface := InitializedControllerTicket(db, redisClientDb, channel)
 	controllerScheduleInterface := InitializedControllerSchedule(db, redisClientDb)
 	engine := app.Router(customerControllerInterface, agencyControllerInterface, busControllerInterface, controllerDriverInterface, controllerTicketInterface, controllerScheduleInterface)
 	return engine

@@ -44,7 +44,7 @@ func (repo *CustomerRepositoryImplementation) GetAllCustomer(ctx context.Context
 
 func (repo *CustomerRepositoryImplementation) AddCustomer(ctx context.Context, tx *sql.Tx, customer *entity.Customer) {
 
-	res, err := tx.ExecContext(ctx, "Insert Into customer( name , phone_number ) Values (?,?)", customer.Name, customer.PhoneNumber)
+	res, err := tx.ExecContext(ctx, "Insert Into customer( name , phone_number, email ) Values (?,?,?)", customer.Name, customer.PhoneNumber, customer.Email)
 	helper.PanicIfError(err)
 	id, err := res.LastInsertId()
 	helper.PanicIfError(err)

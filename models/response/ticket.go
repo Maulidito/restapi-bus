@@ -7,6 +7,13 @@ type Ticket struct {
 	Date       string `json:"date"`
 }
 
+type DetailTicket struct {
+	TicketId int `json:"ticketId"`
+	Schedule DetailSchedule
+	Customer Customer
+	Date     string `json:"date"`
+}
+
 type AllTicketOnAgency struct {
 	Agency *Agency   `json:"agency"`
 	Ticket *[]Ticket `json:"ticket"`

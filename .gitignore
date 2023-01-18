@@ -3,3 +3,6 @@ log/*.log
 tmp/
 .vscode/
 .env
+mock_data/
+cmd/email_server/log
+cmd/restapibus/log

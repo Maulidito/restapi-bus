@@ -11,6 +11,7 @@ func CustomerEntityToResponse(customer *entity.Customer) response.Customer {
 		CustomerId:  customer.CustomerId,
 		Name:        customer.Name,
 		PhoneNumber: customer.PhoneNumber,
+		Email:       customer.Email,
 	}
 }
 
@@ -66,7 +67,7 @@ func BusRequestToEntity(bus *request.Bus) entity.Bus {
 
 func CustomerRequestToEntity(customer *request.Customer) entity.Customer {
 	return entity.Customer{
-
+		Email:       customer.Email,
 		Name:        customer.Name,
 		PhoneNumber: customer.PhoneNumber,
 	}

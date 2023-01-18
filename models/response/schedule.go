@@ -10,3 +10,13 @@ type Schedule struct {
 	Date         string `json:"date" `
 	Arrived      bool   `default:"false" json:"arrived"  `
 }
+type DetailSchedule struct {
+	ScheduleId int    `json:"scheduleId" `
+	FromAgency Agency `json:"fromAgency" `
+	ToAgency   Agency `json:"toAgency" `
+	Bus        Bus    `json:"busId" `
+	Driver     Driver `json:"driverId" `
+	Price      int    `json:"price" `
+	Date       string `json:"date" `
+	Arrived    bool   `default:"false" json:"arrived"  `
+}

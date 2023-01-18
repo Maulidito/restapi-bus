@@ -121,6 +121,8 @@ components:
           type: string
         phoneNumber:
           type: string
+        email:
+          type: string
     driverComponent:
       type: object
       properties:
@@ -759,6 +761,8 @@ paths:
                 name:
                   type: string
                 phoneNumber:
+                  type: string
+                email:
                   type: string
         description: "Request Body"
       summary: "adding Customer"

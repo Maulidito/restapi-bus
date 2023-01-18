@@ -66,7 +66,7 @@ func (ctrl *AgencyControllerImplementation) RegisterAgency(ctx *gin.Context) {
 	agencyAuth := request.AgencyAuth{}
 	err := ctx.ShouldBind(&agencyRequest)
 	helper.PanicIfError(err)
-	ctx.ShouldBind(&agencyAuth)
+	err = ctx.ShouldBind(&agencyAuth)
 	helper.PanicIfError(err)
 	agencyRequest.Auth = &agencyAuth
 	ctrl.service.RegisterAgency(ctx, &agencyRequest)
