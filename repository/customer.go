@@ -26,7 +26,7 @@ func NewCustomerRepository() CustomerRepositoryInterface {
 func (repo *CustomerRepositoryImplementation) GetAllCustomer(ctx context.Context, tx *sql.Tx, filter string) []entity.Customer {
 
 	fmt.Println("CHECK FILTER SQL ", filter)
-	row, err := tx.QueryContext(ctx, "SELECT customer_id,name,phone_number FROM customer "+filter)
+	row, err := tx.QueryContext(ctx, "SELECT customer_id,name,phone_number,email FROM customer "+filter)
 	helper.PanicIfError(err)
 	defer row.Close()
 
@@ -34,7 +34,7 @@ func (repo *CustomerRepositoryImplementation) GetAllCustomer(ctx context.Context
 
 	for row.Next() {
 		tempCustomer := entity.Customer{}
-		err := row.Scan(&tempCustomer.CustomerId, &tempCustomer.Name, &tempCustomer.PhoneNumber)
+		err := row.Scan(&tempCustomer.CustomerId, &tempCustomer.Name, &tempCustomer.PhoneNumber, &tempCustomer.Email)
 		listCustomer = append(listCustomer, tempCustomer)
 		helper.PanicIfError(err)
 	}
@@ -55,8 +55,8 @@ func (repo *CustomerRepositoryImplementation) AddCustomer(ctx context.Context, t
 
 func (repo *CustomerRepositoryImplementation) GetOneCustomer(ctx context.Context, tx *sql.Tx, customer *entity.Customer) {
 
-	err := tx.QueryRowContext(ctx, "SELECT name, phone_number FROM customer where customer_id = ?", customer.CustomerId).
-		Scan(&customer.Name, &customer.PhoneNumber)
+	err := tx.QueryRowContext(ctx, "SELECT name, phone_number,email FROM customer where customer_id = ?", customer.CustomerId).
+		Scan(&customer.Name, &customer.PhoneNumber, &customer.Email)
 
 	if err != nil {
 		panic(exception.NewNotFoundError(fmt.Sprintf("ID Customer %d Not Found", customer.CustomerId)))

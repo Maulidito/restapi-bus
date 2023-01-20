@@ -1,12 +1,17 @@
 package main
 
 import (
+	"bytes"
+	"context"
 	"encoding/json"
+	"fmt"
+	"html/template"
 	"log"
 	"os"
 	"restapi-bus/app"
 	"restapi-bus/helper"
 	"restapi-bus/models/response"
+	"restapi-bus/repository"
 
 	"github.com/joho/godotenv"
 	"github.com/sendgrid/sendgrid-go"
@@ -34,10 +39,9 @@ func main() {
 
 	helper.PanicIfError(err)
 
-	queue, err := channel.QueueDeclare("busTicket", false, true, false, true, nil)
+	MqChannel := repository.BindMqChannel(channel)
 
-	helper.PanicIfError(err)
-	messageChannel, err := channel.Consume(queue.Name, CONSUMER_NAME, false, false, true, true, nil)
+	messageChannel := MqChannel.ConsumeQueue(context.Background(), CONSUMER_NAME)
 	helper.PanicIfError(err)
 
 	stopService := make(chan bool)
@@ -48,8 +52,9 @@ func main() {
 			detailTicket := response.DetailTicket{}
 			err := json.Unmarshal(message.Body, &detailTicket)
 			log.Print(detailTicket)
+			SendTicketEmail(&detailTicket)
 			if err != nil {
-				//do something
+				message.Reject(false)
 			}
 			err = message.Ack(true)
 			helper.PanicIfError(err)
@@ -60,16 +65,15 @@ func main() {
 	<-stopService
 }
 
-func SendEmail() {
+func SendTicketEmail(detailTicket *response.DetailTicket) {
 	from := mail.NewEmail("Bus Agency", "busagencyapi@gmail.com")
 
-	subject := "test"
-	plainTextContent := "plain text content"
+	subject := fmt.Sprintf("Bus Ticket %d", detailTicket.TicketId)
 
-	htmlContent := "<h1> HTML CONTENT </h1>"
-	to := mail.NewEmail("Bus Agency Ticket", "maudana111@gmail.com")
+	htmlContent := getHtmlTemplate(detailTicket)
+	to := mail.NewEmail("Bus Agency Ticket", detailTicket.Customer.Email)
 
-	message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
+	message := mail.NewSingleEmail(from, subject, to, "", htmlContent)
 
 	client := sendgrid.NewSendClient(os.Getenv("SENDGRID_API_KEY"))
 
@@ -83,4 +87,16 @@ func SendEmail() {
 		log.Println(response.Body)
 		log.Println(response.Headers)
 	}
+}
+
+func getHtmlTemplate(data *response.DetailTicket) string {
+	template, err := template.ParseFiles("../../views/html/email_template.html")
+	helper.PanicIfError(err)
+	templateBuffer := new(bytes.Buffer)
+
+	err = template.Execute(templateBuffer, data)
+
+	helper.PanicIfError(err)
+
+	return templateBuffer.String()
 }

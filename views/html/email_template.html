@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div
+      data-role="module-unsubscribe"
+      class="module"
+      role="module"
+      data-type="unsubscribe"
+      style="
+        color: #444444;
+        font-size: 12px;
+        line-height: 20px;
+        text-align: Center;
+        padding-top: 50px;
+      "
+      data-muid="4e838cf3-9892-4a6d-94d6-170e474d21e5"
+    >
+      <h2>This is Your Ticket Bus {{.TicketId}}</h2>
+      <div style="background-color: #ebebeb; padding: 30px">
+        <table
+          style="
+            border-collapse: collapse;
+            margin-left: auto;
+            margin-right: auto;
+            width: 50%;
+            font-size: 13px;
+            border-spacing: 10px;
+          "
+        >
+          <tbody>
+            <tr>
+              <th style="border-style: solid; border-width: 0px 0px 1px 0px">
+                Name
+              </th>
+              <td style="border-style: solid; border-width: 0px 0px 1px 0px">
+                {{.Customer.Name}}
+              </td>
+            </tr>
+            <tr>
+              <th style="border-style: solid; border-width: 0px 0px 1px 0px">
+                Phone Number
+              </th>
+              <td style="border-style: solid; border-width: 0px 0px 1px 0px">
+                {{.Customer.PhoneNumber}}
+              </td>
+            </tr>
+            <tr>
+              <th style="border-style: solid; border-width: 0px 0px 1px 0px">
+                Email
+              </th>
+              <td style="border-style: solid; border-width: 0px 0px 1px 0px">
+                {{.Customer.Email}}
+              </td>
+            </tr>
+            <tr>
+              <th style="border-style: solid; border-width: 0px 0px 1px 0px">
+                From
+              </th>
+              <td style="border-style: solid; border-width: 0px 0px 1px 0px">
+                {{.Schedule.FromAgency.Place}}
+              </td>
+            </tr>
+            <tr>
+              <th style="border-style: solid; border-width: 0px 0px 1px 0px">
+                To
+              </th>
+              <td style="border-style: solid; border-width: 0px 0px 1px 0px">
+                {{.Schedule.ToAgency.Place}}
+              </td>
+            </tr>
+            <tr>
+              <th style="border-style: solid; border-width: 0px 0px 1px 0px">
+                Number Plate Bus
+              </th>
+              <td style="border-style: solid; border-width: 0px 0px 1px 0px">
+                {{.Schedule.Bus.NumberPlate}}
+              </td>
+            </tr>
+            <tr>
+              <th style="border-style: solid; border-width: 0px 0px 1px 0px">
+                Driver Name
+              </th>
+              <td style="border-style: solid; border-width: 0px 0px 1px 0px">
+                {{.Schedule.Driver.Name}}
+              </td>
+            </tr>
+            <tr>
+              <th style="border-style: solid; border-width: 0px 0px 1px 0px">
+                Date
+              </th>
+              <td style="border-style: solid; border-width: 0px 0px 1px 0px">
+                {{.Schedule.Date}}
+              </td>
+            </tr>
+            <tr>
+              <th style="border-style: solid; border-width: 0px 0px 1px 0px">
+                Price
+              </th>
+              <td style="border-style: solid; border-width: 0px 0px 1px 0px">
+                Rp.{{.Schedule.Price}}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div
+        style="
+          background-color: lightgreen;
+          padding: 10px;
+          margin-top: 100px;
+          align-items: center;
+          position: relative;
+          width: 100%;
+          bottom: 0;
+        "
+      >
+        <p style="font-size: 16px; line-height: 20px; flex: 1">
+          Thank you and have a good trip <span> 😀 </span>
+        </p>
+      </div>
+    </div>
+  </body>
+</html>
