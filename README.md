@@ -10,7 +10,7 @@
 
 - [version 1.4](https://github.com/Maulidito/restapi-bus/tree/20b78ef591e6c747bbd57627d85795fb0b9251d0) (adding redis database for optimization)
 
-- [version 1.5]() (adding email service with rabbit mq for communicating)
+- [version 1.5](https://github.com/Maulidito/restapi-bus/tree/e00c8893ce99810a2ca5113367389a168c5c204e) (adding email service with rabbit mq for communicating)
 
 ## Description
 
