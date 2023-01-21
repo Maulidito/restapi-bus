@@ -10,6 +10,8 @@
 
 - [version 1.4](https://github.com/Maulidito/restapi-bus/tree/20b78ef591e6c747bbd57627d85795fb0b9251d0) (adding redis database for optimization)
 
+- [version 1.5]() (adding email service with rabbit mq for communicating)
+
 ## Description
 
 My Portofolio Rest api with golang dan mysql for the database
@@ -37,6 +39,7 @@ the framework i use in this project is [Gin](https://github.com/gin-gonic/gin)
 | customer_id  | int       | **Primary** |
 | name         | string    | -           |
 | phone_number | string    | -           |
+| Email        | string    | -           |
 
 - ### Driver
 
@@ -113,6 +116,24 @@ From the image We Know
 ![Workflow Project](./image/rest%20api%20bus%20diagram-WorkFlow.drawio.png)
 
 This image show workflow from client send request and get response in REST API
+
+## Email Service
+
+![Message Queue System](./image/MessageQueue_System.png)
+
+The goal of Email service is send a ticket bus to email user. If we see the image i use message queue for connecting to email service and rest api, and i user SendGrid Api to handle delivery email. The technology message queue is using [RabbitMq](https://rabbitmq.com/)
+
+The flow email service work:
+
+1. Rest api declare queue and bind the exchange, then publish detail ticket to MQ
+2. Email Service declare queue if didnt exist, then consume queue
+3. Email Service Render the data of detail ticket to html
+4. Email Service send to sendgrid API
+5. Sendgrid API will send it to email user
+
+example of email
+
+![Example Ticket Email](./image/example_email_api.png)
 
 ## Documentation Rest Api
 
