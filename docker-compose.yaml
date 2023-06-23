@@ -8,6 +8,10 @@ services:
       dockerfile: Dockerfile
     ports:
       - 8080:8080
+    environment:
+      - HOST_RMQ=rabbitmq
+    networks:
+      - example_net
     env_file:
       - .env
   mysql:
@@ -19,29 +23,31 @@ services:
     environment:
       - MYSQL_ROOT_PASSWORD=root
       - MYSQL_DATABASE=db_bus
+    ports:
+      - "3307:3306"
     restart: always
   redis:
     image: redis:alpine
     ports:
       - "6379:6379"
-#   rabbitmq:
-#     container_name: rabbitmq_service
-#     image: rabbitmq:3-management
-#     restart: always
-#     environment:
-#       RABBITMQ_DEFAULT_USER: admin
-#       RABBITMQ_DEFAULT_PASS: admin
-#     volumes:
-#       - rabbitmq_data:/var/lib/rabbitmq
-#     networks:
-#       - example_net
-#     ports:
-#       - 5672:5672
-#       - 15672:15672
-# volumes:
-#   rabbitmq_data:
-#     external: true
-# networks:
-#   example_net:
-#     external: true
-#     driver: bridge
+  rabbitmq:
+    container_name: rabbitmq_service
+    image: rabbitmq:3-management
+    restart: always
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - example_net
+    ports:
+      - 5672:5672
+      - 15672:15672
+volumes:
+  rabbitmq_data:
+    external: true
+networks:
+  example_net:
+    external: true
+    driver: bridge

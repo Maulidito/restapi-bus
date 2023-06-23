@@ -28,6 +28,7 @@ func main() {
 
 	port := os.Getenv("PORT")
 	usernameDb := os.Getenv("USERNAME_DB")
+	portDb := os.Getenv("PORT_DB")
 	hostDb := os.Getenv("HOST_DB")
 	passDb := os.Getenv("PASSWORD_DB")
 	nameDb := os.Getenv("NAME_DB")
@@ -38,7 +39,7 @@ func main() {
 	passwordRmq := os.Getenv("PASSWORD_RMQ")
 	hostRmq := os.Getenv("HOST_RMQ")
 	portRmq := os.Getenv("PORT_RMQ")
-	db := app.NewDatabase(usernameDb, passDb, nameDb, hostDb)
+	db := app.NewDatabase(usernameDb, passDb, nameDb, hostDb, portDb)
 
 	rdb := app.NewRedis(hostRdb, portRdb, passRdb)
 	middlewareRedis := middleware.RedisClientDb{Client: rdb}

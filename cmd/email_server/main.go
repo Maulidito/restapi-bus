@@ -6,12 +6,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"restapi-bus/app"
 	"restapi-bus/helper"
 	"restapi-bus/models/response"
 	"restapi-bus/repository"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/sendgrid/sendgrid-go"
@@ -19,6 +22,8 @@ import (
 )
 
 func main() {
+
+	template := parseHtmlFile("../../views/html/email_template_v2.html", "../../views/html/email_ticket.html", "../../views/html/email_template.html")
 	CONSUMER_NAME := "EMAIL_SERVICE"
 	err := godotenv.Load("../../.env")
 	helper.PanicIfError(err)
@@ -51,8 +56,14 @@ func main() {
 		for message := range messageChannel {
 			detailTicket := response.DetailTicket{}
 			err := json.Unmarshal(message.Body, &detailTicket)
+			helper.PanicIfError(err)
 			log.Print(detailTicket)
-			SendTicketEmail(&detailTicket)
+			templateRendered := renderHtmlTemplate(&detailTicket, "email_template.html", template)
+			//imageHtml := htmlToImage(templateRendered)
+			//log.Println("IMAGE HTML", imageHtml)
+			//templateFinal := renderHtmlTemplate(&struct{ Url string }{Url: imageHtml}, "email_template_v2.html", template)
+			//log.Println("Template Final \n", templateFinal)
+			SendTicketEmail(&detailTicket, templateRendered)
 			if err != nil {
 				message.Reject(false)
 			}
@@ -65,15 +76,51 @@ func main() {
 	<-stopService
 }
 
-func SendTicketEmail(detailTicket *response.DetailTicket) {
+func htmlToImage(templateRendered string) string {
+	dataHTML := map[string]string{
+		"html": templateRendered,
+	}
+	templateRenderedByte, err := json.Marshal(&dataHTML)
+	helper.PanicIfError(err)
+	req, err := http.NewRequest("POST", "https://hcti.io/v1/image", bytes.NewReader(templateRenderedByte))
+
+	helper.PanicIfError(err)
+
+	req.SetBasicAuth(os.Getenv("HTMLTOIMAGE_USERID"), os.Getenv("HTMLTOIMAGE_APIKEY"))
+
+	client := &http.Client{Timeout: 10 * time.Second}
+
+	resp, err := client.Do(req)
+
+	helper.PanicIfError(err)
+
+	defer resp.Body.Close()
+
+	bodyByte, err := ioutil.ReadAll(resp.Body)
+
+	helper.PanicIfError(err)
+
+	BodyStruct := struct {
+		Url string
+	}{}
+
+	if err := json.Unmarshal(bodyByte, &BodyStruct); err != nil {
+		helper.PanicIfError(err)
+	}
+
+	log.Print("RESULT BODY STRING", BodyStruct.Url)
+	return BodyStruct.Url
+
+}
+
+func SendTicketEmail(detailTicket *response.DetailTicket, templateRendered string) {
 	from := mail.NewEmail("Bus Agency", "busagencyapi@gmail.com")
 
 	subject := fmt.Sprintf("Bus Ticket %d", detailTicket.TicketId)
 
-	htmlContent := getHtmlTemplate(detailTicket)
 	to := mail.NewEmail("Bus Agency Ticket", detailTicket.Customer.Email)
 
-	message := mail.NewSingleEmail(from, subject, to, "", htmlContent)
+	message := mail.NewSingleEmail(from, subject, to, "", templateRendered)
 
 	client := sendgrid.NewSendClient(os.Getenv("SENDGRID_API_KEY"))
 
@@ -89,12 +136,17 @@ func SendTicketEmail(detailTicket *response.DetailTicket) {
 	}
 }
 
-func getHtmlTemplate(data *response.DetailTicket) string {
-	template, err := template.ParseFiles("../../views/html/email_template.html")
+func parseHtmlFile(filePath ...string) *template.Template {
+	template, err := template.ParseFiles(filePath...)
 	helper.PanicIfError(err)
+	return template
+}
+
+func renderHtmlTemplate(data interface{}, templateName string, template *template.Template) string {
+
 	templateBuffer := new(bytes.Buffer)
 
-	err = template.Execute(templateBuffer, data)
+	err := template.ExecuteTemplate(templateBuffer, templateName, data)
 
 	helper.PanicIfError(err)
 
