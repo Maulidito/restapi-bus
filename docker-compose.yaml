@@ -2,20 +2,27 @@ version: "3.9" # optional since v1.27.0
 services:
   restapi:
     container_name: restapibus
+    image: restapi:testing
     #image: maulidito/restapibus:v1.3
     build:
       context: .
       dockerfile: Dockerfile
+    depends_on:
+      - mysql
+      - redis
+      - rabbitmq
     ports:
       - 8080:8080
-    environment:
-      - HOST_RMQ=rabbitmq
     networks:
-      - example_net
+      - mq_network
+      - mysql_network
+      - redit_network
     env_file:
       - .env
+    restart: always
   mysql:
-    container_name: db_mysql_bus
+    container_name: db_mysql
+    image: db_mysql:testing
     #image: maulidito/db_mysql_restapibus:v1.3
     build:
       context: .
@@ -23,15 +30,22 @@ services:
     environment:
       - MYSQL_ROOT_PASSWORD=root
       - MYSQL_DATABASE=db_bus
-    ports:
-      - "3307:3306"
+    # ports:
+    #   - "3307:3306"
+    networks:
+      - mysql_network
     restart: always
+    volumes:
+      - restapi_data:/var/lib/mysql
   redis:
+    container_name: db_redis
     image: redis:alpine
-    ports:
-      - "6379:6379"
+    networks:
+      - redit_network
+    # ports:
+    #   - "6379:6379"
   rabbitmq:
-    container_name: rabbitmq_service
+    container_name: mq_rabbit
     image: rabbitmq:3-management
     restart: always
     environment:
@@ -40,14 +54,26 @@ services:
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     networks:
-      - example_net
-    ports:
-      - 5672:5672
-      - 15672:15672
+      - mq_network
+    # ports:
+    #   - 5672:5672
+    #   - 15672:15672
 volumes:
   rabbitmq_data:
     external: true
+  restapi_data:
+    external: true
+
 networks:
-  example_net:
+  mysql_network:
     external: true
     driver: bridge
+    name: mysql_network
+  mq_network:
+    external: true
+    driver: bridge
+    name: mq_network
+  redit_network:
+    external: true
+    driver: bridge
+    name: redis_network

@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"restapi-bus/helper"
 
 	"github.com/go-redis/redis"
 )
@@ -13,6 +14,10 @@ func NewRedis(host string, port string, pass string) *redis.Client {
 		DB:       0,    // use default DB
 
 	})
+	ping := rdb.Ping()
+	if ping.Err() != nil {
+		helper.PanicIfError(ping.Err())
+	}
 
 	return rdb
 }
