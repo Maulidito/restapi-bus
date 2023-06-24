@@ -49,5 +49,4 @@ func main() {
 	server := depedency.InitializedServer(db, &middlewareRedis, Rabbitmq)
 	fmt.Println("SERVER RUNNING ON PORT ", port)
 	server.Run(":" + port)
-
 }
