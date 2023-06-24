@@ -1,7 +1,7 @@
 openapi: "3.0.2"
 info:
   title: Api Bus Travel
-  version: "1.2"
+  version: "1.5"
   contact:
     name: Maulidito Dwinandana
     email: maulidito@gmail.com
@@ -120,8 +120,6 @@ components:
         name:
           type: string
         phoneNumber:
-          type: string
-        email:
           type: string
     driverComponent:
       type: object
@@ -761,8 +759,6 @@ paths:
                 name:
                   type: string
                 phoneNumber:
-                  type: string
-                email:
                   type: string
         description: "Request Body"
       summary: "adding Customer"
