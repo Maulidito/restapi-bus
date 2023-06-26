@@ -2,11 +2,7 @@ version: "3.9" # optional since v1.27.0
 services:
   restapi:
     container_name: restapibus
-    image: restapi:testing
-    #image: maulidito/restapibus:v1.3
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: maulidito/restapibus:v1.5
     depends_on:
       - mysql
       - redis
@@ -19,14 +15,10 @@ services:
       - redit_network
     env_file:
       - .env
-    restart: always
+    restart: on-failure
   mysql:
     container_name: db_mysql
-    image: db_mysql:testing
-    #image: maulidito/db_mysql_restapibus:v1.3
-    build:
-      context: .
-      dockerfile: Dockerfile.database
+    image: mysql:8.0
     environment:
       - MYSQL_ROOT_PASSWORD=root
       - MYSQL_DATABASE=db_bus
@@ -34,9 +26,10 @@ services:
     #   - "3307:3306"
     networks:
       - mysql_network
-    restart: always
+    restart: on-failure
     volumes:
       - restapi_data:/var/lib/mysql
+      - ./dumb_db/:/docker-entrypoint-initdb.d
   redis:
     container_name: db_redis
     image: redis:alpine
