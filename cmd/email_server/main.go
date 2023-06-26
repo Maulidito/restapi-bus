@@ -51,7 +51,7 @@ func main() {
 			err := json.Unmarshal(message.Body, &detailTicket)
 			helper.PanicIfError(err)
 			log.Print(detailTicket)
-			templateRendered := service.RenderHtmlTemplate(&detailTicket, "email_template.html", template)
+			templateRendered := service.RenderHtmlTemplate(&detailTicket, "email_ticket.html", template)
 			service.SendTicketEmailSmtp(&detailTicket, templateRendered)
 			if err != nil {
 				message.Reject(false)

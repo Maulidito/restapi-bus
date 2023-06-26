@@ -12,7 +12,17 @@ services:
     networks:
       - mq_network
       - mysql_network
-      - redit_network
+      - redis_network
+    env_file:
+      - .env
+    restart: on-failure
+  email_service:
+    container_name: email_service_restapibus
+    image: maulidito/email_service:v1.0.1
+    depends_on:
+      - rabbitmq
+    networks:
+      - mq_network
     env_file:
       - .env
     restart: on-failure
@@ -22,21 +32,19 @@ services:
     environment:
       - MYSQL_ROOT_PASSWORD=root
       - MYSQL_DATABASE=db_bus
-    # ports:
-    #   - "3307:3306"
     networks:
       - mysql_network
     restart: on-failure
+    ports:
+      - 3307:3306
     volumes:
       - restapi_data:/var/lib/mysql
-      - ./dumb_db/:/docker-entrypoint-initdb.d
+      - ./dump_db/:/docker-entrypoint-initdb.d
   redis:
     container_name: db_redis
     image: redis:alpine
     networks:
-      - redit_network
-    # ports:
-    #   - "6379:6379"
+      - redis_network
   rabbitmq:
     container_name: mq_rabbit
     image: rabbitmq:3-management
@@ -53,20 +61,20 @@ services:
     #   - 15672:15672
 volumes:
   rabbitmq_data:
-    external: true
+    external: false
   restapi_data:
-    external: true
+    external: false
 
 networks:
   mysql_network:
-    external: true
+    external: false
     driver: bridge
     name: mysql_network
   mq_network:
-    external: true
+    external: false
     driver: bridge
     name: mq_network
-  redit_network:
-    external: true
+  redis_network:
+    external: false
     driver: bridge
     name: redis_network
