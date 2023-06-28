@@ -121,9 +121,9 @@ This image show workflow from client send request and get response in REST API
 
 ![Message Queue System](./image/microservice.drawio.png)
 
-~~ no longer using sendgrid~~
+no longer using sendgrid
 
-The goal of Email service is send a ticket bus to email user. If we see the image i use message queue for connecting to email service and rest api, and i user SendGrid Api to handle delivery email. The technology message queue is using [RabbitMq](https://rabbitmq.com/)
+The goal of Email service is send a ticket bus to email user. If we see the image i use message queue for connecting to email service and rest api, and ~~i user SendGrid Api~~ smtp gmail to handle delivery email. The technology message queue is using [RabbitMq](https://rabbitmq.com/)
 
 The flow email service work:
 
