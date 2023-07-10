@@ -4,9 +4,12 @@ services:
     container_name: restapibus
     image: maulidito/restapibus:v1.5
     depends_on:
-      - mysql
-      - redis
-      - rabbitmq
+      mysql:
+        condition: service_started
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     ports:
       - 8080:8080
     networks:
@@ -20,7 +23,8 @@ services:
     container_name: email_service_restapibus
     image: maulidito/email_service:v1.0.1
     depends_on:
-      - rabbitmq
+      rabbitmq:
+        condition: service_healthy
     networks:
       - mq_network
     env_file:
@@ -35,8 +39,8 @@ services:
     networks:
       - mysql_network
     restart: on-failure
-    ports:
-      - 3307:3306
+    # ports:
+    #   - 3307:3306
     volumes:
       - restapi_data:/var/lib/mysql
       - ./dump_db/:/docker-entrypoint-initdb.d
@@ -45,6 +49,12 @@ services:
     image: redis:alpine
     networks:
       - redis_network
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping  | grep PONG ||  exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
   rabbitmq:
     container_name: mq_rabbit
     image: rabbitmq:3-management
@@ -56,6 +66,12 @@ services:
       - rabbitmq_data:/var/lib/rabbitmq
     networks:
       - mq_network
+    healthcheck:
+      test: ["CMD-SHELL", "rabbitmqctl status"]
+      interval: 10s
+      timeout: 20s
+      retries: 5
+      start_period: 30s
     # ports:
     #   - 5672:5672
     #   - 15672:15672

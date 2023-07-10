@@ -8,3 +8,4 @@ cmd/email_server/log
 cmd/restapibus/log
 diagram_drawio/
 *.zip
+docker-compose-local.yaml
