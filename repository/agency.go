@@ -7,28 +7,23 @@ import (
 	"restapi-bus/exception"
 	"restapi-bus/helper"
 	"restapi-bus/models/entity"
+	"restapi-bus/models/request"
 )
 
-type AgencyRepositoryInterface interface {
-	GetAllAgency(ctx context.Context, tx *sql.Tx, filter string) []entity.Agency
-	RegisterAgency(ctx context.Context, tx *sql.Tx, agency *entity.Agency)
-	GetOneAgency(ctx context.Context, tx *sql.Tx, agency *entity.Agency)
-	IsUsenameAgencyExist(ctx context.Context, tx *sql.Tx, agencyUsername string) bool
-	DeleteOneAgency(ctx context.Context, tx *sql.Tx, agency *entity.Agency)
-	GetOneAgencyAuth(ctx context.Context, tx *sql.Tx, agency *entity.Agency)
-	GetSaltAgencyWithUsername(ctx context.Context, tx *sql.Tx, agencyUsername string) string
-}
-
 type AgencyRepositoryImplementation struct {
+	conn *sql.DB
 }
 
-func NewAgencyRepository() AgencyRepositoryInterface {
-	return &AgencyRepositoryImplementation{}
+func NewAgencyRepository(conn *sql.DB) entity.AgencyRepositoryInterface {
+	return &AgencyRepositoryImplementation{conn: conn}
 }
 
-func (repo *AgencyRepositoryImplementation) GetAllAgency(ctx context.Context, tx *sql.Tx, filter string) []entity.Agency {
-
-	row, err := tx.QueryContext(ctx, "SELECT agency.agency_id,agency.name,agency.place FROM agency "+filter)
+func (repo *AgencyRepositoryImplementation) GetAllAgency(ctx context.Context, filter *request.AgencyFilter) []entity.Agency {
+	tx, err := repo.conn.Begin()
+	defer helper.DoCommitOrRollback(tx)
+	helper.PanicIfError(err)
+	filterString := helper.RequestFilterAgencyToString(filter)
+	row, err := tx.QueryContext(ctx, "SELECT agency.agency_id,agency.name,agency.place FROM agency "+filterString)
 	helper.PanicIfError(err)
 
 	defer row.Close()
@@ -45,7 +40,10 @@ func (repo *AgencyRepositoryImplementation) GetAllAgency(ctx context.Context, tx
 	return listAgency
 }
 
-func (repo *AgencyRepositoryImplementation) RegisterAgency(ctx context.Context, tx *sql.Tx, agency *entity.Agency) {
+func (repo *AgencyRepositoryImplementation) RegisterAgency(ctx context.Context, agency *entity.Agency) {
+	tx, err := repo.conn.Begin()
+	defer helper.DoCommitOrRollback(tx)
+	helper.PanicIfError(err)
 
 	res, err := tx.ExecContext(ctx, "Insert Into agency( name , place, username, password, salt ) Values (?,?,?,?,?)", agency.Name, agency.Place, agency.Username, agency.Password, agency.Salt)
 
@@ -58,9 +56,11 @@ func (repo *AgencyRepositoryImplementation) RegisterAgency(ctx context.Context, 
 
 }
 
-func (repo *AgencyRepositoryImplementation) GetOneAgency(ctx context.Context, tx *sql.Tx, agency *entity.Agency) {
-
-	err := tx.QueryRowContext(ctx, "SELECT name, place FROM agency where agency_id = ?", agency.AgencyId).
+func (repo *AgencyRepositoryImplementation) GetOneAgency(ctx context.Context, agency *entity.Agency) {
+	tx, err := repo.conn.Begin()
+	defer helper.DoCommitOrRollback(tx)
+	helper.PanicIfError(err)
+	err = tx.QueryRowContext(ctx, "SELECT name, place FROM agency where agency_id = ?", agency.AgencyId).
 		Scan(
 			&agency.Name,
 			&agency.Place,
@@ -73,18 +73,22 @@ func (repo *AgencyRepositoryImplementation) GetOneAgency(ctx context.Context, tx
 	}
 
 }
-func (repo *AgencyRepositoryImplementation) DeleteOneAgency(ctx context.Context, tx *sql.Tx, agency *entity.Agency) {
+func (repo *AgencyRepositoryImplementation) DeleteOneAgency(ctx context.Context, agency *entity.Agency) {
+	tx, err := repo.conn.Begin()
+	defer helper.DoCommitOrRollback(tx)
+	helper.PanicIfError(err)
 
-	_, err := tx.ExecContext(ctx, "DELETE FROM agency WHERE agency_id = ?", agency.AgencyId)
+	_, err = tx.ExecContext(ctx, "DELETE FROM agency WHERE agency_id = ?", agency.AgencyId)
 
 	helper.PanicIfError(err)
 
 }
 
-func (repo *AgencyRepositoryImplementation) GetOneAgencyAuth(ctx context.Context, tx *sql.Tx, agency *entity.Agency) {
-
-	//rows, err := tx.QueryContext(ctx, "SELECT agency_id,name,place FROM agency where username = ? AND password = ?", agency.Username, agency.Password)
-	err := tx.QueryRowContext(ctx, "SELECT agency_id,name,place FROM agency where username = ? AND password = ?", agency.Username, agency.Password).
+func (repo *AgencyRepositoryImplementation) GetOneAgencyAuth(ctx context.Context, agency *entity.Agency) {
+	tx, err := repo.conn.Begin()
+	defer helper.DoCommitOrRollback(tx)
+	helper.PanicIfError(err)
+	err = tx.QueryRowContext(ctx, "SELECT agency_id,name,place FROM agency where username = ? AND password = ?", agency.Username, agency.Password).
 		Scan(
 			&agency.AgencyId,
 			&agency.Name,
@@ -99,9 +103,11 @@ func (repo *AgencyRepositoryImplementation) GetOneAgencyAuth(ctx context.Context
 
 }
 
-func (repo *AgencyRepositoryImplementation) GetSaltAgencyWithUsername(ctx context.Context, tx *sql.Tx, agencyUsername string) (saltResult string) {
-
-	err := tx.QueryRowContext(ctx, "SELECT salt place FROM agency where username = ? ", agencyUsername).Scan(&saltResult)
+func (repo *AgencyRepositoryImplementation) GetSaltAgencyWithUsername(ctx context.Context, agencyUsername string) (saltResult string) {
+	tx, err := repo.conn.Begin()
+	defer helper.DoCommitOrRollback(tx)
+	helper.PanicIfError(err)
+	err = tx.QueryRowContext(ctx, "SELECT salt place FROM agency where username = ? ", agencyUsername).Scan(&saltResult)
 
 	if err != nil {
 		errMsg := fmt.Sprintf("username %s Not Found", agencyUsername)
@@ -110,10 +116,14 @@ func (repo *AgencyRepositoryImplementation) GetSaltAgencyWithUsername(ctx contex
 	return
 }
 
-func (repo *AgencyRepositoryImplementation) IsUsenameAgencyExist(ctx context.Context, tx *sql.Tx, agencyUsername string) bool {
+func (repo *AgencyRepositoryImplementation) IsUsenameAgencyExist(ctx context.Context, agencyUsername string) bool {
 
 	var name_temp string
-	err := tx.QueryRowContext(ctx, "SELECT name place FROM agency where username = ? ", agencyUsername).Scan(&name_temp)
+	tx, err := repo.conn.Begin()
+	defer helper.DoCommitOrRollback(tx)
+	helper.PanicIfError(err)
+
+	err = tx.QueryRowContext(ctx, "SELECT name place FROM agency where username = ? ", agencyUsername).Scan(&name_temp)
 
 	return err == nil
 

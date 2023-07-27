@@ -2,38 +2,24 @@ package service
 
 import (
 	"context"
-	"database/sql"
 	"restapi-bus/helper"
 	"restapi-bus/models/entity"
 	"restapi-bus/models/request"
 	"restapi-bus/models/response"
-	"restapi-bus/repository"
 )
 
-type BusServiceInterface interface {
-	GetAllBus(ctx context.Context, filter *request.BusFilter) []response.Bus
-	AddBus(ctx context.Context, bus *request.Bus)
-	GetOneBusSpecificAgency(ctx context.Context, idBus int) response.Bus
-	DeleteOneBus(ctx context.Context, idBus int) response.Bus
-	GetAllBusOnSpecificAgency(ctx context.Context, idAgency int) []response.Bus
-}
-
 type BusServiceImplemtation struct {
-	Db         *sql.DB
-	RepoBus    repository.BusRepositoryInterface
-	RepoAgency repository.AgencyRepositoryInterface
+	RepoBus    entity.BusRepositoryInterface
+	RepoAgency entity.AgencyRepositoryInterface
 }
 
-func NewBusService(db *sql.DB, repoBus repository.BusRepositoryInterface, repoAgency repository.AgencyRepositoryInterface) BusServiceInterface {
-	return &BusServiceImplemtation{Db: db, RepoBus: repoBus, RepoAgency: repoAgency}
+func NewBusService(repoBus entity.BusRepositoryInterface, repoAgency entity.AgencyRepositoryInterface) entity.BusServiceInterface {
+	return &BusServiceImplemtation{RepoBus: repoBus, RepoAgency: repoAgency}
 }
 
 func (service *BusServiceImplemtation) GetAllBus(ctx context.Context, filter *request.BusFilter) []response.Bus {
-	tx, err := service.Db.Begin()
-	defer helper.DoCommitOrRollback(tx)
-	helper.PanicIfError(err)
 
-	listBus := service.RepoBus.GetAllBus(ctx, tx, helper.RequestFilterBusToString(filter))
+	listBus := service.RepoBus.GetAllBus(ctx, filter)
 	listBusResponse := []response.Bus{}
 
 	for _, bus := range listBus {
@@ -45,33 +31,26 @@ func (service *BusServiceImplemtation) GetAllBus(ctx context.Context, filter *re
 
 }
 func (service *BusServiceImplemtation) AddBus(ctx context.Context, bus *request.Bus) {
-	tx, err := service.Db.Begin()
-	defer helper.DoCommitOrRollback(tx)
-	helper.PanicIfError(err)
-	service.RepoAgency.GetOneAgency(ctx, tx, &entity.Agency{AgencyId: bus.AgencyId})
+
+	service.RepoAgency.GetOneAgency(ctx, &entity.Agency{AgencyId: bus.AgencyId})
 	busEntity := helper.BusRequestToEntity(bus)
-	service.RepoBus.AddBus(ctx, tx, &busEntity)
+	service.RepoBus.AddBus(ctx, &busEntity)
 
 }
 
 func (service *BusServiceImplemtation) GetOneBusSpecificAgency(ctx context.Context, idBus int) response.Bus {
-	tx, err := service.Db.Begin()
-	defer helper.DoCommitOrRollback(tx)
-	helper.PanicIfError(err)
 
 	busEntity := entity.Bus{
 		BusId: idBus,
 	}
-	service.RepoBus.GetOneBus(ctx, tx, &busEntity)
+	service.RepoBus.GetOneBus(ctx, &busEntity)
 
 	return helper.BusEntityToResponse(&busEntity)
 
 }
 
 func (service *BusServiceImplemtation) GetAllBusOnSpecificAgency(ctx context.Context, idAgency int) []response.Bus {
-	tx, err := service.Db.Begin()
-	defer helper.DoCommitOrRollback(tx)
-	helper.PanicIfError(err)
+
 	var busEntity []entity.Bus
 
 	chanErr := make(chan error, 1)
@@ -91,8 +70,8 @@ func (service *BusServiceImplemtation) GetAllBusOnSpecificAgency(ctx context.Con
 
 		}()
 
-		service.RepoAgency.GetOneAgency(ctx, tx, &agencyEntity)
-		busEntity = service.RepoBus.GetAllBusSpecificAgency(ctx, tx, idAgency)
+		service.RepoAgency.GetOneAgency(ctx, &agencyEntity)
+		busEntity = service.RepoBus.GetAllBusSpecificAgency(ctx, idAgency)
 	}()
 
 	helper.PanicIfError(<-chanErr)
@@ -105,15 +84,12 @@ func (service *BusServiceImplemtation) GetAllBusOnSpecificAgency(ctx context.Con
 
 }
 func (service *BusServiceImplemtation) DeleteOneBus(ctx context.Context, idBus int) response.Bus {
-	tx, err := service.Db.Begin()
-	defer helper.DoCommitOrRollback(tx)
-	helper.PanicIfError(err)
 
 	busEntity := entity.Bus{
 		BusId: idBus,
 	}
-	service.RepoBus.GetOneBus(ctx, tx, &busEntity)
-	service.RepoBus.DeleteOneBus(ctx, tx, &busEntity)
+	service.RepoBus.GetOneBus(ctx, &busEntity)
+	service.RepoBus.DeleteOneBus(ctx, &busEntity)
 
 	return helper.BusEntityToResponse(&busEntity)
 }

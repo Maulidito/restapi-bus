@@ -50,7 +50,6 @@ func main() {
 			detailTicket := response.DetailTicket{}
 			err := json.Unmarshal(message.Body, &detailTicket)
 			helper.PanicIfError(err)
-			log.Print(detailTicket)
 			templateRendered := service.RenderHtmlTemplate(&detailTicket, "email_ticket.html", template)
 			service.SendTicketEmailSmtp(&detailTicket, templateRendered)
 			if err != nil {
@@ -59,6 +58,7 @@ func main() {
 			err = message.Ack(true)
 			helper.PanicIfError(err)
 		}
+		close(stopService)
 
 	}()
 

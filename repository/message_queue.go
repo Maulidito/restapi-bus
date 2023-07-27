@@ -12,7 +12,7 @@ type MessageChannel struct {
 }
 
 type IMessageChannel interface {
-	PublishToEmailService(ctx context.Context, data *amqp091.Publishing)
+	PublishToEmailService(ctx context.Context, data []byte)
 	ConsumeQueue(ctx context.Context, consumerName string) <-chan amqp091.Delivery
 }
 
@@ -21,11 +21,11 @@ func BindMqChannel(channelMq *amqp091.Channel) IMessageChannel {
 	return &MessageChannel{channelMq}
 }
 
-func (mq *MessageChannel) PublishToEmailService(ctx context.Context, data *amqp091.Publishing) {
+func (mq *MessageChannel) PublishToEmailService(ctx context.Context, data []byte) {
 	queue := initQueue(mq)
 	err := mq.QueueBind(queue.Name, "info", "amq.direct", false, nil)
 	helper.PanicIfError(err)
-	mq.PublishWithContext(ctx, "amq.direct", "info", false, false, *data)
+	mq.PublishWithContext(ctx, "amq.direct", "info", false, false, amqp091.Publishing{Body: data})
 }
 
 func (mq *MessageChannel) ConsumeQueue(ctx context.Context, consumerName string) <-chan amqp091.Delivery {

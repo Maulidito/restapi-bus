@@ -79,26 +79,6 @@ func SendTicketEmail(detailTicket *response.DetailTicket, templateRendered strin
 	}
 }
 
-// func SendTicketEmailGomail(detailTicket *response.DetailTicket, templateRendered string) {
-// 	app_password := os.Getenv("APP_PASSWORD_GMAIL")
-// 	m := gomail.NewMessage()
-// 	m.SetHeader("From", "maudana111restapibus@gmail.com")
-// 	m.SetHeader("To", detailTicket.Customer.Email)
-// 	// m.SetAddressHeader("Cc", "dan@example.com", "Dan")
-// 	m.SetHeader("Subject", fmt.Sprintf("Bus Ticket %d", detailTicket.TicketId))
-// 	m.SetBody("text/html", templateRendered)
-
-// 	d := gomail.NewDialer("smtp.gmail.com", 587, "maudana111restapibus@gmail.com", app_password)
-// 	//d.TLSConfig.InsecureSkipVerify = true
-// 	log.Print(d.Host, app_password, d.Port)
-
-// 	// Send the email to Bob, Cora and Dan.
-// 	if err := d.DialAndSend(m); err != nil {
-// 		panic(err)
-// 	}
-
-// }
-
 func SendTicketEmailSmtp(detailTicket *response.DetailTicket, templateRendered string) {
 
 	app_password := os.Getenv("APP_PASSWORD_GMAIL")

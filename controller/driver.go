@@ -5,9 +5,9 @@ import (
 	"restapi-bus/exception"
 	"restapi-bus/helper"
 	"restapi-bus/middleware"
+	"restapi-bus/models/entity"
 	"restapi-bus/models/request"
 	"restapi-bus/models/web"
-	"restapi-bus/service"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -24,11 +24,11 @@ type ControllerDriverInterface interface {
 }
 
 type ControllerDriverImplementation struct {
-	service service.ServiceDriverInterface
+	service entity.ServiceDriverInterface
 	Rdb     *middleware.RedisClientDb
 }
 
-func NewDriverController(serv service.ServiceDriverInterface, rdb *middleware.RedisClientDb) ControllerDriverInterface {
+func NewDriverController(serv entity.ServiceDriverInterface, rdb *middleware.RedisClientDb) ControllerDriverInterface {
 	return &ControllerDriverImplementation{service: serv, Rdb: rdb}
 }
 

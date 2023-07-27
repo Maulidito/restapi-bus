@@ -6,9 +6,10 @@ import (
 	"restapi-bus/exception"
 	"restapi-bus/helper"
 	"restapi-bus/middleware"
+	"restapi-bus/models/entity"
 	"restapi-bus/models/request"
 	"restapi-bus/models/web"
-	"restapi-bus/service"
+
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -24,11 +25,11 @@ type AgencyControllerInterface interface {
 }
 
 type AgencyControllerImplementation struct {
-	service service.AgencyServiceInterface
+	service entity.AgencyServiceInterface
 	Rdb     *middleware.RedisClientDb
 }
 
-func NewAgencyController(service service.AgencyServiceInterface, rdb *middleware.RedisClientDb) AgencyControllerInterface {
+func NewAgencyController(service entity.AgencyServiceInterface, rdb *middleware.RedisClientDb) AgencyControllerInterface {
 	return &AgencyControllerImplementation{service: service, Rdb: rdb}
 }
 
@@ -53,11 +54,8 @@ func (ctrl *AgencyControllerImplementation) GetAllAgency(ctx *gin.Context) {
 	if err != nil {
 		panic(exception.NewBadRequestError(err.Error()))
 	}
-
 	agencyResponse := ctrl.service.GetAllAgency(ctx, &filter)
-
 	finalResponse := web.WebResponse{Code: http.StatusOK, Status: "OK", Data: agencyResponse}
-
 	ctx.JSON(http.StatusOK, finalResponse)
 }
 func (ctrl *AgencyControllerImplementation) RegisterAgency(ctx *gin.Context) {

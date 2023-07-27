@@ -2,39 +2,24 @@ package service
 
 import (
 	"context"
-	"database/sql"
 	"restapi-bus/helper"
 	"restapi-bus/models/entity"
 	"restapi-bus/models/request"
 	"restapi-bus/models/response"
-	"restapi-bus/repository"
 )
 
-type ServiceDriverInterface interface {
-	GetAllDriver(ctx context.Context, filter *request.DriverFilter) []response.Driver
-	GetAllDriverOnSpecificAgency(ctx context.Context, agencyId int) []response.Driver
-	GetOneDriverOnSpecificAgency(ctx context.Context, driverId int) response.Driver
-	AddDriver(ctx context.Context, driver *request.Driver)
-	DeleteDriver(ctx context.Context, driverId int) response.Driver
-}
-
 type ServiceDriverImplementation struct {
-	Db         *sql.DB
-	RepoDriver repository.DriverRepositoryInterface
-	RepoAgency repository.AgencyRepositoryInterface
+	RepoDriver entity.DriverRepositoryInterface
+	RepoAgency entity.AgencyRepositoryInterface
 }
 
-func NewServiceDriver(db *sql.DB, repoDriver repository.DriverRepositoryInterface, repoAgency repository.AgencyRepositoryInterface) ServiceDriverInterface {
-	return &ServiceDriverImplementation{Db: db, RepoDriver: repoDriver, RepoAgency: repoAgency}
+func NewServiceDriver(repoDriver entity.DriverRepositoryInterface, repoAgency entity.AgencyRepositoryInterface) entity.ServiceDriverInterface {
+	return &ServiceDriverImplementation{RepoDriver: repoDriver, RepoAgency: repoAgency}
 }
 
 func (service *ServiceDriverImplementation) GetAllDriver(ctx context.Context, filter *request.DriverFilter) []response.Driver {
 
-	tx, err := service.Db.Begin()
-	defer helper.DoCommitOrRollback(tx)
-	helper.PanicIfError(err)
-
-	listDriver := service.RepoDriver.GetAllDriver(tx, ctx, helper.RequestFilterDriverToString(filter))
+	listDriver := service.RepoDriver.GetAllDriver(ctx, filter)
 
 	res := []response.Driver{}
 	for _, val := range listDriver {
@@ -45,9 +30,6 @@ func (service *ServiceDriverImplementation) GetAllDriver(ctx context.Context, fi
 
 }
 func (service *ServiceDriverImplementation) GetAllDriverOnSpecificAgency(ctx context.Context, agencyId int) []response.Driver {
-	tx, err := service.Db.Begin()
-	defer helper.DoCommitOrRollback(tx)
-	helper.PanicIfError(err)
 
 	agency := entity.Agency{AgencyId: agencyId}
 	listDriver := []entity.Driver{}
@@ -63,8 +45,8 @@ func (service *ServiceDriverImplementation) GetAllDriverOnSpecificAgency(ctx con
 			close(chanErr)
 
 		}()
-		service.RepoAgency.GetOneAgency(ctx, tx, &agency)
-		listDriver = service.RepoDriver.GetAllDriverOnSpecificAgency(tx, ctx, agency.AgencyId)
+		service.RepoAgency.GetOneAgency(ctx, &agency)
+		listDriver = service.RepoDriver.GetAllDriverOnSpecificAgency(ctx, agency.AgencyId)
 	}()
 
 	helper.PanicIfError(<-chanErr)
@@ -77,35 +59,26 @@ func (service *ServiceDriverImplementation) GetAllDriverOnSpecificAgency(ctx con
 
 }
 func (service *ServiceDriverImplementation) GetOneDriverOnSpecificAgency(ctx context.Context, driverId int) response.Driver {
-	tx, err := service.Db.Begin()
-	defer helper.DoCommitOrRollback(tx)
-	helper.PanicIfError(err)
 
 	driver := entity.Driver{DriverId: driverId}
 
-	service.RepoDriver.GetOneDriverOnSpecificAgency(tx, ctx, &driver)
+	service.RepoDriver.GetOneDriverOnSpecificAgency(ctx, &driver)
 
 	return helper.DriverEntityToResponse(&driver)
 
 }
 func (service *ServiceDriverImplementation) AddDriver(ctx context.Context, driver *request.Driver) {
-	tx, err := service.Db.Begin()
-	defer helper.DoCommitOrRollback(tx)
-	helper.PanicIfError(err)
 
-	service.RepoAgency.GetOneAgency(ctx, tx, &entity.Agency{AgencyId: driver.AgencyId})
+	service.RepoAgency.GetOneAgency(ctx, &entity.Agency{AgencyId: driver.AgencyId})
 	driverEntity := helper.DriverRequestToEntity(driver)
 
-	service.RepoDriver.AddDriver(tx, ctx, &driverEntity)
+	service.RepoDriver.AddDriver(ctx, &driverEntity)
 }
 func (service *ServiceDriverImplementation) DeleteDriver(ctx context.Context, driverId int) response.Driver {
-	tx, err := service.Db.Begin()
-	defer helper.DoCommitOrRollback(tx)
-	helper.PanicIfError(err)
 
 	driverEntity := entity.Driver{DriverId: driverId}
-	service.RepoDriver.GetOneDriverOnSpecificAgency(tx, ctx, &driverEntity)
-	service.RepoDriver.DeleteDriver(tx, ctx, &driverEntity)
+	service.RepoDriver.GetOneDriverOnSpecificAgency(ctx, &driverEntity)
+	service.RepoDriver.DeleteDriver(ctx, &driverEntity)
 
 	return helper.DriverEntityToResponse(&driverEntity)
 }

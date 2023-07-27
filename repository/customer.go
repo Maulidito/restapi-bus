@@ -7,26 +7,23 @@ import (
 	"restapi-bus/exception"
 	"restapi-bus/helper"
 	"restapi-bus/models/entity"
+	"restapi-bus/models/request"
 )
 
-type CustomerRepositoryInterface interface {
-	GetAllCustomer(ctx context.Context, tx *sql.Tx, filter string) []entity.Customer
-	AddCustomer(ctx context.Context, tx *sql.Tx, customer *entity.Customer)
-	GetOneCustomer(ctx context.Context, tx *sql.Tx, customer *entity.Customer)
-	DeleteOneCustomer(ctx context.Context, tx *sql.Tx, customer *entity.Customer)
-}
-
 type CustomerRepositoryImplementation struct {
+	conn *sql.DB
 }
 
-func NewCustomerRepository() CustomerRepositoryInterface {
-	return &CustomerRepositoryImplementation{}
+func NewCustomerRepository(conn *sql.DB) entity.CustomerRepositoryInterface {
+	return &CustomerRepositoryImplementation{conn: conn}
 }
 
-func (repo *CustomerRepositoryImplementation) GetAllCustomer(ctx context.Context, tx *sql.Tx, filter string) []entity.Customer {
-
-	fmt.Println("CHECK FILTER SQL ", filter)
-	row, err := tx.QueryContext(ctx, "SELECT customer_id,name,phone_number,email FROM customer "+filter)
+func (repo *CustomerRepositoryImplementation) GetAllCustomer(ctx context.Context, filter *request.CustomerFilter) []entity.Customer {
+	tx, err := repo.conn.Begin()
+	defer helper.DoCommitOrRollback(tx)
+	helper.PanicIfError(err)
+	filterString := helper.RequestFilterCustomerToString(filter)
+	row, err := tx.QueryContext(ctx, "SELECT customer_id,name,phone_number,email FROM customer "+filterString)
 	helper.PanicIfError(err)
 	defer row.Close()
 
@@ -42,8 +39,10 @@ func (repo *CustomerRepositoryImplementation) GetAllCustomer(ctx context.Context
 	return listCustomer
 }
 
-func (repo *CustomerRepositoryImplementation) AddCustomer(ctx context.Context, tx *sql.Tx, customer *entity.Customer) {
-
+func (repo *CustomerRepositoryImplementation) AddCustomer(ctx context.Context, customer *entity.Customer) {
+	tx, err := repo.conn.Begin()
+	defer helper.DoCommitOrRollback(tx)
+	helper.PanicIfError(err)
 	res, err := tx.ExecContext(ctx, "Insert Into customer( name , phone_number, email ) Values (?,?,?)", customer.Name, customer.PhoneNumber, customer.Email)
 	helper.PanicIfError(err)
 	id, err := res.LastInsertId()
@@ -53,9 +52,11 @@ func (repo *CustomerRepositoryImplementation) AddCustomer(ctx context.Context, t
 
 }
 
-func (repo *CustomerRepositoryImplementation) GetOneCustomer(ctx context.Context, tx *sql.Tx, customer *entity.Customer) {
-
-	err := tx.QueryRowContext(ctx, "SELECT name, phone_number,email FROM customer where customer_id = ?", customer.CustomerId).
+func (repo *CustomerRepositoryImplementation) GetOneCustomer(ctx context.Context, customer *entity.Customer) {
+	tx, err := repo.conn.Begin()
+	defer helper.DoCommitOrRollback(tx)
+	helper.PanicIfError(err)
+	err = tx.QueryRowContext(ctx, "SELECT name, phone_number,email FROM customer where customer_id = ?", customer.CustomerId).
 		Scan(&customer.Name, &customer.PhoneNumber, &customer.Email)
 
 	if err != nil {
@@ -63,9 +64,11 @@ func (repo *CustomerRepositoryImplementation) GetOneCustomer(ctx context.Context
 	}
 
 }
-func (repo *CustomerRepositoryImplementation) DeleteOneCustomer(ctx context.Context, tx *sql.Tx, customer *entity.Customer) {
-
-	_, err := tx.ExecContext(ctx, "DELETE FROM customer WHERE customer_id = ?", customer.CustomerId)
+func (repo *CustomerRepositoryImplementation) DeleteOneCustomer(ctx context.Context, customer *entity.Customer) {
+	tx, err := repo.conn.Begin()
+	defer helper.DoCommitOrRollback(tx)
+	helper.PanicIfError(err)
+	_, err = tx.ExecContext(ctx, "DELETE FROM customer WHERE customer_id = ?", customer.CustomerId)
 
 	helper.PanicIfError(err)
 

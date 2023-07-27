@@ -2,44 +2,31 @@ package service
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"os"
+
 	"restapi-bus/exception"
 	"restapi-bus/helper"
 	"restapi-bus/models/entity"
 	"restapi-bus/models/request"
 	"restapi-bus/models/response"
 	"restapi-bus/models/web"
-	"restapi-bus/repository"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
 )
 
-type AgencyServiceInterface interface {
-	GetAllAgency(ctx context.Context, filter *request.AgencyFilter) []response.Agency
-	RegisterAgency(ctx context.Context, agency *request.Agency)
-	GetOneAgency(ctx context.Context, id int) response.Agency
-	DeleteOneAgency(ctx context.Context, id int) response.Agency
-	LoginAgency(ctx context.Context, agencyAuth *request.AgencyAuth) (string, int, response.Agency)
-}
-
 type AgencyServiceImplemtation struct {
-	Db   *sql.DB
-	Repo repository.AgencyRepositoryInterface
+	Repo entity.AgencyRepositoryInterface
 }
 
-func NewAgencyService(db *sql.DB, repo repository.AgencyRepositoryInterface) AgencyServiceInterface {
-	return &AgencyServiceImplemtation{Db: db, Repo: repo}
+func NewAgencyService(repo entity.AgencyRepositoryInterface) entity.AgencyServiceInterface {
+	return &AgencyServiceImplemtation{Repo: repo}
 }
 
 func (service *AgencyServiceImplemtation) GetAllAgency(ctx context.Context, filter *request.AgencyFilter) []response.Agency {
-	tx, err := service.Db.Begin()
-	defer helper.DoCommitOrRollback(tx)
-	helper.PanicIfError(err)
 
-	listAgency := service.Repo.GetAllAgency(ctx, tx, helper.RequestFilterAgencyToString(filter))
+	listAgency := service.Repo.GetAllAgency(ctx, filter)
 	listAgencyResponse := []response.Agency{}
 
 	for _, agency := range listAgency {
@@ -51,9 +38,10 @@ func (service *AgencyServiceImplemtation) GetAllAgency(ctx context.Context, filt
 
 }
 func (service *AgencyServiceImplemtation) RegisterAgency(ctx context.Context, agency *request.Agency) {
-	tx, err := service.Db.Begin()
-	defer helper.DoCommitOrRollback(tx)
-	if service.Repo.IsUsenameAgencyExist(ctx, tx, agency.Auth.Username) {
+	var (
+		err error
+	)
+	if service.Repo.IsUsenameAgencyExist(ctx, agency.Auth.Username) {
 		panic(exception.NewBadRequestError("email already registered"))
 	}
 	salt := fmt.Sprint(time.Now().UnixNano())
@@ -61,41 +49,33 @@ func (service *AgencyServiceImplemtation) RegisterAgency(ctx context.Context, ag
 	helper.PanicIfError(err)
 	agencyEntity := helper.AgencyRequestToEntity(agency)
 	agencyEntity.Salt = salt
-	service.Repo.RegisterAgency(ctx, tx, &agencyEntity)
+	service.Repo.RegisterAgency(ctx, &agencyEntity)
 
 }
 func (service *AgencyServiceImplemtation) GetOneAgency(ctx context.Context, id int) response.Agency {
-	tx, err := service.Db.Begin()
-	defer helper.DoCommitOrRollback(tx)
-	helper.PanicIfError(err)
+
 	agencyEntity := entity.Agency{AgencyId: id}
-	service.Repo.GetOneAgency(ctx, tx, &agencyEntity)
+	service.Repo.GetOneAgency(ctx, &agencyEntity)
 	return helper.AgencyEntityToResponse(&agencyEntity)
 
 }
 func (service *AgencyServiceImplemtation) DeleteOneAgency(ctx context.Context, id int) response.Agency {
-	tx, err := service.Db.Begin()
-	defer helper.DoCommitOrRollback(tx)
-	helper.PanicIfError(err)
 	agencyEntity := entity.Agency{AgencyId: id}
-	service.Repo.GetOneAgency(ctx, tx, &agencyEntity)
-	service.Repo.DeleteOneAgency(ctx, tx, &agencyEntity)
+	service.Repo.GetOneAgency(ctx, &agencyEntity)
+	service.Repo.DeleteOneAgency(ctx, &agencyEntity)
 
 	return helper.AgencyEntityToResponse(&agencyEntity)
 }
 
 func (service *AgencyServiceImplemtation) LoginAgency(ctx context.Context, agencyAuth *request.AgencyAuth) (string, int, response.Agency) {
-	tx, err := service.Db.Begin()
-	helper.PanicIfError(err)
-	defer helper.DoCommitOrRollback(tx)
 
-	salt := service.Repo.GetSaltAgencyWithUsername(ctx, tx, agencyAuth.Username)
+	salt := service.Repo.GetSaltAgencyWithUsername(ctx, agencyAuth.Username)
 
 	passEncrypted := helper.HashPassword(agencyAuth.Password, salt)
 
 	agency := entity.Agency{Username: agencyAuth.Username, Password: passEncrypted}
 
-	service.Repo.GetOneAgencyAuth(ctx, tx, &agency)
+	service.Repo.GetOneAgencyAuth(ctx, &agency)
 
 	claim := web.Claim{
 		RegisteredClaims: &jwt.RegisteredClaims{

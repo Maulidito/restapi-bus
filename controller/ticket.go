@@ -6,9 +6,9 @@ import (
 	"restapi-bus/exception"
 	"restapi-bus/helper"
 	"restapi-bus/middleware"
+	"restapi-bus/models/entity"
 	"restapi-bus/models/request"
 	"restapi-bus/models/web"
-	"restapi-bus/service"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -31,12 +31,12 @@ type ControllerTicketInterface interface {
 }
 
 type ControllerTicketImplementation struct {
-	service  service.TicketServiceInterface
+	service  entity.TicketServiceInterface
 	Rdb      *middleware.RedisClientDb
 	Rabbitmq *amqp091.Channel
 }
 
-func NewTicketController(serv service.TicketServiceInterface, rdb *middleware.RedisClientDb, rmq *amqp091.Channel) ControllerTicketInterface {
+func NewTicketController(serv entity.TicketServiceInterface, rdb *middleware.RedisClientDb, rmq *amqp091.Channel) ControllerTicketInterface {
 	return &ControllerTicketImplementation{service: serv, Rdb: rdb, Rabbitmq: rmq}
 }
 

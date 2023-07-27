@@ -20,52 +20,52 @@ import (
 // Injectors from injector.go:
 
 func InitializedControllerCustomer(db *sql.DB, rdb *middleware.RedisClientDb) controller.CustomerControllerInterface {
-	customerRepositoryInterface := repository.NewCustomerRepository()
-	customerServiceInterface := service.NewCustomerService(db, customerRepositoryInterface)
+	customerRepositoryInterface := repository.NewCustomerRepository(db)
+	customerServiceInterface := service.NewCustomerService(customerRepositoryInterface)
 	customerControllerInterface := controller.NewCustomerController(customerServiceInterface, rdb)
 	return customerControllerInterface
 }
 
 func InitializedControllerAgency(db *sql.DB, rdb *middleware.RedisClientDb) controller.AgencyControllerInterface {
-	agencyRepositoryInterface := repository.NewAgencyRepository()
-	agencyServiceInterface := service.NewAgencyService(db, agencyRepositoryInterface)
+	agencyRepositoryInterface := repository.NewAgencyRepository(db)
+	agencyServiceInterface := service.NewAgencyService(agencyRepositoryInterface)
 	agencyControllerInterface := controller.NewAgencyController(agencyServiceInterface, rdb)
 	return agencyControllerInterface
 }
 
 func InitializedControllerBus(db *sql.DB, rdb *middleware.RedisClientDb) controller.BusControllerInterface {
-	busRepositoryInterface := repository.NewBusRepository()
-	agencyRepositoryInterface := repository.NewAgencyRepository()
-	busServiceInterface := service.NewBusService(db, busRepositoryInterface, agencyRepositoryInterface)
+	busRepositoryInterface := repository.NewBusRepository(db)
+	agencyRepositoryInterface := repository.NewAgencyRepository(db)
+	busServiceInterface := service.NewBusService(busRepositoryInterface, agencyRepositoryInterface)
 	busControllerInterface := controller.NewBusController(busServiceInterface, rdb)
 	return busControllerInterface
 }
 
 func InitializedControllerDriver(db *sql.DB, rdb *middleware.RedisClientDb) controller.ControllerDriverInterface {
-	driverRepositoryInterface := repository.NewDiverRepository()
-	agencyRepositoryInterface := repository.NewAgencyRepository()
-	serviceDriverInterface := service.NewServiceDriver(db, driverRepositoryInterface, agencyRepositoryInterface)
+	driverRepositoryInterface := repository.NewDiverRepository(db)
+	agencyRepositoryInterface := repository.NewAgencyRepository(db)
+	serviceDriverInterface := service.NewServiceDriver(driverRepositoryInterface, agencyRepositoryInterface)
 	controllerDriverInterface := controller.NewDriverController(serviceDriverInterface, rdb)
 	return controllerDriverInterface
 }
 
 func InitializedControllerSchedule(db *sql.DB, rdb *middleware.RedisClientDb) controller.ControllerScheduleInterface {
-	scheduleRepositoryInterface := repository.NewScheduleRepository()
-	agencyRepositoryInterface := repository.NewAgencyRepository()
-	driverRepositoryInterface := repository.NewDiverRepository()
-	busRepositoryInterface := repository.NewBusRepository()
-	scheduleServiceInterface := service.NewScheduleService(scheduleRepositoryInterface, agencyRepositoryInterface, driverRepositoryInterface, busRepositoryInterface, db)
+	scheduleRepositoryInterface := repository.NewScheduleRepository(db)
+	agencyRepositoryInterface := repository.NewAgencyRepository(db)
+	driverRepositoryInterface := repository.NewDiverRepository(db)
+	busRepositoryInterface := repository.NewBusRepository(db)
+	scheduleServiceInterface := service.NewScheduleService(scheduleRepositoryInterface, agencyRepositoryInterface, driverRepositoryInterface, busRepositoryInterface)
 	controllerScheduleInterface := controller.NewScheduleController(scheduleServiceInterface, rdb)
 	return controllerScheduleInterface
 }
 
 func InitializedControllerTicket(db *sql.DB, rdb *middleware.RedisClientDb, rmq *amqp091.Channel) controller.ControllerTicketInterface {
-	busRepositoryInterface := repository.NewBusRepository()
-	customerRepositoryInterface := repository.NewCustomerRepository()
-	driverRepositoryInterface := repository.NewDiverRepository()
-	ticketRepositoryInterface := repository.NewTicketRepository()
-	agencyRepositoryInterface := repository.NewAgencyRepository()
-	scheduleRepositoryInterface := repository.NewScheduleRepository()
+	busRepositoryInterface := repository.NewBusRepository(db)
+	customerRepositoryInterface := repository.NewCustomerRepository(db)
+	driverRepositoryInterface := repository.NewDiverRepository(db)
+	ticketRepositoryInterface := repository.NewTicketRepository(db)
+	agencyRepositoryInterface := repository.NewAgencyRepository(db)
+	scheduleRepositoryInterface := repository.NewScheduleRepository(db)
 	iMessageChannel := repository.BindMqChannel(rmq)
 	ticketServiceInterface := service.NewTicketService(db, busRepositoryInterface, customerRepositoryInterface, driverRepositoryInterface, ticketRepositoryInterface, agencyRepositoryInterface, scheduleRepositoryInterface, iMessageChannel)
 	controllerTicketInterface := controller.NewTicketController(ticketServiceInterface, rdb, rmq)

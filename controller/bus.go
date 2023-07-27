@@ -5,9 +5,9 @@ import (
 	"restapi-bus/exception"
 	"restapi-bus/helper"
 	"restapi-bus/middleware"
+	"restapi-bus/models/entity"
 	"restapi-bus/models/request"
 	"restapi-bus/models/web"
-	"restapi-bus/service"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -23,11 +23,11 @@ type BusControllerInterface interface {
 }
 
 type BusControllerImplementation struct {
-	service service.BusServiceInterface
+	service entity.BusServiceInterface
 	Rdb     *middleware.RedisClientDb
 }
 
-func NewBusController(service service.BusServiceInterface, rdb *middleware.RedisClientDb) BusControllerInterface {
+func NewBusController(service entity.BusServiceInterface, rdb *middleware.RedisClientDb) BusControllerInterface {
 	return &BusControllerImplementation{service: service, Rdb: rdb}
 }
 

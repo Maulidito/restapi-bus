@@ -5,9 +5,9 @@ import (
 	"restapi-bus/exception"
 	"restapi-bus/helper"
 	"restapi-bus/middleware"
+	"restapi-bus/models/entity"
 	"restapi-bus/models/request"
 	"restapi-bus/models/web"
-	"restapi-bus/service"
 	"strconv"
 	"sync"
 
@@ -24,11 +24,11 @@ type ControllerScheduleInterface interface {
 }
 
 type ControllerScheduleImplementation struct {
-	Service service.ScheduleServiceInterface
+	Service entity.ScheduleServiceInterface
 	Rdb     *middleware.RedisClientDb
 }
 
-func NewScheduleController(serv service.ScheduleServiceInterface, rdb *middleware.RedisClientDb) ControllerScheduleInterface {
+func NewScheduleController(serv entity.ScheduleServiceInterface, rdb *middleware.RedisClientDb) ControllerScheduleInterface {
 	return &ControllerScheduleImplementation{Service: serv, Rdb: rdb}
 }
 

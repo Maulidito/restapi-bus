@@ -6,9 +6,9 @@ import (
 	"restapi-bus/exception"
 	"restapi-bus/helper"
 	"restapi-bus/middleware"
+	"restapi-bus/models/entity"
 	"restapi-bus/models/request"
 	"restapi-bus/models/web"
-	"restapi-bus/service"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -23,11 +23,11 @@ type CustomerControllerInterface interface {
 }
 
 type CustomerControllerImplementation struct {
-	service service.CustomerServiceInterface
+	service entity.CustomerServiceInterface
 	Rdb     *middleware.RedisClientDb
 }
 
-func NewCustomerController(service service.CustomerServiceInterface, rdb *middleware.RedisClientDb) CustomerControllerInterface {
+func NewCustomerController(service entity.CustomerServiceInterface, rdb *middleware.RedisClientDb) CustomerControllerInterface {
 	return &CustomerControllerImplementation{service: service, Rdb: rdb}
 }
 

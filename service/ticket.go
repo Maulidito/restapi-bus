@@ -9,55 +9,36 @@ import (
 	"restapi-bus/models/request"
 	"restapi-bus/models/response"
 	"restapi-bus/repository"
-
-	"github.com/rabbitmq/amqp091-go"
 )
-
-type TicketServiceInterface interface {
-	GetAllTicket(ctx context.Context, filter *request.TicketFilter) []response.Ticket
-	AddTicket(ctx context.Context, ticket *request.Ticket)
-	GetOneTicket(ctx context.Context, ticketId int) response.Ticket
-	DeleteTicket(ctx context.Context, ticketId int) response.Ticket
-	GetAllTicketOnDriver(ctx context.Context, idDriver int) response.AllTicketOnDriver
-	GetAllTicketOnCustomer(ctx context.Context, idCustomer int) response.AllTicketOnCustomer
-	GetAllTicketOnBus(ctx context.Context, idBus int) response.AllTicketOnBus
-	GetAllTicketOnAgency(ctx context.Context, idAgency int) response.AllTicketOnAgency
-	GetTotalPriceAllTicket(ctx context.Context) response.AllTicketPrice
-	GetTotalPriceTicketFromSpecificAgency(ctx context.Context, idAgency int) response.AllTicketPriceSpecificAgency
-	GetTotalPriceTicketFromSpecificDriver(ctx context.Context, idDriver int) response.AllTicketPriceSpecificDriver
-}
 
 type TicketServiceImplementation struct {
 	Db           *sql.DB
-	RepoBus      repository.BusRepositoryInterface
-	RepoCustomer repository.CustomerRepositoryInterface
-	RepoDriver   repository.DriverRepositoryInterface
-	RepoTicket   repository.TicketRepositoryInterface
-	RepoAgency   repository.AgencyRepositoryInterface
-	RepoSchedule repository.ScheduleRepositoryInterface
+	RepoBus      entity.BusRepositoryInterface
+	RepoCustomer entity.CustomerRepositoryInterface
+	RepoDriver   entity.DriverRepositoryInterface
+	RepoTicket   entity.TicketRepositoryInterface
+	RepoAgency   entity.AgencyRepositoryInterface
+	RepoSchedule entity.ScheduleRepositoryInterface
 	RepoMq       repository.IMessageChannel
 }
 
 func NewTicketService(
 	db *sql.DB,
-	repoBus repository.BusRepositoryInterface,
-	repoCustomer repository.CustomerRepositoryInterface,
-	repoDriver repository.DriverRepositoryInterface,
-	repoTicket repository.TicketRepositoryInterface,
-	repoAgency repository.AgencyRepositoryInterface,
-	repoSchedule repository.ScheduleRepositoryInterface,
+	repoBus entity.BusRepositoryInterface,
+	repoCustomer entity.CustomerRepositoryInterface,
+	repoDriver entity.DriverRepositoryInterface,
+	repoTicket entity.TicketRepositoryInterface,
+	repoAgency entity.AgencyRepositoryInterface,
+	repoSchedule entity.ScheduleRepositoryInterface,
 	RepoMq repository.IMessageChannel,
-) TicketServiceInterface {
+) entity.TicketServiceInterface {
 
 	return &TicketServiceImplementation{Db: db, RepoBus: repoBus, RepoCustomer: repoCustomer, RepoDriver: repoDriver, RepoTicket: repoTicket, RepoAgency: repoAgency, RepoSchedule: repoSchedule, RepoMq: RepoMq}
 }
 
 func (service *TicketServiceImplementation) GetAllTicket(ctx context.Context, filter *request.TicketFilter) []response.Ticket {
-	tx, err := service.Db.Begin()
-	helper.PanicIfError(err)
-	defer helper.DoCommitOrRollback(tx)
 
-	listAllTicket := service.RepoTicket.GetAllTicket(tx, ctx, helper.RequestFilterTicketToString(filter))
+	listAllTicket := service.RepoTicket.GetAllTicket(ctx, filter)
 
 	responseListTicket := []response.Ticket{}
 
@@ -68,9 +49,6 @@ func (service *TicketServiceImplementation) GetAllTicket(ctx context.Context, fi
 	return responseListTicket
 }
 func (service *TicketServiceImplementation) AddTicket(ctx context.Context, ticket *request.Ticket) {
-	tx, err := service.Db.Begin()
-	helper.PanicIfError(err)
-	defer helper.DoCommitOrRollback(tx)
 
 	ticketEntity := helper.TicketRequestToEntity(ticket)
 
@@ -90,56 +68,49 @@ func (service *TicketServiceImplementation) AddTicket(ctx context.Context, ticke
 			close(chanErr)
 		}()
 
-		service.RepoSchedule.GetOneSchedule(ctx, tx, &scheduleEntity)
-		service.RepoCustomer.GetOneCustomer(ctx, tx, &customerEntity)
+		service.RepoSchedule.GetOneSchedule(ctx, &scheduleEntity)
+		service.RepoCustomer.GetOneCustomer(ctx, &customerEntity)
 	}()
 	helper.PanicIfError(<-chanErr)
 	// rabbitmq
 	respDetailSchedule := response.DetailSchedule{ScheduleId: scheduleEntity.ScheduleId, FromAgency: response.Agency{AgencyId: scheduleEntity.FromAgencyId}, ToAgency: response.Agency{AgencyId: scheduleEntity.ToAgencyId}, Driver: response.Driver{DriverId: scheduleEntity.DriverId}, Bus: response.Bus{BusId: scheduleEntity.BusId}}
 
-	service.RepoSchedule.GetOneDetailSchedule(ctx, tx, &respDetailSchedule)
+	service.RepoSchedule.GetOneDetailSchedule(ctx, &respDetailSchedule)
 
-	service.RepoTicket.AddTicket(tx, ctx, &ticketEntity)
+	service.RepoTicket.AddTicket(ctx, &ticketEntity)
 
 	respDetailTicket := response.DetailTicket{TicketId: ticketEntity.TicketId, Customer: helper.CustomerEntityToResponse(&customerEntity), Schedule: respDetailSchedule}
 
 	respDetailTicketByte, err := json.Marshal(respDetailTicket)
 	helper.PanicIfError(err)
 
-	service.RepoMq.PublishToEmailService(ctx, &amqp091.Publishing{Body: respDetailTicketByte})
+	service.RepoMq.PublishToEmailService(ctx, respDetailTicketByte)
 	//
 
 }
 func (service *TicketServiceImplementation) GetOneTicket(ctx context.Context, ticketId int) response.Ticket {
-	tx, err := service.Db.Begin()
-	helper.PanicIfError(err)
-	defer helper.DoCommitOrRollback(tx)
+
 	ticketEntity := entity.Ticket{TicketId: ticketId}
-	service.RepoTicket.GetOneTicket(tx, ctx, &ticketEntity)
+	service.RepoTicket.GetOneTicket(ctx, &ticketEntity)
 
 	return helper.TicketEntityToResponse(&ticketEntity)
 
 }
 func (service *TicketServiceImplementation) DeleteTicket(ctx context.Context, ticketId int) response.Ticket {
-	tx, err := service.Db.Begin()
-	helper.PanicIfError(err)
-	defer helper.DoCommitOrRollback(tx)
+
 	ticketEntity := entity.Ticket{TicketId: ticketId}
 
-	service.RepoTicket.GetOneTicket(tx, ctx, &ticketEntity)
-	service.RepoTicket.DeleteTicket(tx, ctx, &ticketEntity)
+	service.RepoTicket.GetOneTicket(ctx, &ticketEntity)
+	service.RepoTicket.DeleteTicket(ctx, &ticketEntity)
 
 	return helper.TicketEntityToResponse(&ticketEntity)
 }
 func (service *TicketServiceImplementation) GetAllTicketOnDriver(ctx context.Context, idDriver int) response.AllTicketOnDriver {
-	tx, err := service.Db.Begin()
-	helper.PanicIfError(err)
-	defer helper.DoCommitOrRollback(tx)
 
 	driverEntity := entity.Driver{DriverId: idDriver}
 
-	service.RepoDriver.GetOneDriverOnSpecificAgency(tx, ctx, &driverEntity)
-	listTicket := service.RepoTicket.GetAllTicketOnDriver(tx, ctx, idDriver)
+	service.RepoDriver.GetOneDriverOnSpecificAgency(ctx, &driverEntity)
+	listTicket := service.RepoTicket.GetAllTicketOnDriver(ctx, idDriver)
 	responseListTicket := []response.Ticket{}
 	for _, val := range listTicket {
 		responseListTicket = append(responseListTicket, helper.TicketEntityToResponse(&val))
@@ -155,14 +126,11 @@ func (service *TicketServiceImplementation) GetAllTicketOnDriver(ctx context.Con
 }
 
 func (service *TicketServiceImplementation) GetAllTicketOnCustomer(ctx context.Context, idCustomer int) response.AllTicketOnCustomer {
-	tx, err := service.Db.Begin()
-	helper.PanicIfError(err)
-	defer helper.DoCommitOrRollback(tx)
 
 	customerEntity := entity.Customer{CustomerId: idCustomer}
-	service.RepoCustomer.GetOneCustomer(ctx, tx, &customerEntity)
+	service.RepoCustomer.GetOneCustomer(ctx, &customerEntity)
 
-	listTicket := service.RepoTicket.GetAllTicketOnCustomer(tx, ctx, idCustomer)
+	listTicket := service.RepoTicket.GetAllTicketOnCustomer(ctx, idCustomer)
 
 	customerResponse := helper.CustomerEntityToResponse(&customerEntity)
 
@@ -180,14 +148,11 @@ func (service *TicketServiceImplementation) GetAllTicketOnCustomer(ctx context.C
 
 }
 func (service *TicketServiceImplementation) GetAllTicketOnBus(ctx context.Context, idBus int) response.AllTicketOnBus {
-	tx, err := service.Db.Begin()
-	helper.PanicIfError(err)
-	defer helper.DoCommitOrRollback(tx)
 
 	busEntity := entity.Bus{BusId: idBus}
-	service.RepoBus.GetOneBus(ctx, tx, &busEntity)
+	service.RepoBus.GetOneBus(ctx, &busEntity)
 
-	listTicket := service.RepoTicket.GetAllTicketOnBus(tx, ctx, idBus)
+	listTicket := service.RepoTicket.GetAllTicketOnBus(ctx, idBus)
 
 	busResponse := helper.BusEntityToResponse(&busEntity)
 
@@ -206,14 +171,11 @@ func (service *TicketServiceImplementation) GetAllTicketOnBus(ctx context.Contex
 }
 
 func (service *TicketServiceImplementation) GetAllTicketOnAgency(ctx context.Context, idAgency int) response.AllTicketOnAgency {
-	tx, err := service.Db.Begin()
-	helper.PanicIfError(err)
-	defer helper.DoCommitOrRollback(tx)
 
 	agencyEntity := entity.Agency{AgencyId: idAgency}
-	service.RepoAgency.GetOneAgency(ctx, tx, &agencyEntity)
+	service.RepoAgency.GetOneAgency(ctx, &agencyEntity)
 
-	listTicket := service.RepoTicket.GetAllTicketOnAgency(tx, ctx, idAgency)
+	listTicket := service.RepoTicket.GetAllTicketOnAgency(ctx, idAgency)
 
 	agencyResponse := helper.AgencyEntityToResponse(&agencyEntity)
 
@@ -231,36 +193,27 @@ func (service *TicketServiceImplementation) GetAllTicketOnAgency(ctx context.Con
 }
 
 func (service *TicketServiceImplementation) GetTotalPriceAllTicket(ctx context.Context) response.AllTicketPrice {
-	tx, err := service.Db.Begin()
-	helper.PanicIfError(err)
-	defer helper.DoCommitOrRollback(tx)
 
 	response := response.AllTicketPrice{}
 
-	service.RepoTicket.GetTotalPriceAllTicket(tx, ctx, &response)
+	service.RepoTicket.GetTotalPriceAllTicket(ctx, &response)
 	return response
 
 }
 func (service *TicketServiceImplementation) GetTotalPriceTicketFromSpecificAgency(ctx context.Context, idAgency int) response.AllTicketPriceSpecificAgency {
-	tx, err := service.Db.Begin()
-	helper.PanicIfError(err)
-	defer helper.DoCommitOrRollback(tx)
 
 	agencyEntity := entity.Agency{AgencyId: idAgency}
-	service.RepoAgency.GetOneAgency(ctx, tx, &agencyEntity)
+	service.RepoAgency.GetOneAgency(ctx, &agencyEntity)
 	response := response.AllTicketPriceSpecificAgency{Agency: helper.AgencyEntityToResponse(&agencyEntity)}
-	service.RepoTicket.GetTotalPriceTicketFromSpecificAgency(tx, ctx, &response)
+	service.RepoTicket.GetTotalPriceTicketFromSpecificAgency(ctx, &response)
 	return response
 
 }
 func (service *TicketServiceImplementation) GetTotalPriceTicketFromSpecificDriver(ctx context.Context, idDriver int) response.AllTicketPriceSpecificDriver {
-	tx, err := service.Db.Begin()
-	helper.PanicIfError(err)
-	defer helper.DoCommitOrRollback(tx)
 
 	driverEntity := entity.Driver{DriverId: idDriver}
-	service.RepoDriver.GetOneDriverOnSpecificAgency(tx, ctx, &driverEntity)
+	service.RepoDriver.GetOneDriverOnSpecificAgency(ctx, &driverEntity)
 	response := response.AllTicketPriceSpecificDriver{Driver: helper.DriverEntityToResponse(&driverEntity)}
-	service.RepoTicket.GetTotalPriceTicketFromSpecificDriver(tx, ctx, &response)
+	service.RepoTicket.GetTotalPriceTicketFromSpecificDriver(ctx, &response)
 	return response
 }
