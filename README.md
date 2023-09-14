@@ -29,8 +29,12 @@ the framework i use in this project is [Gin](https://github.com/gin-gonic/gin)
 - Driver
 - Schedule
 
+i also use Erd in this [link](https://drawsql.app/teams/maulidito-dwinandana/diagrams/rest-api-bus) using [drawsql](https://drawsql.app/)
+
 <details><summary>  Entity Details</summary>
 <p>
+
+
 
 - ### Customer
 

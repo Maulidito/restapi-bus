@@ -34,8 +34,8 @@ services:
     container_name: db_mysql
     image: mysql:8.0
     environment:
-      - MYSQL_ROOT_PASSWORD=root
-      - MYSQL_DATABASE=db_bus
+      - MYSQL_ROOT_PASSWORD=${PASSWORD_DB}
+      - MYSQL_DATABASE=${NAME_DB}
     networks:
       - mysql_network
     restart: on-failure
@@ -60,8 +60,8 @@ services:
     image: rabbitmq:3-management
     restart: always
     environment:
-      RABBITMQ_DEFAULT_USER: admin
-      RABBITMQ_DEFAULT_PASS: admin
+      RABBITMQ_DEFAULT_USER: ${USERNAME_RMQ}
+      RABBITMQ_DEFAULT_PASS: ${PASSWORD_RMQ}
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     networks:
