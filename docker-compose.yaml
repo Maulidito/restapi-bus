@@ -3,7 +3,7 @@ services:
   restapi:
     container_name: restapibus
     image: maulidito/restapibus:v1.5
-    build: .
+    # build: .
     depends_on:
       mysql:
         condition: service_started

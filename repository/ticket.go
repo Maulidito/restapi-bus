@@ -11,12 +11,17 @@ import (
 	"restapi-bus/models/response"
 )
 
+var ticketRepositorySingleton *TicketRepositoryImplementation
+
 type TicketRepositoryImplementation struct {
 	conn *sql.DB
 }
 
 func NewTicketRepository(conn *sql.DB) entity.TicketRepositoryInterface {
-	return &TicketRepositoryImplementation{conn: conn}
+	if ticketRepositorySingleton == nil {
+		ticketRepositorySingleton = &TicketRepositoryImplementation{conn: conn}
+	}
+	return ticketRepositorySingleton
 }
 
 func (repo *TicketRepositoryImplementation) GetAllTicket(ctx context.Context, filter *request.TicketFilter) []entity.Ticket {

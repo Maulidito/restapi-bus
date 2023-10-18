@@ -12,12 +12,17 @@ import (
 	"restapi-bus/models/response"
 )
 
+var scheduleRepositorySingleton *ScheduleRepositoryImplementation
+
 type ScheduleRepositoryImplementation struct {
 	conn *sql.DB
 }
 
 func NewScheduleRepository(conn *sql.DB) entity.ScheduleRepositoryInterface {
-	return &ScheduleRepositoryImplementation{conn: conn}
+	if scheduleRepositorySingleton == nil {
+		scheduleRepositorySingleton = &ScheduleRepositoryImplementation{conn: conn}
+	}
+	return scheduleRepositorySingleton
 }
 
 func (repo *ScheduleRepositoryImplementation) GetAllSchedule(ctx context.Context, filter *request.ScheduleFilter) []entity.Schedule {

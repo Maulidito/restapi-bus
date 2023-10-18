@@ -10,12 +10,17 @@ import (
 	"restapi-bus/models/request"
 )
 
+var agencyRepositorySingleton *AgencyRepositoryImplementation
+
 type AgencyRepositoryImplementation struct {
 	conn *sql.DB
 }
 
 func NewAgencyRepository(conn *sql.DB) entity.AgencyRepositoryInterface {
-	return &AgencyRepositoryImplementation{conn: conn}
+	if agencyRepositorySingleton == nil {
+		agencyRepositorySingleton = &AgencyRepositoryImplementation{conn: conn}
+	}
+	return agencyRepositorySingleton
 }
 
 func (repo *AgencyRepositoryImplementation) GetAllAgency(ctx context.Context, filter *request.AgencyFilter) []entity.Agency {
@@ -103,11 +108,11 @@ func (repo *AgencyRepositoryImplementation) GetOneAgencyAuth(ctx context.Context
 
 }
 
-func (repo *AgencyRepositoryImplementation) GetSaltAgencyWithUsername(ctx context.Context, agencyUsername string) (saltResult string) {
+func (repo *AgencyRepositoryImplementation) GetSaltAgencyWithUsername(ctx context.Context, agencyUsername string) (saltResult string, hashPassword string) {
 	tx, err := repo.conn.Begin()
 	defer helper.DoCommitOrRollback(tx)
 	helper.PanicIfError(err)
-	err = tx.QueryRowContext(ctx, "SELECT salt place FROM agency where username = ? ", agencyUsername).Scan(&saltResult)
+	err = tx.QueryRowContext(ctx, "SELECT salt,password  FROM agency where username = ? ", agencyUsername).Scan(&saltResult, &hashPassword)
 
 	if err != nil {
 		errMsg := fmt.Sprintf("username %s Not Found", agencyUsername)
@@ -123,7 +128,7 @@ func (repo *AgencyRepositoryImplementation) IsUsenameAgencyExist(ctx context.Con
 	defer helper.DoCommitOrRollback(tx)
 	helper.PanicIfError(err)
 
-	err = tx.QueryRowContext(ctx, "SELECT name place FROM agency where username = ? ", agencyUsername).Scan(&name_temp)
+	err = tx.QueryRowContext(ctx, "SELECT name  FROM agency where username = ? ", agencyUsername).Scan(&name_temp)
 
 	return err == nil
 

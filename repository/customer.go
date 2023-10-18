@@ -10,12 +10,17 @@ import (
 	"restapi-bus/models/request"
 )
 
+var customerRepositorySingleton *CustomerRepositoryImplementation
+
 type CustomerRepositoryImplementation struct {
 	conn *sql.DB
 }
 
 func NewCustomerRepository(conn *sql.DB) entity.CustomerRepositoryInterface {
-	return &CustomerRepositoryImplementation{conn: conn}
+	if customerRepositorySingleton == nil {
+		customerRepositorySingleton = &CustomerRepositoryImplementation{conn: conn}
+	}
+	return customerRepositorySingleton
 }
 
 func (repo *CustomerRepositoryImplementation) GetAllCustomer(ctx context.Context, filter *request.CustomerFilter) []entity.Customer {

@@ -59,6 +59,7 @@ func main() {
 			helper.PanicIfError(err)
 		}
 		close(stopService)
+		return
 
 	}()
 

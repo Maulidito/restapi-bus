@@ -10,12 +10,17 @@ import (
 	"restapi-bus/models/request"
 )
 
+var driverRepositorySingleton *DriverRepositoryImplementation
+
 type DriverRepositoryImplementation struct {
 	conn *sql.DB
 }
 
 func NewDiverRepository(conn *sql.DB) entity.DriverRepositoryInterface {
-	return &DriverRepositoryImplementation{conn: conn}
+	if driverRepositorySingleton == nil {
+		driverRepositorySingleton = &DriverRepositoryImplementation{conn: conn}
+	}
+	return driverRepositorySingleton
 }
 
 func (repo *DriverRepositoryImplementation) GetAllDriver(ctx context.Context, filter *request.DriverFilter) []entity.Driver {

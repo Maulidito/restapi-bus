@@ -80,17 +80,6 @@ func (ctrl *ControllerTicketImplementation) AddTicket(ctx *gin.Context) {
 
 	finalResponse := web.WebResponseNoData{Code: http.StatusOK, Status: "OK"}
 
-	// finalResponseByte, err := json.Marshal(finalResponse)
-	// helper.PanicIfError(err)
-	// queue, err := ctrl.Rabbitmq.QueueDeclare("busTicket", false, true, false, true, nil)
-	// helper.PanicIfError(err)
-	// err = ctrl.Rabbitmq.QueueBind(queue.Name, "info", "amq.direct", false, nil)
-
-	// helper.PanicIfError(err)
-
-	// go func() {
-	// 	ctrl.Rabbitmq.PublishWithContext(ctx, "amq.direct", "info", false, false, amqp091.Publishing{Body: finalResponseByte})
-	// }()
 	ctx.JSON(http.StatusOK, &finalResponse)
 
 }

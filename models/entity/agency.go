@@ -30,5 +30,5 @@ type AgencyRepositoryInterface interface {
 	IsUsenameAgencyExist(ctx context.Context, agencyUsername string) bool
 	DeleteOneAgency(ctx context.Context, agency *Agency)
 	GetOneAgencyAuth(ctx context.Context, agency *Agency)
-	GetSaltAgencyWithUsername(ctx context.Context, agencyUsername string) string
+	GetSaltAgencyWithUsername(ctx context.Context, agencyUsername string) (string, string)
 }

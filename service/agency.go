@@ -45,7 +45,7 @@ func (service *AgencyServiceImplemtation) RegisterAgency(ctx context.Context, ag
 		panic(exception.NewBadRequestError("email already registered"))
 	}
 	salt := fmt.Sprint(time.Now().UnixNano())
-	agency.Auth.Password = helper.HashPassword(agency.Auth.Password, salt)
+	agency.Auth.Password = helper.HashPasswordBcrypt(agency.Auth.Password, salt)
 	helper.PanicIfError(err)
 	agencyEntity := helper.AgencyRequestToEntity(agency)
 	agencyEntity.Salt = salt
@@ -69,11 +69,13 @@ func (service *AgencyServiceImplemtation) DeleteOneAgency(ctx context.Context, i
 
 func (service *AgencyServiceImplemtation) LoginAgency(ctx context.Context, agencyAuth *request.AgencyAuth) (string, int, response.Agency) {
 
-	salt := service.Repo.GetSaltAgencyWithUsername(ctx, agencyAuth.Username)
+	salt, hashedPassword := service.Repo.GetSaltAgencyWithUsername(ctx, agencyAuth.Username)
 
-	passEncrypted := helper.HashPassword(agencyAuth.Password, salt)
+	if err := helper.HashPasswordCompare(hashedPassword, agencyAuth.Password, salt); err != nil {
+		panic(exception.NewBadRequestError("Password is incorrect"))
+	}
 
-	agency := entity.Agency{Username: agencyAuth.Username, Password: passEncrypted}
+	agency := entity.Agency{Username: agencyAuth.Username, Password: hashedPassword}
 
 	service.Repo.GetOneAgencyAuth(ctx, &agency)
 

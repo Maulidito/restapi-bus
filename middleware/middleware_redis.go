@@ -63,6 +63,7 @@ func (redis *RedisClientDb) MiddlewareSetDataRedis(ctx *gin.Context) {
 		log.Println("SET KEY REDIS", ctx.Request.URL.String())
 
 		redis.Set(ctx.Request.URL.String(), byteBuffer.Bytes(), timeDuration)
+		return
 	}()
 
 	ctx.Next()

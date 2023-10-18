@@ -10,12 +10,17 @@ import (
 	"restapi-bus/models/request"
 )
 
+var busRepositorySingleton *BusRepositoryImplementation
+
 type BusRepositoryImplementation struct {
 	conn *sql.DB
 }
 
 func NewBusRepository(conn *sql.DB) entity.BusRepositoryInterface {
-	return &BusRepositoryImplementation{conn: conn}
+	if busRepositorySingleton == nil {
+		busRepositorySingleton = &BusRepositoryImplementation{conn: conn}
+	}
+	return busRepositorySingleton
 }
 
 func (repo *BusRepositoryImplementation) GetAllBus(ctx context.Context, filter *request.BusFilter) []entity.Bus {
