@@ -1,5 +1,9 @@
 # Rest Api Bus Travel
 
+Rest api about managing bus and order ticket bus, this rest api are just used by admin of each agency
+
+### Version History
+
 - [version 1.0](https://github.com/Maulidito/restapi-bus/tree/e4a605c0f629203e73a3b60418968b3bf616bff8) (CRUD Data Entity)
 
 - [version 1.1](https://github.com/Maulidito/restapi-bus/tree/dd752fa446c5d6df6d9a797cd3eeacffc7647acc) (adding all filter on http method GET)
@@ -12,13 +16,10 @@
 
 - [version 1.5](https://github.com/Maulidito/restapi-bus/tree/e00c8893ce99810a2ca5113367389a168c5c204e) (adding email service with rabbit mq for communicating)
 
-## Description
-
-My Portofolio Rest api with golang dan mysql for the database
 
 ## Framework
 
-the framework i use in this project is [Gin](https://github.com/gin-gonic/gin)
+The Framework i use in this project is [Gin](https://github.com/gin-gonic/gin)
 
 ## Entity
 
@@ -29,71 +30,12 @@ the framework i use in this project is [Gin](https://github.com/gin-gonic/gin)
 - Driver
 - Schedule
 
-i also use Erd in this [link](https://drawsql.app/teams/maulidito-dwinandana/diagrams/rest-api-bus) using [drawsql](https://drawsql.app/)
-
-<details><summary>  Entity Details</summary>
-<p>
+you can also see Erd in this [link](https://drawsql.app/teams/maulidito-dwinandana/diagrams/rest-api-bus) using [drawsql](https://drawsql.app/)
 
 
+## Project Architecture
 
-- ### Customer
-
-| Entity Name  | Type Data | Key         |
-| ------------ | --------- | ----------- |
-| customer_id  | int       | **Primary** |
-| name         | string    | -           |
-| phone_number | string    | -           |
-| email        | string    | -           |
-
-- ### Driver
-
-| Entity Name | Type Data | Key         |
-| ----------- | --------- | ----------- |
-| driver_id   | int       | **Primary** |
-| agency_id   | int       | Foreign     |
-| name        | string    | -           |
-
-- ### Bus
-
-| Entity Name  | Type Data | Key         |
-| ------------ | --------- | ----------- |
-| bus_id       | int       | **Primary** |
-| agency_id    | int       | Foreign     |
-| number_plate | string    | -           |
-
-- ### Agency
-
-| Entity Name | Type Data | Key         |
-| ----------- | --------- | ----------- |
-| agency_id   | int       | **Primary** |
-| name        | string    | -           |
-| place       | string    | -           |
-| username    | string    | -           |
-| password    | string    | -           |
-
-- ### Ticket
-
-| Entity Name | Type Data | Key         |
-| ----------- | --------- | ----------- |
-| ticket_id   | int       | **Primary** |
-| schedule_id | int       | Foreign     |
-| customer_id | int       | Foreign     |
-| date        | timestamp | -           |
-
-- ### Schedule
-
-| Entity Name    | Type Data | Key         |
-| -------------- | --------- | ----------- |
-| schedule_id    | int       | **Primary** |
-| from_agency_id | int       | Foreign     |
-| to_agency_id   | int       | Foreign     |
-| driver_id      | int       | Foreign     |
-| bus_id         | int       | Foreign     |
-| price          | int       | -           |
-| date           | timestamp | -           |
-
-</p>
-</details>
+![Project Architecture](./image/architecture.drawio_withBG.png)
 
 ## Diagram Project
 
@@ -125,9 +67,8 @@ This image show workflow from client send request and get response in REST API
 
 ![Message Queue System](./image/microservice.drawio.png)
 
-no longer using sendgrid
 
-The goal of Email service is send a ticket bus to email user. If we see the image i use message queue for connecting to email service and rest api, and ~~i user SendGrid Api~~ smtp gmail to handle delivery email. The technology message queue is using [RabbitMq](https://rabbitmq.com/)
+The goal of Email service is send a ticket bus to email user. If we see the image i use message queue for connecting to email service and rest api, and smtp gmail to handle delivery email. The technology message queue is using [RabbitMq](https://rabbitmq.com/)
 
 The flow email service work:
 
@@ -144,37 +85,79 @@ example of email
 
 Using [OpenApi](https://app.swaggerhub.com/apis/Maulidito/api-bus_travel) For Documentation
 
-## How To Run with Docker Images
+## Getting Started 
 
-- You can just download or copy the [docker-compose.yaml](https://github.com/Maulidito/restapi-bus/blob/main/docker-compose.yaml)
+### Prerequisites
 
-- make .env file, example in this [file](https://github.com/Maulidito/restapi-bus/blob/main/.env.example). the .env file must same directory with docker-compose
+(optional) if you want email service work you need to have App Password from gmail. follow the [instruction]("https://support.google.com/mail/answer/185833?hl=en) and you will get app passowrd for env file.
 
-- make sure port restapibus in [env](https://github.com/Maulidito/restapi-bus/blob/main/.env.example) same with [docker-compose](https://github.com/Maulidito/restapi-bus/blob/main/docker-compose.yaml)
+you need have docker and git with lastest version 
+#### docker
+- [windows version](https://docs.docker.com/desktop/install/windows-install/)
+- [ubuntu version](https://docs.docker.com/engine/install/ubuntu/)
+- [mac os](https://docs.docker.com/desktop/install/mac-install/)
 
-example
-
-.env
-
-```
-PORT=:8888
-```
-
-docker-compose
-
-```yaml
-restapi:
-  container_name: restapibus
-  image: maulidito/restapibus:v1.5
-  ports:
-    - 8080:8888
-  env_file:
-    - .env
+to make sure your docker has been installed in your computer 
+```sh
+docker -v
 ```
 
-\*note : 8080 means port in host or your computer and 8888 means port in container on docker
+#### git
+- [windows version](https://git-scm.com/downloads)
 
-- Command "docker-compose up" on CLI
-- Check if docker container have been build, command "docker container ls -a"
-- If the container exist and the container not have been start, command "docker container start restapibus" and "docker container start db_mysql_bus"
-- The Service starting
+linux and mac user use the command 
+```sh
+sudo apt install git
+```
+
+### Installation
+
+
+1. clone the repository
+``` sh
+git clone https://github.com/Maulidito/restapi-bus
+```
+if you dont want to clone all repository just copy .env and docker-compose.yaml file to your computer
+2. make the env file and copy paste from .env.example
+``` sh
+cat .env.example >> .env
+```
+
+3. configure the env file
+you can change the rest api port and change the username and password db or rabbitmq but dont change the port to db, rabbitmq, and smtp
+
+Things that cannot be changed
+``` js
+HOST_DB = mysql
+PORT_DB = 3306 
+HOST_RDB = redis 
+PORT_RDB = 6379
+SMTP_MAIL_SERVER = smtp.gmail.com
+SMTP_MAIL_PORT = 465
+HOST_RMQ = rabbitmq
+PORT_RMQ = 5672
+```
+(optional) and inserted app password gmail that you created to env file 
+``` js
+APP_PASSWORD_GMAIL = example_app_password
+```
+
+4. do 
+``` sh
+docker compose up -d
+```
+
+5. make sure your container is running and healthy
+``` sh 
+docker ps
+```
+you can monitor it with watch
+``` sh 
+watch docker ps
+```
+
+6. Done, to make sure this program is running do
+``` sh 
+curl -X GET http://localhost:8080/v1/agency
+```
+
