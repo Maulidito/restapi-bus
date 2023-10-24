@@ -94,9 +94,9 @@ Using [OpenApi](https://app.swaggerhub.com/apis/Maulidito/api-bus_travel) For Do
 ### Prerequisites
 
 #### A think u need todo
- - Get App password from Gmail [instruction]("https://support.google.com/mail/answer/185833?hl=en) 
+ - Get App password from Gmail [instruction](https://support.google.com/mail/answer/185833?hl=en) 
 
-- Register and Get Api Secret Key in [xendit]("https://www.xendit.co/en-id/")
+- Register and Get Api Secret Key in [xendit](https://www.xendit.co/en-id/)
 
 
 you need have docker and git with lastest 
