@@ -3,9 +3,11 @@ package app
 import (
 	"io/fs"
 	"os"
+	"reflect"
 	"restapi-bus/controller"
 	"restapi-bus/helper"
 	"restapi-bus/middleware"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -34,10 +36,26 @@ func IntializedCustomValidation() {
 		v.RegisterValidation("validatefromTodate", helper.ValidateFromToDate)
 		v.RegisterValidation("validatedateafternow", helper.ValidateDateAfterNow)
 		v.RegisterValidation("validateoneuppercase", helper.AtLeastOneUppercase)
+		v.RegisterTagNameFunc(func(fld reflect.StructField) string {
+			name := strings.SplitN(fld.Tag.Get("json"), ",", 2)[0]
+			if name == "-" {
+				return ""
+			}
+			return name
+		})
 	}
+
 }
 
-func Router(customer controller.CustomerControllerInterface, agency controller.AgencyControllerInterface, bus controller.BusControllerInterface, driver controller.ControllerDriverInterface, ticket controller.ControllerTicketInterface, schedule controller.ControllerScheduleInterface) *gin.Engine {
+func Router(
+	customer controller.CustomerControllerInterface,
+	agency controller.AgencyControllerInterface,
+	bus controller.BusControllerInterface,
+	driver controller.ControllerDriverInterface,
+	ticket controller.ControllerTicketInterface,
+	schedule controller.ControllerScheduleInterface,
+
+) *gin.Engine {
 
 	g := DefaultConfigurationRouter()
 

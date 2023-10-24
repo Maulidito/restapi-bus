@@ -5,13 +5,33 @@ type Ticket struct {
 	ScheduleId int    `json:"scheduleId"`
 	CustomerId int    `json:"customerId"`
 	Date       string `json:"date"`
+	ExternalId string `json:"external_id"`
+	PaymentId  string `json:"payment_id"`
 }
 
 type DetailTicket struct {
-	TicketId int `json:"ticketId"`
-	Schedule DetailSchedule
-	Customer Customer
-	Date     string `json:"date"`
+	TicketId   int `json:"ticketId"`
+	Schedule   DetailSchedule
+	Customer   Customer
+	Date       string `json:"date"`
+	PaymentId  string `json:"paymentId"`
+	IsPaid     bool   `json:"isPaid"`
+	ExternalId string `json:"external_id"`
+}
+
+type TicketOrder struct {
+	TicketId            int `json:"ticketId"`
+	Schedule            DetailSchedule
+	Customer            Customer
+	Date                string `json:"date"`
+	ExpiryDate          string `json:"expirate_date"`
+	ExpiryMinute        int    `json:"expirate_minute"`
+	ExpiryHour          int    `json:"expirate_hour"`
+	ExpiryDay           int    `json:"expirate_day"`
+	VirtualAccontNumber string `json:"virtual_account_number"`
+	IsPaid              bool   `json:"isPaid"`
+	BankCode            string `json:"bank_code"`
+	MerchantCode        string `json:"merchant_code"`
 }
 
 type AllTicketOnAgency struct {

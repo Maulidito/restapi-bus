@@ -1,0 +1,54 @@
+<html>
+
+
+<body style="font-family: Arial, sans-serif;  text-align: center; padding: 50px; color: black;">
+
+    <div
+        style="max-width: 400px; margin: 0 auto; background-color: #f3f1c9; padding: 20px; border-radius: 5px; box-shadow: 0 2px 5px #ccc;">
+
+        <h2 style="color: #333; margin-bottom: 20px;">Payment Order</h2>
+
+        <table style="width:100%; text-align: left; margin-bottom: 20px;border-spacing: 10px; font-size: 13px;">
+            <tr>
+                <td><strong>Virtual Account Number:</strong></td>
+                <td style="text-align: right;">{{.VirtualAccontNumber}}</td>
+            </tr>
+            <tr>
+                <td><strong>Service Provider Code:</strong></td>
+                <td style="text-align: right;">{{.MerchantCode}}</td>
+            </tr>
+            <tr>
+                <td><strong>Bank:</strong></td>
+                <td style="text-align: right;">{{.BankCode}}</td>
+            </tr>
+            <tr>
+                <td><strong>Amount:</strong></td>
+                <td style="text-align: right;">IDR {{.Schedule.Price}}</td>
+            </tr>
+            <tr>
+                <td><strong>Duration until:</strong></td>
+                <td style="text-align: right;">{{.ExpiryDate}}</td>
+            </tr>
+        </table>
+
+        <p style="color: #888;">Please Do payment before expired,
+            <strong style="color: red;">
+                {{if gt .ExpiryDay 0 }}
+                {{.ExpiryDay }} Days
+                {{else if gt .ExpiryHour 0 }}
+                {{.ExpiryHour }} Hour
+                {{else if gt .ExpiryMinute 0 }}
+                {{.ExpiryMinute}} Minute
+                {{end}}
+                remaining<strong>
+        </p>
+
+        <div style="border-top: 1px solid #ccc; padding-top: 20px; margin-top: 20px;">
+            <p style="color: #888;">For any inquiries, please contact our support team.</p>
+        </div>
+
+    </div>
+
+</body>
+
+</html>

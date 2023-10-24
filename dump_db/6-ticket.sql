@@ -27,9 +27,13 @@ CREATE TABLE `ticket` (
   `schedule_id` int NOT NULL,
   `customer_id` int NOT NULL,
   `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `payment_id` varchar(100) NULL,
+  `external_id` varchar(100) NULL,
+  `is_paid` boolean default false,
   PRIMARY KEY (`ticket_id`),
   KEY `customer_id` (`customer_id`),
   KEY `schedule_id` (`schedule_id`),
+  UNIQUE(`external_id`),
   CONSTRAINT `ticket_ibfk_3` FOREIGN KEY (`customer_id`) REFERENCES `customer` (`customer_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `ticket_ibfk_4` FOREIGN KEY (`schedule_id`) REFERENCES `schedule` (`schedule_id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=1012 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

@@ -2,10 +2,12 @@ package main
 
 import (
 	"encoding/gob"
+	"flag"
 	"fmt"
 	"os"
 	"restapi-bus/app"
 	"restapi-bus/depedency"
+	"restapi-bus/external"
 	"restapi-bus/helper"
 	"restapi-bus/middleware"
 	"restapi-bus/models/response"
@@ -39,14 +41,23 @@ func main() {
 	passwordRmq := os.Getenv("PASSWORD_RMQ")
 	hostRmq := os.Getenv("HOST_RMQ")
 	portRmq := os.Getenv("PORT_RMQ")
+	var hostEnv string
+	flag.StringVar(&hostEnv, "hostenv", "local", "environment host every db")
+	flag.Parse()
+	if hostEnv == "local" {
+		hostDb = "localhost"
+		hostRdb = "localhost"
+		hostRmq = "localhost"
+
+	}
 	db := app.NewDatabase(usernameDb, passDb, nameDb, hostDb, portDb)
 
 	rdb := app.NewRedis(hostRdb, portRdb, passRdb)
 	middlewareRedis := middleware.RedisClientDb{Client: rdb}
 	Rabbitmq, err := app.NewRabbitMqConn(usernameRmq, passwordRmq, hostRmq, portRmq).Channel()
 	helper.PanicIfError(err)
-
-	server := depedency.InitializedServer(db, &middlewareRedis, Rabbitmq)
+	middlewarePayment := external.NewPayment()
+	server := depedency.InitializedServer(db, &middlewareRedis, Rabbitmq, middlewarePayment)
 	fmt.Println("SERVER RUNNING ON PORT ", port)
 	server.Run(":" + port)
 }

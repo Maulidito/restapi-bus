@@ -52,23 +52,41 @@ func (repo *TicketRepositoryImplementation) AddTicket(ctx context.Context, ticke
 	tx, err := repo.conn.Begin()
 	defer helper.DoCommitOrRollback(tx)
 	helper.PanicIfError(err)
-	res, err := tx.ExecContext(ctx, "INSERT INTO ticket(schedule_id,customer_id) VALUES (?,?)", &ticket.ScheduleId, &ticket.CustomerId)
+	res, err := tx.ExecContext(ctx, "INSERT INTO ticket(schedule_id,customer_id,external_id) VALUES (?,?,?)",
+		&ticket.ScheduleId, &ticket.CustomerId, &ticket.ExternalId)
 	helper.PanicIfError(err)
 	ticketId, err := res.LastInsertId()
-	helper.PanicIfError(err)
 	ticket.TicketId = int(ticketId)
+	helper.PanicIfError(err)
+	err = tx.QueryRowContext(ctx, "SELECT date FROM ticket where ticket_id = ?", ticketId).Scan(&ticket.Date)
+	helper.PanicIfError(err)
+
 }
 func (repo *TicketRepositoryImplementation) GetOneTicket(ctx context.Context, entityTicket *entity.Ticket) {
 	tx, err := repo.conn.Begin()
 	defer helper.DoCommitOrRollback(tx)
 	helper.PanicIfError(err)
 	err = tx.QueryRowContext(ctx, "SELECT * FROM ticket WHERE ticket_id = ?", entityTicket.TicketId).
-		Scan(&entityTicket.TicketId, &entityTicket.ScheduleId, &entityTicket.CustomerId, &entityTicket.Date)
+		Scan(&entityTicket.TicketId, &entityTicket.ScheduleId, &entityTicket.CustomerId, &entityTicket.Date, &entityTicket.ExternalId, &entityTicket.PaymentId, &entityTicket.IsPaid)
 
 	if err != nil {
 		panic(exception.NewNotFoundError(fmt.Sprintf("TICKET ID %d NOT FOUND", entityTicket.TicketId)))
 	}
 }
+
+func (repo *TicketRepositoryImplementation) IsCustomerHaveUnpaidPayment(ctx context.Context, customerId int) bool {
+	tx, err := repo.conn.Begin()
+	defer helper.DoCommitOrRollback(tx)
+	helper.PanicIfError(err)
+
+	row, err := tx.QueryContext(ctx, "SELECT * FROM ticket WHERE customer_id = ? AND is_paid = false", customerId)
+	helper.PanicIfError(err)
+	defer row.Close()
+
+	return row.Next()
+
+}
+
 func (repo *TicketRepositoryImplementation) DeleteTicket(ctx context.Context, ticket *entity.Ticket) {
 	tx, err := repo.conn.Begin()
 	defer helper.DoCommitOrRollback(tx)
@@ -210,3 +228,32 @@ func (repo *TicketRepositoryImplementation) GetTotalPriceTicketFromSpecificDrive
 	}
 
 }
+
+func (repo *TicketRepositoryImplementation) UpdateTicketToPaid(ctx context.Context, externalId string, paymentId string) {
+	tx, err := repo.conn.Begin()
+	defer helper.DoCommitOrRollback(tx)
+	helper.PanicIfError(err)
+	res, err := tx.ExecContext(ctx, "UPDATE ticket SET is_paid = TRUE, payment_id=? WHERE external_id = ?", paymentId, externalId)
+	helper.PanicIfError(err)
+	countRowsAffected, err := res.RowsAffected()
+	helper.PanicIfError(err)
+	if countRowsAffected == 0 {
+		helper.PanicIfError(fmt.Errorf("failed to updated ticket to paid with external_id %s and payment_id %s", externalId, paymentId))
+	}
+
+}
+
+func (repo *TicketRepositoryImplementation) GetOneTicketbyExternalId(ctx context.Context, externalId string) entity.Ticket {
+	tx, err := repo.conn.Begin()
+	defer helper.DoCommitOrRollback(tx)
+	helper.PanicIfError(err)
+	entityTicket := entity.Ticket{}
+	err = tx.QueryRowContext(ctx, "SELECT * FROM ticket WHERE external_id = ?", externalId).
+		Scan(&entityTicket.TicketId, &entityTicket.ScheduleId, &entityTicket.CustomerId, &entityTicket.Date, &entityTicket.PaymentId, &entityTicket.IsPaid, &entityTicket.ExternalId)
+	if err != nil {
+		panic(err)
+	}
+	return entityTicket
+}
+
+// repo *TicketRepositoryImplementation

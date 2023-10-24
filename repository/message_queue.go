@@ -7,40 +7,47 @@ import (
 	"github.com/rabbitmq/amqp091-go"
 )
 
+var MessageChannelSingleton *MessageChannel
+
 type MessageChannel struct {
 	*amqp091.Channel
 }
 
 type IMessageChannel interface {
-	PublishToEmailService(ctx context.Context, data []byte)
-	ConsumeQueue(ctx context.Context, consumerName string) <-chan amqp091.Delivery
+	PublishToEmailService(ctx context.Context, queueName string, data []byte)
+	PublishToEmailServiceTopic(ctx context.Context, topic string, queueName string, data []byte)
+	ConsumeQueue(ctx context.Context, consumerName string, queueName string) <-chan amqp091.Delivery
 }
 
 func BindMqChannel(channelMq *amqp091.Channel) IMessageChannel {
-
-	return &MessageChannel{channelMq}
+	if MessageChannelSingleton == nil {
+		MessageChannelSingleton = &MessageChannel{channelMq}
+	}
+	return MessageChannelSingleton
 }
 
-func (mq *MessageChannel) PublishToEmailService(ctx context.Context, data []byte) {
-	queue := initQueue(mq)
-	err := mq.QueueBind(queue.Name, "info", "amq.direct", false, nil)
+func (mq *MessageChannel) PublishToEmailServiceTopic(ctx context.Context, topic string, queueName string, data []byte) {
+	err := mq.QueueBind(queueName, topic, "amq.topic", false, nil)
+	helper.PanicIfError(err)
+	mq.PublishWithContext(ctx, "amq.topic", topic, false, false, amqp091.Publishing{Body: data})
+}
+
+func (mq *MessageChannel) PublishToEmailService(ctx context.Context, queueName string, data []byte) {
+
+	err := mq.QueueBind(queueName, "info", "amq.direct", false, nil)
+
 	helper.PanicIfError(err)
 	mq.PublishWithContext(ctx, "amq.direct", "info", false, false, amqp091.Publishing{Body: data})
 }
 
-func (mq *MessageChannel) ConsumeQueue(ctx context.Context, consumerName string) <-chan amqp091.Delivery {
-	queue := initQueue(mq)
+func (mq *MessageChannel) ConsumeQueue(ctx context.Context, consumerName string, queueName string) <-chan amqp091.Delivery {
+	queue, err := mq.QueueDeclare(queueName, false, true, false, true, nil)
+
+	helper.PanicIfError(err)
+
 	dataConsume, err := mq.Consume(queue.Name, consumerName, false, false, false, true, nil)
 
 	helper.PanicIfError(err)
 
 	return dataConsume
-}
-
-func initQueue(mq *MessageChannel) amqp091.Queue {
-	queue, err := mq.QueueDeclare("busTicket", false, true, false, true, nil)
-	helper.PanicIfError(err)
-
-	return queue
-
 }

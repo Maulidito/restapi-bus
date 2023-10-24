@@ -7,6 +7,7 @@ import (
 	"database/sql"
 	"restapi-bus/app"
 	"restapi-bus/controller"
+	"restapi-bus/external"
 	"restapi-bus/middleware"
 	"restapi-bus/repository"
 	"restapi-bus/service"
@@ -60,7 +61,7 @@ func InitializedControllerSchedule(db *sql.DB, rdb *middleware.RedisClientDb) co
 	return nil
 }
 
-func InitializedControllerTicket(db *sql.DB, rdb *middleware.RedisClientDb, rmq *amqp091.Channel) controller.ControllerTicketInterface {
+func InitializedControllerTicket(db *sql.DB, rdb *middleware.RedisClientDb, rmq *amqp091.Channel, paymid external.InterfacePayment) controller.ControllerTicketInterface {
 	wire.Build(
 		repository.NewTicketRepository,
 		repository.NewCustomerRepository,
@@ -74,7 +75,7 @@ func InitializedControllerTicket(db *sql.DB, rdb *middleware.RedisClientDb, rmq 
 	return nil
 }
 
-func InitializedServer(*sql.DB, *middleware.RedisClientDb, *amqp091.Channel) *gin.Engine {
+func InitializedServer(*sql.DB, *middleware.RedisClientDb, *amqp091.Channel, external.InterfacePayment) *gin.Engine {
 	wire.Build(
 		InitializedControllerCustomer,
 		InitializedControllerAgency,

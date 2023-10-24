@@ -79,13 +79,11 @@ func SendTicketEmail(detailTicket *response.DetailTicket, templateRendered strin
 	}
 }
 
-func SendTicketEmailSmtp(detailTicket *response.DetailTicket, templateRendered string) {
+func SendDataEmailSmtp(templateRendered string, subject string, toEmail string) {
 
 	app_password := os.Getenv("APP_PASSWORD_GMAIL")
 	host_smtp := os.Getenv("SMTP_MAIL_SERVER")
 	port_stmp := os.Getenv("SMTP_MAIL_PORT")
-
-	to := detailTicket.Customer.Email
 
 	auth := smtp.PlainAuth("", "maudana111restapibus@gmail.com", app_password, host_smtp)
 
@@ -104,18 +102,18 @@ func SendTicketEmailSmtp(detailTicket *response.DetailTicket, templateRendered s
 	helper.PanicIfError(err)
 	err = c.Mail("maudana111restapibus@gmail.com")
 	helper.PanicIfError(err)
-	err = c.Rcpt(to)
+	err = c.Rcpt(toEmail)
 	helper.PanicIfError(err)
 	w, err := c.Data()
 	helper.PanicIfError(err)
 
-	subject := fmt.Sprintf("Subject: Bus Ticket %d", detailTicket.TicketId)
+	//subject := fmt.Sprintf("Subject: Bus Ticket %d", detailTicket.TicketId)
 	mime := "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n"
 
 	message := fmt.Sprintf("To: %s\r\n"+
+		"Subject: %s\r\n"+
 		"%s\r\n"+
-		"%s\r\n"+
-		"%s\r\n", detailTicket.Customer.Email, subject, mime, templateRendered)
+		"%s\r\n", toEmail, subject, mime, templateRendered)
 
 	_, err = w.Write([]byte(message))
 

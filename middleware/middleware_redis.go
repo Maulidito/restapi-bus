@@ -19,7 +19,7 @@ type RedisClientDb struct {
 }
 
 func (redis *RedisClientDb) MiddlewareGetDataRedis(ctx *gin.Context) {
-	log.Println("MIDDELWARE GET DATA REDIS FUNC")
+
 	redisResult := redis.Get(ctx.Request.URL.String())
 
 	res, err := redisResult.Bytes()
@@ -45,7 +45,7 @@ func (redis *RedisClientDb) MiddlewareGetDataRedis(ctx *gin.Context) {
 }
 
 func (redis *RedisClientDb) MiddlewareSetDataRedis(ctx *gin.Context) {
-	log.Println("MIDDELWARE SET DATA REDIS FUNC")
+
 	timeDuration := time.Hour * 1
 	go func() {
 		response, ok := ctx.Get("response")
@@ -63,7 +63,7 @@ func (redis *RedisClientDb) MiddlewareSetDataRedis(ctx *gin.Context) {
 		log.Println("SET KEY REDIS", ctx.Request.URL.String())
 
 		redis.Set(ctx.Request.URL.String(), byteBuffer.Bytes(), timeDuration)
-		return
+
 	}()
 
 	ctx.Next()

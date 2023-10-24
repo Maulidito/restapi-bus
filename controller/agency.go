@@ -68,8 +68,6 @@ func (ctrl *AgencyControllerImplementation) RegisterAgency(ctx *gin.Context) {
 	helper.PanicIfError(err)
 	agencyRequest.Auth = &agencyAuth
 	ctrl.service.RegisterAgency(ctx, &agencyRequest)
-	helper.PanicIfError(err)
-
 	finalResponse := web.WebResponseNoData{Code: http.StatusOK, Status: "OK"}
 	ctx.JSON(http.StatusOK, finalResponse)
 

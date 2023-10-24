@@ -27,6 +27,7 @@ type ControllerTicketInterface interface {
 	GetTotalPriceAllTicket(ctx *gin.Context)
 	GetTotalPriceTicketFromSpecificAgency(ctx *gin.Context)
 	GetTotalPriceTicketFromSpecificDriver(ctx *gin.Context)
+
 	RouterMount(g gin.IRouter)
 }
 
@@ -56,6 +57,7 @@ func (ctrl *ControllerTicketImplementation) RouterMount(g gin.IRouter) {
 	grouterTicketAuth.GET("/driver/:driverId/price", ctrl.GetTotalPriceTicketFromSpecificDriver)
 	grouterTicketAuth.POST("", ctrl.AddTicket)
 	grouterTicketAuth.DELETE("/:ticketId", ctrl.DeleteTicket)
+
 }
 
 func (ctrl *ControllerTicketImplementation) GetAllTicket(ctx *gin.Context) {
@@ -76,9 +78,9 @@ func (ctrl *ControllerTicketImplementation) AddTicket(ctx *gin.Context) {
 	ticketRequest := request.Ticket{}
 	err := ctx.Bind(&ticketRequest)
 	helper.PanicIfError(err)
-	ctrl.service.AddTicket(ctx, &ticketRequest)
+	responseTicket := ctrl.service.AddTicket(ctx, &ticketRequest)
 
-	finalResponse := web.WebResponseNoData{Code: http.StatusOK, Status: "OK"}
+	finalResponse := web.WebResponse{Code: http.StatusOK, Status: "OK", Data: responseTicket}
 
 	ctx.JSON(http.StatusOK, &finalResponse)
 

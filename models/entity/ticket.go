@@ -11,11 +11,14 @@ type Ticket struct {
 	ScheduleId int
 	CustomerId int
 	Date       string
+	PaymentId  string
+	ExternalId string
+	IsPaid     bool
 }
 
 type TicketServiceInterface interface {
 	GetAllTicket(ctx context.Context, filter *request.TicketFilter) []response.Ticket
-	AddTicket(ctx context.Context, ticket *request.Ticket)
+	AddTicket(ctx context.Context, ticket *request.Ticket) response.Ticket
 	GetOneTicket(ctx context.Context, ticketId int) response.Ticket
 	DeleteTicket(ctx context.Context, ticketId int) response.Ticket
 	GetAllTicketOnDriver(ctx context.Context, idDriver int) response.AllTicketOnDriver
@@ -29,8 +32,10 @@ type TicketServiceInterface interface {
 
 type TicketRepositoryInterface interface {
 	GetAllTicket(ctx context.Context, filter *request.TicketFilter) []Ticket
+	IsCustomerHaveUnpaidPayment(ctx context.Context, customerId int) bool
 	AddTicket(ctx context.Context, ticket *Ticket)
 	GetOneTicket(ctx context.Context, ticket *Ticket)
+	GetOneTicketbyExternalId(ctx context.Context, externalId string) Ticket
 	DeleteTicket(ctx context.Context, ticket *Ticket)
 	GetAllTicketOnDriver(ctx context.Context, idDriver int) []Ticket
 	GetAllTicketOnCustomer(ctx context.Context, idCustomer int) []Ticket
@@ -39,4 +44,5 @@ type TicketRepositoryInterface interface {
 	GetTotalPriceAllTicket(ctx context.Context, response *response.AllTicketPrice)
 	GetTotalPriceTicketFromSpecificAgency(ctx context.Context, response *response.AllTicketPriceSpecificAgency)
 	GetTotalPriceTicketFromSpecificDriver(ctx context.Context, response *response.AllTicketPriceSpecificDriver)
+	UpdateTicketToPaid(ctx context.Context, externalId string, paymentId string)
 }

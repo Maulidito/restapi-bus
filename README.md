@@ -65,7 +65,7 @@ This image show workflow from client send request and get response in REST API
 
 ## Email Service
 
-![Message Queue System](./image/microservice.drawio.png)
+![Message Queue System](./image/deep_dive_message_queue.png)
 
 
 The goal of Email service is send a ticket bus to email user. If we see the image i use message queue for connecting to email service and rest api, and smtp gmail to handle delivery email. The technology message queue is using [RabbitMq](https://rabbitmq.com/)
@@ -77,9 +77,13 @@ The flow email service work:
 3. Email Service Render the data of detail ticket to html
 4. Email Service send to email user with smtp gmail
 
-example of email
+- example of ticket email
 
 ![Example Ticket Email](./image/email_ticket.png)
+
+- example of email ticket payment
+
+![Example Ticket Email](./image/email_payment_order.png)
 
 ## Documentation Rest Api
 
@@ -89,9 +93,15 @@ Using [OpenApi](https://app.swaggerhub.com/apis/Maulidito/api-bus_travel) For Do
 
 ### Prerequisites
 
-(optional) if you want email service work you need to have App Password from gmail. follow the [instruction]("https://support.google.com/mail/answer/185833?hl=en) and you will get app passowrd for env file.
+#### A think u need todo
+ - Get App password from Gmail [instruction]("https://support.google.com/mail/answer/185833?hl=en) 
 
-you need have docker and git with lastest version 
+- Register and Get Api Secret Key in [xendit]("https://www.xendit.co/en-id/")
+
+
+you need have docker and git with lastest 
+
+version 
 #### docker
 - [windows version](https://docs.docker.com/desktop/install/windows-install/)
 - [ubuntu version](https://docs.docker.com/engine/install/ubuntu/)
@@ -137,9 +147,12 @@ SMTP_MAIL_PORT = 465
 HOST_RMQ = rabbitmq
 PORT_RMQ = 5672
 ```
-(optional) and inserted app password gmail that you created to env file 
+inserted app password gmail and xendit that you created to env file 
 ``` js
 APP_PASSWORD_GMAIL = example_app_password
+PASSWORD_XENDIT = example_password_xendit
+SECRET_KEY_XENDIT = example_secret_key
+WEBHOOK_VERIFICATION_TOKEN = example_webhook_token
 ```
 
 4. do 

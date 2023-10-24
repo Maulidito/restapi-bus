@@ -4,11 +4,17 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
+	"restapi-bus/constant"
+	"restapi-bus/exception"
+	"restapi-bus/external"
 	"restapi-bus/helper"
 	"restapi-bus/models/entity"
 	"restapi-bus/models/request"
 	"restapi-bus/models/response"
+	"restapi-bus/models/web"
 	"restapi-bus/repository"
+	"time"
 )
 
 type TicketServiceImplementation struct {
@@ -20,6 +26,7 @@ type TicketServiceImplementation struct {
 	RepoAgency   entity.AgencyRepositoryInterface
 	RepoSchedule entity.ScheduleRepositoryInterface
 	RepoMq       repository.IMessageChannel
+	Payapi       external.InterfacePayment
 }
 
 func NewTicketService(
@@ -31,9 +38,23 @@ func NewTicketService(
 	repoAgency entity.AgencyRepositoryInterface,
 	repoSchedule entity.ScheduleRepositoryInterface,
 	RepoMq repository.IMessageChannel,
+	payapi external.InterfacePayment,
 ) entity.TicketServiceInterface {
 
-	return &TicketServiceImplementation{Db: db, RepoBus: repoBus, RepoCustomer: repoCustomer, RepoDriver: repoDriver, RepoTicket: repoTicket, RepoAgency: repoAgency, RepoSchedule: repoSchedule, RepoMq: RepoMq}
+	TicketServiceStruct := TicketServiceImplementation{
+		Db:           db,
+		RepoBus:      repoBus,
+		RepoCustomer: repoCustomer,
+		RepoDriver:   repoDriver,
+		RepoTicket:   repoTicket,
+		RepoAgency:   repoAgency,
+		RepoSchedule: repoSchedule,
+		RepoMq:       RepoMq,
+		Payapi:       payapi,
+	}
+
+	go TicketServiceStruct.consumeWebhookQueuePaymentSuccess()
+	return &TicketServiceStruct
 }
 
 func (service *TicketServiceImplementation) GetAllTicket(ctx context.Context, filter *request.TicketFilter) []response.Ticket {
@@ -48,7 +69,7 @@ func (service *TicketServiceImplementation) GetAllTicket(ctx context.Context, fi
 
 	return responseListTicket
 }
-func (service *TicketServiceImplementation) AddTicket(ctx context.Context, ticket *request.Ticket) {
+func (service *TicketServiceImplementation) AddTicket(ctx context.Context, ticket *request.Ticket) response.Ticket {
 
 	ticketEntity := helper.TicketRequestToEntity(ticket)
 
@@ -70,22 +91,56 @@ func (service *TicketServiceImplementation) AddTicket(ctx context.Context, ticke
 
 		service.RepoSchedule.GetOneSchedule(ctx, &scheduleEntity)
 		service.RepoCustomer.GetOneCustomer(ctx, &customerEntity)
+
 	}()
 	helper.PanicIfError(<-chanErr)
-	// rabbitmq
+	if service.RepoTicket.IsCustomerHaveUnpaidPayment(ctx, customerEntity.CustomerId) {
+		panic(exception.NewBadRequestError(fmt.Sprintf("Customer %s with email %s still have an Unpaid Order Payment", customerEntity.Name, customerEntity.Email)))
+	}
 	respDetailSchedule := response.DetailSchedule{ScheduleId: scheduleEntity.ScheduleId, FromAgency: response.Agency{AgencyId: scheduleEntity.FromAgencyId}, ToAgency: response.Agency{AgencyId: scheduleEntity.ToAgencyId}, Driver: response.Driver{DriverId: scheduleEntity.DriverId}, Bus: response.Bus{BusId: scheduleEntity.BusId}}
 
 	service.RepoSchedule.GetOneDetailSchedule(ctx, &respDetailSchedule)
 
+	dataVirtualAccount := service.Payapi.MakeVirtualAccount(ctx,
+		"Bus Agency Ticket Payment",
+		fmt.Sprintf("FIXED-VA-%s-%s-%d", customerEntity.Email, customerEntity.PhoneNumber, time.Now().UnixNano()),
+		ticket.BankCode,
+		scheduleEntity.Price)
+	ticketEntity.ExternalId = fmt.Sprintf("%v", dataVirtualAccount["external_id"])
+
 	service.RepoTicket.AddTicket(ctx, &ticketEntity)
+	date, err := time.Parse(time.DateTime, ticketEntity.Date)
+	helper.PanicIfError(err)
+	expiration_date := dataVirtualAccount["expiration_date"]
+	time_expire, err := time.Parse(time.RFC3339, fmt.Sprintf("%s", expiration_date))
 
-	respDetailTicket := response.DetailTicket{TicketId: ticketEntity.TicketId, Customer: helper.CustomerEntityToResponse(&customerEntity), Schedule: respDetailSchedule}
+	helper.PanicIfError(err)
+	expiration_date_string := time_expire.Format("2006-01-02")
+	expiration_time_string := int(time.Since(time_expire).Abs().Minutes())
+	expiration_hour_string := int(time.Since(time_expire).Abs().Hours())
+	expiration_day_string := int(time.Since(time_expire).Abs().Hours() / 24)
+	respTicketOrder := response.TicketOrder{
+		TicketId:            ticketEntity.TicketId,
+		Schedule:            respDetailSchedule,
+		Customer:            helper.CustomerEntityToResponse(&customerEntity),
+		Date:                fmt.Sprintf("%v", date.Format(time.DateOnly)),
+		VirtualAccontNumber: fmt.Sprintf("%v", dataVirtualAccount["account_number"]),
+		ExpiryDate:          expiration_date_string,
+		ExpiryMinute:        expiration_time_string,
+		ExpiryHour:          expiration_hour_string,
+		ExpiryDay:           expiration_day_string,
+		BankCode:            fmt.Sprintf("%v", dataVirtualAccount["bank_code"]),
+		MerchantCode:        fmt.Sprintf("%v", dataVirtualAccount["merchant_code"]),
+	}
 
-	respDetailTicketByte, err := json.Marshal(respDetailTicket)
+	ticketResponse := helper.TicketEntityToResponse(&ticketEntity)
+
+	respTicketOrderByte, err := json.Marshal(respTicketOrder)
 	helper.PanicIfError(err)
 
-	service.RepoMq.PublishToEmailService(ctx, respDetailTicketByte)
-	//
+	service.RepoMq.PublishToEmailServiceTopic(ctx, constant.TOPIC_PAYMENT_EMAIL, constant.QUEUE_PAYMENT, respTicketOrderByte)
+
+	return ticketResponse
 
 }
 func (service *TicketServiceImplementation) GetOneTicket(ctx context.Context, ticketId int) response.Ticket {
@@ -216,4 +271,42 @@ func (service *TicketServiceImplementation) GetTotalPriceTicketFromSpecificDrive
 	response := response.AllTicketPriceSpecificDriver{Driver: helper.DriverEntityToResponse(&driverEntity)}
 	service.RepoTicket.GetTotalPriceTicketFromSpecificDriver(ctx, &response)
 	return response
+}
+
+func (service *TicketServiceImplementation) consumeWebhookQueuePaymentSuccess() {
+
+	ctx := context.Background()
+	messages := service.RepoMq.ConsumeQueue(ctx, constant.CONSUMER_PAYMENT_WEBHOOK, constant.QUEUE_PAYMENT_WEBHOOK)
+	paymentSuccess := web.PaymentSuccess{}
+	go func() {
+		for msg := range messages {
+			json.Unmarshal(msg.Body, &paymentSuccess)
+			service.RepoTicket.UpdateTicketToPaid(ctx, paymentSuccess.ExternalID, paymentSuccess.PaymentID)
+			Ticket := service.RepoTicket.GetOneTicketbyExternalId(ctx, paymentSuccess.ExternalID)
+			err := recover()
+			if err != nil {
+				fmt.Println(err.(error).Error())
+				continue
+			}
+			Schedule := response.DetailSchedule{ScheduleId: Ticket.ScheduleId}
+			Customer := entity.Customer{CustomerId: Ticket.CustomerId}
+			service.RepoSchedule.GetOneDetailSchedule(ctx, &Schedule)
+			service.RepoCustomer.GetOneCustomer(ctx, &Customer)
+
+			respDetailTicket := response.DetailTicket{
+				TicketId:   Ticket.TicketId,
+				Schedule:   Schedule,
+				Customer:   helper.CustomerEntityToResponse(&Customer),
+				Date:       Ticket.Date,
+				PaymentId:  Ticket.PaymentId,
+				ExternalId: Ticket.ExternalId,
+				IsPaid:     Ticket.IsPaid,
+			}
+			respDetailTicketByte, errorJson := json.Marshal(respDetailTicket)
+			helper.PanicIfError(errorJson)
+			fmt.Printf("SUCCESS PAYMENT WITH Payment ID %s", paymentSuccess.PaymentID)
+			service.RepoMq.PublishToEmailServiceTopic(ctx, constant.TOPIC_TICKET_EMAIL, constant.QUEUE_TICKET, respDetailTicketByte)
+
+		}
+	}()
 }
