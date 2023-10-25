@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -8,12 +9,15 @@ import (
 	"os"
 	"restapi-bus/app"
 	"restapi-bus/constant"
+	"restapi-bus/external"
 	"restapi-bus/helper"
 	"restapi-bus/models/web"
 	"restapi-bus/repository"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	"golang.ngrok.com/ngrok"
+	"golang.ngrok.com/ngrok/config"
 )
 
 var mqChannelSingleton repository.IMessageChannel
@@ -22,12 +26,12 @@ func main() {
 	err := godotenv.Load("../../.env")
 	helper.PanicIfError(err)
 	g := app.DefaultConfigurationRouter()
-
+	payment := external.NewPayment()
 	usernameRmq := os.Getenv("USERNAME_RMQ")
 	passwordRmq := os.Getenv("PASSWORD_RMQ")
 	hostRmq := os.Getenv("HOST_RMQ")
 	portRmq := os.Getenv("PORT_RMQ")
-	portWebhookServer := os.Getenv("PORT_WEBHOOK_SERVER")
+
 	var hostEnv string
 	flag.StringVar(&hostEnv, "hostenv", "local", "environment host every db")
 	flag.Parse()
@@ -48,8 +52,27 @@ func main() {
 	mqChannelSingleton = MqChannel
 	groupPayment := g.Group("/hook/payment")
 	groupPayment.POST("/success", PaymentSuccessHandler)
+	ngrokTunnel := ConfigNgrok()
 
-	g.Run(":" + portWebhookServer)
+	err = payment.SetXenditWebhookUrl("fva_paid", ngrokTunnel.URL())
+	if err != nil {
+		fmt.Printf("Error Set Xendit Webhook Url \n %s", err.Error())
+		os.Exit(1)
+	}
+
+	g.RunListener(ngrokTunnel)
+
+}
+
+func ConfigNgrok() ngrok.Tunnel {
+	ctx := context.Background()
+	tun, err := ngrok.Listen(ctx,
+		config.HTTPEndpoint(),
+		ngrok.WithAuthtokenFromEnv(),
+	)
+	helper.PanicIfError(err)
+
+	return tun
 
 }
 

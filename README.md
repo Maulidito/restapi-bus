@@ -98,6 +98,8 @@ Using [OpenApi](https://app.swaggerhub.com/apis/Maulidito/api-bus_travel) For Do
 
 - Register and Get Api Secret Key in [xendit](https://www.xendit.co/en-id/)
 
+- Register and Get Api token [nginx](https://ngrok.com/)
+
 
 you need have docker and git with lastest 
 
@@ -153,6 +155,7 @@ APP_PASSWORD_GMAIL = example_app_password
 PASSWORD_XENDIT = example_password_xendit
 SECRET_KEY_XENDIT = example_secret_key
 WEBHOOK_VERIFICATION_TOKEN = example_webhook_token
+NGROK_AUTHTOKEN = example_ngrok_token
 ```
 
 4. do 

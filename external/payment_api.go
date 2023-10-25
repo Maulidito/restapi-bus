@@ -17,6 +17,7 @@ type InterfacePayment interface {
 	MakeVirtualAccount(c context.Context, name string, id string, bank_code string, expected_amount int) map[string]interface{}
 	GetDataVirtualAccount(c context.Context, id string) map[string]interface{}
 	PayVirtualAccount(c context.Context, externalId string, amount int) error
+	SetXenditWebhookUrl(typeUrl string, urlPublic string) error
 }
 
 type Payment struct {
@@ -138,5 +139,34 @@ func (p *Payment) PayVirtualAccount(c context.Context, externalId string, amount
 	if resp.StatusCode != 200 {
 		return errors.New("something went wrong")
 	}
+	return nil
+}
+
+func (p *Payment) SetXenditWebhookUrl(typeUrl string, urlPublic string) error {
+
+	body := map[string]string{
+		"url": urlPublic,
+	}
+	var bodyBuffer bytes.Buffer
+	err := json.NewEncoder(&bodyBuffer).Encode(body)
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("https://api.xendit.co/callback_urls/%s", typeUrl), &bodyBuffer)
+	req.Header.Add("Content-Type", "application/json")
+	req.SetBasicAuth(p.usernamePayment, p.passwordPayment)
+	if err != nil {
+		return err
+	}
+	client := http.DefaultClient
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != 200 {
+		return errors.New("something went wrong")
+	}
+
 	return nil
 }
