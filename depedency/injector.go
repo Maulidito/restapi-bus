@@ -7,6 +7,7 @@ import (
 	"database/sql"
 	"restapi-bus/app"
 	"restapi-bus/controller"
+	croncustom "restapi-bus/cron_custom"
 	"restapi-bus/external"
 	"restapi-bus/middleware"
 	"restapi-bus/repository"
@@ -61,7 +62,13 @@ func InitializedControllerSchedule(db *sql.DB, rdb *middleware.RedisClientDb) co
 	return nil
 }
 
-func InitializedControllerTicket(db *sql.DB, rdb *middleware.RedisClientDb, rmq *amqp091.Channel, paymid external.InterfacePayment) controller.ControllerTicketInterface {
+func InitializedControllerTicket(
+	db *sql.DB,
+	rdb *middleware.RedisClientDb,
+	rmq *amqp091.Channel,
+	paymid external.InterfacePayment,
+	cronJob croncustom.InterfaceCronJob,
+) controller.ControllerTicketInterface {
 	wire.Build(
 		repository.NewTicketRepository,
 		repository.NewCustomerRepository,
@@ -75,7 +82,7 @@ func InitializedControllerTicket(db *sql.DB, rdb *middleware.RedisClientDb, rmq 
 	return nil
 }
 
-func InitializedServer(*sql.DB, *middleware.RedisClientDb, *amqp091.Channel, external.InterfacePayment) *gin.Engine {
+func InitializedServer(*sql.DB, *middleware.RedisClientDb, *amqp091.Channel, external.InterfacePayment, croncustom.InterfaceCronJob) *gin.Engine {
 	wire.Build(
 		InitializedControllerCustomer,
 		InitializedControllerAgency,

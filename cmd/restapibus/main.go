@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"restapi-bus/app"
+	croncustom "restapi-bus/cron_custom"
 	"restapi-bus/depedency"
 	"restapi-bus/external"
 	"restapi-bus/helper"
@@ -56,8 +57,9 @@ func main() {
 	middlewareRedis := middleware.RedisClientDb{Client: rdb}
 	Rabbitmq, err := app.NewRabbitMqConn(usernameRmq, passwordRmq, hostRmq, portRmq).Channel()
 	helper.PanicIfError(err)
-	middlewarePayment := external.NewPayment()
-	server := depedency.InitializedServer(db, &middlewareRedis, Rabbitmq, middlewarePayment)
+	apiPayment := external.NewPayment()
+	cronJob := croncustom.NewCronJob()
+	server := depedency.InitializedServer(db, &middlewareRedis, Rabbitmq, apiPayment, cronJob)
 	fmt.Println("SERVER RUNNING ON PORT ", port)
 	server.Run(":" + port)
 }

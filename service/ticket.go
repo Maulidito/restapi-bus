@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"restapi-bus/constant"
+	croncustom "restapi-bus/cron_custom"
 	"restapi-bus/exception"
 	"restapi-bus/external"
 	"restapi-bus/helper"
@@ -14,6 +15,7 @@ import (
 	"restapi-bus/models/response"
 	"restapi-bus/models/web"
 	"restapi-bus/repository"
+
 	"time"
 )
 
@@ -27,6 +29,7 @@ type TicketServiceImplementation struct {
 	RepoSchedule entity.ScheduleRepositoryInterface
 	RepoMq       repository.IMessageChannel
 	Payapi       external.InterfacePayment
+	cronjob      croncustom.InterfaceCronJob
 }
 
 func NewTicketService(
@@ -39,6 +42,7 @@ func NewTicketService(
 	repoSchedule entity.ScheduleRepositoryInterface,
 	RepoMq repository.IMessageChannel,
 	payapi external.InterfacePayment,
+	cronJob croncustom.InterfaceCronJob,
 ) entity.TicketServiceInterface {
 
 	TicketServiceStruct := TicketServiceImplementation{
@@ -51,6 +55,7 @@ func NewTicketService(
 		RepoSchedule: repoSchedule,
 		RepoMq:       RepoMq,
 		Payapi:       payapi,
+		cronjob:      cronJob,
 	}
 
 	go TicketServiceStruct.consumeWebhookQueuePaymentSuccess()
@@ -139,6 +144,16 @@ func (service *TicketServiceImplementation) AddTicket(ctx context.Context, ticke
 	helper.PanicIfError(err)
 
 	service.RepoMq.PublishToEmailServiceTopic(ctx, constant.TOPIC_PAYMENT_EMAIL, constant.QUEUE_PAYMENT, respTicketOrderByte)
+
+	err = service.cronjob.SetCronJobOnce(
+		dataVirtualAccount["external_id"].(string),
+		func() {
+			service.RepoTicket.DeleteTicket(ctx, &ticketEntity)
+		},
+		fmt.Sprintf("%d %d * * * * ", time_expire.Minute(), time_expire.Hour()),
+	)
+
+	helper.PanicIfError(err)
 
 	return ticketResponse
 
@@ -278,9 +293,11 @@ func (service *TicketServiceImplementation) consumeWebhookQueuePaymentSuccess() 
 	ctx := context.Background()
 	messages := service.RepoMq.ConsumeQueue(ctx, constant.CONSUMER_PAYMENT_WEBHOOK, constant.QUEUE_PAYMENT_WEBHOOK)
 	paymentSuccess := web.PaymentSuccess{}
+
 	go func() {
 		for msg := range messages {
 			json.Unmarshal(msg.Body, &paymentSuccess)
+			go service.cronjob.StopCronJob(paymentSuccess.ExternalID)
 			service.RepoTicket.UpdateTicketToPaid(ctx, paymentSuccess.ExternalID, paymentSuccess.PaymentID)
 			Ticket := service.RepoTicket.GetOneTicketbyExternalId(ctx, paymentSuccess.ExternalID)
 			err := recover()

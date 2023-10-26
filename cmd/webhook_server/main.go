@@ -54,7 +54,7 @@ func main() {
 	groupPayment.POST("/success", PaymentSuccessHandler)
 	ngrokTunnel := ConfigNgrok()
 
-	err = payment.SetXenditWebhookUrl("fva_paid", ngrokTunnel.URL())
+	err = payment.SetXenditWebhookUrl("fva_paid", fmt.Sprintf("%s/hook/payment/success", ngrokTunnel.URL()))
 	if err != nil {
 		fmt.Printf("Error Set Xendit Webhook Url \n %s", err.Error())
 		os.Exit(1)

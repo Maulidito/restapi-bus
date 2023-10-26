@@ -5,6 +5,7 @@ import (
 	"os"
 	"reflect"
 	"restapi-bus/controller"
+	croncustom "restapi-bus/cron_custom"
 	"restapi-bus/helper"
 	"restapi-bus/middleware"
 	"strings"
@@ -54,6 +55,7 @@ func Router(
 	driver controller.ControllerDriverInterface,
 	ticket controller.ControllerTicketInterface,
 	schedule controller.ControllerScheduleInterface,
+	cronJob croncustom.InterfaceCronJob,
 
 ) *gin.Engine {
 
