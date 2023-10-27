@@ -18,6 +18,7 @@ type ControllerScheduleInterface interface {
 	GetAllSchedule(ctx *gin.Context)
 	GetOneSchedule(ctx *gin.Context)
 	AddSchedule(ctx *gin.Context)
+	AutoSchedule(ctx *gin.Context)
 	DeleteSchedule(ctx *gin.Context)
 	UpdateArrivedSchedule(ctx *gin.Context)
 	RouterMount(g gin.IRouter)
@@ -38,6 +39,7 @@ func (controller *ControllerScheduleImplementation) RouterMount(g gin.IRouter) {
 	grouterScheduleRdb := grouterSchedule.Group("", controller.Rdb.MiddlewareGetDataRedis)
 	grouterSchedule.GET("", controller.GetAllSchedule)
 	grouterScheduleAuth.POST("", controller.AddSchedule)
+	grouterScheduleAuth.POST("/autoschedule", controller.AutoSchedule)
 	grouterScheduleRdb.GET("/:scheduleId", controller.GetOneSchedule, controller.Rdb.MiddlewareSetDataRedis)
 	grouterScheduleAuth.DELETE("/:scheduleId", controller.DeleteSchedule)
 	grouterScheduleAuth.PATCH("/:scheduleId/arrived", controller.UpdateArrivedSchedule)
@@ -142,4 +144,11 @@ func (controller *ControllerScheduleImplementation) UpdateArrivedSchedule(ctx *g
 	finalResponse := web.WebResponse{Code: http.StatusOK, Status: "OK", Data: responseSchedule}
 
 	ctx.JSON(finalResponse.Code, finalResponse)
+}
+
+func (controller *ControllerScheduleImplementation) AutoSchedule(ctx *gin.Context) {
+	// autoSchedule := request.AutoSchedule{}
+
+	// err := ctx.ShouldBind(&autoSchedule)
+
 }

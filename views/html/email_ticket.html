@@ -1,17 +1,13 @@
 <html>
-  <body>
-    <div
-      class="main-content"
-      style="
+
+<body>
+  <div class="main-content" style="
         text-transform: uppercase;
 
         font-family: 'Questrial', sans-serif;
         align-self: center;
-      "
-    >
-      <table
-        class="ticket"
-        style="
+      ">
+    <table class="ticket" style="
           height: 400 px;
           width: 800px;
           background: #f3f1c9;
@@ -21,24 +17,19 @@
           padding: 10px;
           table-layout: fixed;
           border-spacing: 0px;
-        "
-      >
-        <tr class="ticket__main" style="height: 80px; padding: 10px">
-          <td
-            class="header"
-            colspan="4"
-            style="
+        ">
+      <tr class="ticket__main" style="height: 80px; padding: 10px">
+        <td class="header" colspan="4" style="
               font: 900 38px 'Montserrat', sans-serif;
               padding: 5px 0 5px 30px;
               letter-spacing: 6px;
               background: #111;
               color: #f3f1c9;
-            "
-          >
-            Bus Agency
-          </td>
+            ">
+          Bus Agency
+        </td>
 
-          <!-- <td
+        <!-- <td
             rowspan="4"
             class="logo"
             style="
@@ -112,104 +103,87 @@
               {{.Schedule.FromAgency.Place}}
             </div>
           </td> -->
-        </tr>
-        <tr
-          style="
+      </tr>
+      <tr style="
             height: 80px;
 
             /* border:2px solid black ; */
-          "
-        >
-          <td
-            class="info passenger"
-            colspan="4"
-            style="
+          ">
+        <td class="info passenger" colspan="3" style="
               border-style: solid;
               border-width: 0px 3px 3px 3px;
 
               padding: 8px;
-            "
-          >
-            <div
-              class="info__item"
-              style="
+            ">
+          <div class="info__item" style="
                 font: 400 13px 'Questrial', sans-serif;
                 letter-spacing: 0.5px;
-              "
-            >
-              Passenger
-            </div>
-            <div
-              class="info__detail"
-              style="
+              ">
+            Passenger
+          </div>
+          <div class="info__detail" style="
                 font: 700 20px/1 'Jura';
                 letter-spacing: 1px;
                 margin: 4px 0;
-              "
-            >
-              {{.Customer.Name}}
-            </div>
-          </td>
-        </tr>
-        <tr>
-          <td
-            class="info departure"
-            colspan="2"
-            style="
+              ">
+            {{.Customer.Name}}
+          </div>
+        </td>
+        <td class="info Seat" colspan="1" style="border: 3px solid; border-width: 0 3px 3px 0; padding: 8px">
+          <div class="info__item" style="
+              font: 400 13px 'Questrial', sans-serif;
+              letter-spacing: 0.5px;
+            ">
+            Seat No
+          </div>
+          <div class="info__detail" style="
+              font: 700 20px/1 'Jura';
+              letter-spacing: 1px;
+              margin: 4px 0;
+            ">
+            {{.SeatNumber}}
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td class="info departure" colspan="2" style="
               border-left: 3px solid;
               border: 3px solid;
               border-width: 0 3px 3px 3px;
               padding: 8px;
-            "
-          >
-            <div
-              class="info__item"
-              style="
+            ">
+          <div class="info__item" style="
                 font: 400 13px 'Questrial', sans-serif;
                 letter-spacing: 0.5px;
-              "
-            >
-              Depart
-            </div>
-            <div
-              class="info__detail"
-              style="
+              ">
+            Depart
+          </div>
+          <div class="info__detail" style="
                 font: 700 20px/1 'Jura';
                 letter-spacing: 1px;
                 margin: 4px 0;
-              "
-            >
-              {{.Schedule.FromAgency.Place}}
-            </div>
-          </td>
+              ">
+            {{.Schedule.FromAgency.Place}}
+          </div>
+        </td>
 
-          <td
-            class="info arrival"
-            colspan="2"
-            style="border: 3px solid; border-width: 0 3px 3px 0; padding: 8px"
-          >
-            <div
-              class="info__item"
-              style="
+        <td class="info arrival" colspan="2" style="border: 3px solid; border-width: 0 3px 3px 0; padding: 8px">
+          <div class="info__item" style="
                 font: 400 13px 'Questrial', sans-serif;
                 letter-spacing: 0.5px;
-              "
-            >
-              Arrive
-            </div>
-            <div
-              class="info__detail"
-              style="
+              ">
+            Arrive
+          </div>
+          <div class="info__detail" style="
                 font: 700 20px/1 'Jura';
                 letter-spacing: 1px;
                 margin: 4px 0;
-              "
-            >
-              {{.Schedule.ToAgency.Place}}
-            </div>
-          </td>
+              ">
+            {{.Schedule.ToAgency.Place}}
+          </div>
+        </td>
 
-          <!-- <td
+        <!-- <td
             rowspan="2"
             class="info side-date"
             style="
@@ -256,122 +230,85 @@
               {{.Schedule.Bus.NumberPlate}}
             </div>
           </td> -->
-        </tr>
-        <tr>
-          <td
-            class="info date"
-            colspan="1"
-            style="
+      </tr>
+      <tr>
+        <td class="info date" colspan="1" style="
               border-left: 3px solid;
               border: 3px solid;
               border-width: 0 3px 3px 3px;
               padding: 8px;
-            "
-          >
-            <div
-              class="info__item"
-              style="
+            ">
+          <div class="info__item" style="
                 font: 400 13px 'Questrial', sans-serif;
                 letter-spacing: 0.5px;
-              "
-            >
-              Date
-            </div>
-            <div
-              class="info__detail"
-              style="
+              ">
+            Date
+          </div>
+          <div class="info__detail" style="
                 font: 700 20px/1 'Jura';
                 letter-spacing: 1px;
                 margin: 4px 0;
-              "
-            >
-              {{.Schedule.Date}}
-            </div>
-          </td>
-          <td
-            colspan="1"
-            class="info time"
-            style="border: 3px solid; border-width: 0px 3px 3px 0; padding: 8px"
-          >
-            <div
-              class="info__item"
-              style="
+              ">
+            {{.Schedule.Date}}
+          </div>
+        </td>
+        <td colspan="1" class="info time" style="border: 3px solid; border-width: 0px 3px 3px 0; padding: 8px">
+          <div class="info__item" style="
                 font: 400 13px 'Questrial', sans-serif;
                 letter-spacing: 0.5px;
-              "
-            >
-              Plate Number
-            </div>
-            <div
-              class="info__detail"
-              style="
+              ">
+            Plate Number
+          </div>
+          <div class="info__detail" style="
                 font: 700 20px/1 'Jura';
                 letter-spacing: 1px;
                 margin: 4px 0;
-              "
-            >
-              {{.Schedule.Bus.NumberPlate}}
-            </div>
-          </td>
+              ">
+            {{.Schedule.Bus.NumberPlate}}
+          </div>
+        </td>
 
-          <td
-            class="info price"
-            colspan="2"
-            style="border: 3px solid; border-width: 0 3px 3px 0; padding: 8px"
-          >
-            <div
-              class="info__item"
-              style="
+        <td class="info price" colspan="2" style="border: 3px solid; border-width: 0 3px 3px 0; padding: 8px">
+          <div class="info__item" style="
                 font: 400 13px 'Questrial', sans-serif;
                 letter-spacing: 0.5px;
-              "
-            >
-              Price
-            </div>
-            <div
-              class="info__detail"
-              style="
+              ">
+            Price
+          </div>
+          <div class="info__detail" style="
                 font: 700 20px/1 'Jura';
                 letter-spacing: 1px;
                 margin: 4px 0;
-              "
-            >
-              Rp.{{.Schedule.Price}}
-            </div>
-          </td>
-        </tr>
-        <tr>
-          <td
-            class="fineprint"
-            rowspan="2"
-            colspan="3"
-            style="
+              ">
+            Rp.{{.Schedule.Price}}
+          </div>
+        </td>
+
+      </tr>
+      <tr>
+        <td class="fineprint" rowspan="2" colspan="3" style="
               font-size: 14px;
               font-family: 'Inconsolata';
               line-height: 1;
               margin-top: 10px;
               padding-right: 5px;
-            "
-          >
-            <p>
-              Boarding begins 30 minutes before departure. Snacks available for
-              purchase from The Depature & Arrival Agency.
-            </p>
-            <p
-              style="
+            ">
+          <p>
+            Boarding begins 30 minutes before departure. Snacks available for
+            purchase from The Depature & Arrival Agency.
+          </p>
+          <p style="
                 margin: 4px 4px 0 0;
                 padding-top: 4px;
                 border-top: 1.5px dotted;
                 font: 11px/1 'Inconsolata';
-              "
-            >
-              This ticket is Non-refundable • Bus Agency Authority
-            </p>
-          </td>
+              ">
+            This ticket is Non-refundable • Bus Agency Authority
+          </p>
+        </td>
 
-          <td rowspan="2" class="barcode__scan" style="padding: 5px">
-            <div
-              style="
+        <td rowspan="2" class="barcode__scan" style="padding: 5px">
+          <div style="
                 height: 100%;
 
                 background: linear-gradient(
@@ -494,10 +431,9 @@
                   #333 95%,
                   transparent 95%
                 );
-              "
-            ></div>
-          </td>
-          <!-- <div
+              "></div>
+        </td>
+        <!-- <div
           class="barcode__id"
           style="
             letter-spacing: 4px;
@@ -508,10 +444,11 @@
         >
           {{.TicketId}}
         </div> -->
-          <!-- 
+        <!-- 
           <td style="border-left: 1.5px dashed #111"></td> -->
-        </tr>
-      </table>
-    </div>
-  </body>
+      </tr>
+    </table>
+  </div>
+</body>
+
 </html>

@@ -59,14 +59,17 @@ func (repo *ScheduleRepositoryImplementation) GetOneDetailSchedule(ctx context.C
 	tx, err := repo.conn.Begin()
 	defer helper.DoCommitOrRollback(tx)
 	helper.PanicIfError(err)
-	row, err := tx.QueryContext(ctx, "SELECT s.schedule_id,a1.name,a1.place,a2.name,a2.place,b.agency_id,b.number_plate,d.agency_id,d.name,s.price,s.date,s.arrived FROM schedule as s LEFT JOIN agency as a1 ON s.from_agency_id = a1.agency_id LEFT JOIN agency as a2 ON s.to_agency_id = a2.agency_id LEFT JOIN bus as b ON b.bus_id = s.bus_id LEFT JOIN driver as d ON d.driver_id = s.driver_id WHERE s.schedule_id = ?", schedule.ScheduleId)
+	row, err := tx.QueryContext(ctx, "SELECT s.schedule_id,a1.name,a1.place,a2.name,a2.place,b.agency_id,b.number_plate,b.total_seat,d.agency_id,d.name,s.price,s.date,s.arrived FROM schedule as s LEFT JOIN agency as a1 ON s.from_agency_id = a1.agency_id LEFT JOIN agency as a2 ON s.to_agency_id = a2.agency_id LEFT JOIN bus as b ON b.bus_id = s.bus_id LEFT JOIN driver as d ON d.driver_id = s.driver_id WHERE s.schedule_id = ?", schedule.ScheduleId)
 
 	helper.PanicIfError(err)
 	defer row.Close()
 
 	if row.Next() {
 
-		err = row.Scan(&schedule.ScheduleId, &schedule.FromAgency.Name, &schedule.FromAgency.Place, &schedule.ToAgency.Name, &schedule.ToAgency.Place, &schedule.Bus.AgencyId, &schedule.Bus.NumberPlate,
+		err = row.Scan(
+			&schedule.ScheduleId,
+			&schedule.FromAgency.Name, &schedule.FromAgency.Place, &schedule.ToAgency.Name, &schedule.ToAgency.Place,
+			&schedule.Bus.AgencyId, &schedule.Bus.NumberPlate, &schedule.Bus.TotalSeat,
 			&schedule.Driver.AgencyId, &schedule.Driver.Name, &schedule.Price, &schedule.Date, &schedule.Arrived)
 		log.Print(err)
 

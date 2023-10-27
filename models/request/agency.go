@@ -10,8 +10,8 @@ type AgencyFilter struct {
 	Name          string `form:"name" binding:"omitempty"`
 	Limit         int    `form:"limit" binding:"omitempty,numeric"`
 	Place         string `form:"place" binding:"omitempty,alpha"`
-	BelowBusCount int    `form:"belowBusCount" binding:"omitempty,numeric"`
-	AboveBusCount int    `form:"aboveBusCount" binding:"omitempty,numeric"`
+	BelowBusCount int    `form:"belowBusCount" binding:"omitempty,numeric,gtecsfield=AboveBusCount"`
+	AboveBusCount int    `form:"aboveBusCount" binding:"omitempty,numeric,ltecsfield=BelowBusCount"`
 }
 
 type AgencyAuth struct {

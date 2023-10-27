@@ -4,8 +4,7 @@ type Ticket struct {
 	ScheduleId int    `form:"scheduleId" json:"scheduleId" binding:"required,numeric"`
 	CustomerId int    `form:"customerId" json:"customerId" binding:"required,numeric"`
 	BankCode   string `json:"bank_code" form:"bank_code" binding:"required,oneof=BNI BJB BRI BSI BNC MANDIRI PERMATA BCA CIMB DBS"`
-	// PaymentId  string `form:"paymentId" json:"paymentId" binding:"omitempty,alphanumeric"`
-	// IsPaid     bool   `form:"isPaid" json:"isPaid" binding:"omitempty,boolean,default=false"`
+	SeatNumber int    `form:"seatNumber" json:"seatNumber" binding:"required,numeric,min=1"`
 }
 
 type TicketFilter struct {

@@ -49,7 +49,7 @@ func (ctrl *AgencyControllerImplementation) GetAllAgency(ctx *gin.Context) {
 
 	filter := request.AgencyFilter{}
 
-	err := ctx.Bind(&filter)
+	err := ctx.ShouldBind(&filter)
 
 	if err != nil {
 		panic(exception.NewBadRequestError(err.Error()))

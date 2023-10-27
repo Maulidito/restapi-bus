@@ -7,6 +7,7 @@ type Ticket struct {
 	Date       string `json:"date"`
 	ExternalId string `json:"external_id"`
 	PaymentId  string `json:"payment_id"`
+	SeatNumber int    `json:"seat_number"`
 }
 
 type DetailTicket struct {
@@ -17,6 +18,7 @@ type DetailTicket struct {
 	PaymentId  string `json:"paymentId"`
 	IsPaid     bool   `json:"isPaid"`
 	ExternalId string `json:"external_id"`
+	SeatNumber int    `json:"seat_number"`
 }
 
 type TicketOrder struct {
@@ -32,6 +34,7 @@ type TicketOrder struct {
 	IsPaid              bool   `json:"isPaid"`
 	BankCode            string `json:"bank_code"`
 	MerchantCode        string `json:"merchant_code"`
+	SeatNumber          int    `json:"seat_number"`
 }
 
 type AllTicketOnAgency struct {

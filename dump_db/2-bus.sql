@@ -26,6 +26,7 @@ CREATE TABLE `bus` (
   `bus_id` int NOT NULL AUTO_INCREMENT,
   `agency_id` int NOT NULL,
   `number_plate` varchar(100) NOT NULL,
+  `total_seat` int NOT NULL,
   PRIMARY KEY (`bus_id`),
   KEY `agency_id` (`agency_id`) USING BTREE,
   CONSTRAINT `bus_ibfk_1` FOREIGN KEY (`agency_id`) REFERENCES `agency` (`agency_id`) ON DELETE CASCADE ON UPDATE CASCADE

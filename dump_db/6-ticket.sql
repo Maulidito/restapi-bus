@@ -30,6 +30,7 @@ CREATE TABLE `ticket` (
   `payment_id` varchar(100) NULL,
   `external_id` varchar(100) NULL,
   `is_paid` boolean default false,
+  `seat_number` int NOT NULL,
   PRIMARY KEY (`ticket_id`),
   KEY `customer_id` (`customer_id`),
   KEY `schedule_id` (`schedule_id`),

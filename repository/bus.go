@@ -28,14 +28,14 @@ func (repo *BusRepositoryImplementation) GetAllBus(ctx context.Context, filter *
 	defer helper.DoCommitOrRollback(tx)
 	helper.PanicIfError(err)
 	filterString := helper.RequestFilterBusToString(filter)
-	row, err := tx.QueryContext(ctx, "SELECT bus_id,agency_id,number_plate FROM bus "+filterString)
+	row, err := tx.QueryContext(ctx, "SELECT bus_id,agency_id,number_plate,total_seat FROM bus "+filterString)
 	helper.PanicIfError(err)
 	defer row.Close()
 	listBus := []entity.Bus{}
 
 	for row.Next() {
 		tempBus := entity.Bus{}
-		err := row.Scan(&tempBus.BusId, &tempBus.AgencyId, &tempBus.NumberPlate)
+		err := row.Scan(&tempBus.BusId, &tempBus.AgencyId, &tempBus.NumberPlate, &tempBus.TotalSeat)
 		listBus = append(listBus, tempBus)
 		helper.PanicIfError(err)
 	}
@@ -47,7 +47,7 @@ func (repo *BusRepositoryImplementation) GetAllBusSpecificAgency(ctx context.Con
 	tx, err := repo.conn.Begin()
 	defer helper.DoCommitOrRollback(tx)
 	helper.PanicIfError(err)
-	row, err := tx.QueryContext(ctx, "SELECT bus_id,agency_id,number_plate FROM bus WHERE agency_id = ?", agencyId)
+	row, err := tx.QueryContext(ctx, "SELECT bus_id,agency_id,number_plate,total_seat FROM bus WHERE agency_id = ?", agencyId)
 
 	helper.PanicIfError(err)
 	defer row.Close()
@@ -55,7 +55,7 @@ func (repo *BusRepositoryImplementation) GetAllBusSpecificAgency(ctx context.Con
 
 	for row.Next() {
 		tempBus := entity.Bus{}
-		err := row.Scan(&tempBus.BusId, &tempBus.AgencyId, &tempBus.NumberPlate)
+		err := row.Scan(&tempBus.BusId, &tempBus.AgencyId, &tempBus.NumberPlate, &tempBus.TotalSeat)
 		listBus = append(listBus, tempBus)
 		helper.PanicIfError(err)
 	}
@@ -67,7 +67,7 @@ func (repo *BusRepositoryImplementation) AddBus(ctx context.Context, bus *entity
 	tx, err := repo.conn.Begin()
 	defer helper.DoCommitOrRollback(tx)
 	helper.PanicIfError(err)
-	res, err := tx.ExecContext(ctx, "Insert Into bus( agency_id , number_plate ) Values (?,?)", bus.AgencyId, bus.NumberPlate)
+	res, err := tx.ExecContext(ctx, "Insert Into bus( agency_id , number_plate, total_seat ) Values (?,?,?)", bus.AgencyId, bus.NumberPlate, bus.TotalSeat)
 
 	helper.PanicIfError(err)
 
@@ -82,8 +82,8 @@ func (repo *BusRepositoryImplementation) GetOneBus(ctx context.Context, bus *ent
 	tx, err := repo.conn.Begin()
 	defer helper.DoCommitOrRollback(tx)
 	helper.PanicIfError(err)
-	err = tx.QueryRowContext(ctx, "SELECT agency_id,number_plate FROM bus where bus_id = ?", bus.BusId).
-		Scan(&bus.AgencyId, &bus.NumberPlate)
+	err = tx.QueryRowContext(ctx, "SELECT agency_id,number_plate,total_seat FROM bus where bus_id = ?", bus.BusId).
+		Scan(&bus.AgencyId, &bus.NumberPlate, &bus.TotalSeat)
 
 	if err != nil {
 		panic(exception.NewNotFoundError(fmt.Sprintf("id bus %d not found ", bus.BusId)))

@@ -14,6 +14,7 @@ type Ticket struct {
 	PaymentId  string
 	ExternalId string
 	IsPaid     bool
+	SeatNumber int
 }
 
 type TicketServiceInterface interface {
@@ -45,4 +46,5 @@ type TicketRepositoryInterface interface {
 	GetTotalPriceTicketFromSpecificAgency(ctx context.Context, response *response.AllTicketPriceSpecificAgency)
 	GetTotalPriceTicketFromSpecificDriver(ctx context.Context, response *response.AllTicketPriceSpecificDriver)
 	UpdateTicketToPaid(ctx context.Context, externalId string, paymentId string)
+	IsSeatBooked(ctx context.Context, scheduleId int, seatNumber int) bool
 }

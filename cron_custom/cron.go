@@ -8,8 +8,15 @@ import (
 
 type InterfaceCronJob interface {
 	SetCronJobOnce(idCron string, callback func(), timeFormat string) error
+	SetCronJob(idCron string, callback func(), timeFormat string) error
 	StopCronJob(idCron string)
 }
+
+// type CustomCron struct {
+// 	Id      string
+// 	Cron    *cron.Cron
+// 	Counter int
+// }
 
 type CronJob struct {
 	ListCron map[string]*cron.Cron
@@ -29,16 +36,16 @@ func NewCronJob() InterfaceCronJob {
 
 func (c *CronJob) SetCronJobOnce(idCron string, callback func(), timeFormat string) error {
 
-	cronTicket := cron.New()
+	cronAgent := cron.New()
 
-	c.ListCron[idCron] = cronTicket
+	c.ListCron[idCron] = cronAgent
 
-	_, err := cronTicket.AddFunc(fmt.Sprintf("CRON_TZ=Asia/Jakarta %s", timeFormat), func() {
-		defer c.closeAndDeleteCron(cronTicket, idCron)
+	_, err := cronAgent.AddFunc(fmt.Sprintf("CRON_TZ=Asia/Jakarta %s", timeFormat), func() {
+		defer c.closeAndDeleteCron(cronAgent, idCron)
 		callback()
 
 	})
-	cronTicket.Start()
+	cronAgent.Start()
 	return err
 
 }
@@ -51,4 +58,19 @@ func (c *CronJob) StopCronJob(idCron string) {
 func (c *CronJob) closeAndDeleteCron(cronJob *cron.Cron, idCron string) {
 	cronJob.Stop()
 	delete(c.ListCron, idCron)
+}
+
+func (c *CronJob) SetCronJob(idCron string, callback func(), timeFormat string) error {
+
+	cronAgenct := cron.New()
+
+	c.ListCron[idCron] = cronAgenct
+
+	_, err := cronAgenct.AddFunc(fmt.Sprintf("CRON_TZ=Asia/Jakarta %s", timeFormat), func() {
+		callback()
+
+	})
+	cronAgenct.Start()
+	return err
+
 }

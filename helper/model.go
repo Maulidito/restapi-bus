@@ -36,6 +36,7 @@ func BusEntityToResponse(bus *entity.Bus) response.Bus {
 		BusId:       bus.BusId,
 		AgencyId:    bus.AgencyId,
 		NumberPlate: bus.NumberPlate,
+		TotalSeat:   bus.TotalSeat,
 	}
 }
 
@@ -47,6 +48,7 @@ func TicketEntityToResponse(ticket *entity.Ticket) response.Ticket {
 		Date:       ticket.Date,
 		ExternalId: ticket.ExternalId,
 		PaymentId:  ticket.PaymentId,
+		SeatNumber: ticket.SeatNumber,
 	}
 }
 
@@ -60,7 +62,7 @@ func AgencyRequestToEntity(agency *request.Agency) entity.Agency {
 }
 func BusRequestToEntity(bus *request.Bus) entity.Bus {
 	return entity.Bus{
-
+		TotalSeat:   bus.TotalSeat,
 		AgencyId:    bus.AgencyId,
 		NumberPlate: bus.NumberPlate,
 	}
@@ -86,6 +88,7 @@ func TicketRequestToEntity(ticket *request.Ticket) entity.Ticket {
 	return entity.Ticket{
 		ScheduleId: ticket.ScheduleId,
 		CustomerId: ticket.CustomerId,
+		SeatNumber: ticket.SeatNumber,
 	}
 }
 

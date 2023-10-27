@@ -80,6 +80,7 @@ func (service *TicketServiceImplementation) AddTicket(ctx context.Context, ticke
 
 	scheduleEntity := entity.Schedule{ScheduleId: ticket.ScheduleId}
 	customerEntity := entity.Customer{CustomerId: ticket.CustomerId}
+	busEntity := entity.Bus{}
 
 	chanErr := make(chan error, 1)
 
@@ -93,14 +94,21 @@ func (service *TicketServiceImplementation) AddTicket(ctx context.Context, ticke
 
 			close(chanErr)
 		}()
-
+		go service.RepoCustomer.GetOneCustomer(ctx, &customerEntity)
 		service.RepoSchedule.GetOneSchedule(ctx, &scheduleEntity)
-		service.RepoCustomer.GetOneCustomer(ctx, &customerEntity)
+		busEntity.BusId = scheduleEntity.BusId
+		service.RepoBus.GetOneBus(ctx, &busEntity)
 
 	}()
 	helper.PanicIfError(<-chanErr)
 	if service.RepoTicket.IsCustomerHaveUnpaidPayment(ctx, customerEntity.CustomerId) {
 		panic(exception.NewBadRequestError(fmt.Sprintf("Customer %s with email %s still have an Unpaid Order Payment", customerEntity.Name, customerEntity.Email)))
+	}
+	if ticketEntity.SeatNumber > busEntity.TotalSeat {
+		panic(exception.NewBadRequestError(fmt.Sprintf("Customer Choose Seat No %d But The Bus Only Have %d", ticketEntity.SeatNumber, busEntity.TotalSeat)))
+	}
+	if service.RepoTicket.IsSeatBooked(ctx, ticket.ScheduleId, ticketEntity.SeatNumber) {
+		panic(exception.NewBadRequestError(fmt.Sprintf("The Seat No %d Have Been Booked", ticketEntity.SeatNumber)))
 	}
 	respDetailSchedule := response.DetailSchedule{ScheduleId: scheduleEntity.ScheduleId, FromAgency: response.Agency{AgencyId: scheduleEntity.FromAgencyId}, ToAgency: response.Agency{AgencyId: scheduleEntity.ToAgencyId}, Driver: response.Driver{DriverId: scheduleEntity.DriverId}, Bus: response.Bus{BusId: scheduleEntity.BusId}}
 
@@ -136,6 +144,7 @@ func (service *TicketServiceImplementation) AddTicket(ctx context.Context, ticke
 		ExpiryDay:           expiration_day_string,
 		BankCode:            fmt.Sprintf("%v", dataVirtualAccount["bank_code"]),
 		MerchantCode:        fmt.Sprintf("%v", dataVirtualAccount["merchant_code"]),
+		SeatNumber:          ticketEntity.SeatNumber,
 	}
 
 	ticketResponse := helper.TicketEntityToResponse(&ticketEntity)
@@ -150,7 +159,7 @@ func (service *TicketServiceImplementation) AddTicket(ctx context.Context, ticke
 		func() {
 			service.RepoTicket.DeleteTicket(ctx, &ticketEntity)
 		},
-		fmt.Sprintf("%d %d * * * * ", time_expire.Minute(), time_expire.Hour()),
+		fmt.Sprintf("%d %d * * * ", time_expire.Minute(), time_expire.Hour()),
 	)
 
 	helper.PanicIfError(err)
@@ -318,6 +327,7 @@ func (service *TicketServiceImplementation) consumeWebhookQueuePaymentSuccess() 
 				PaymentId:  Ticket.PaymentId,
 				ExternalId: Ticket.ExternalId,
 				IsPaid:     Ticket.IsPaid,
+				SeatNumber: Ticket.SeatNumber,
 			}
 			respDetailTicketByte, errorJson := json.Marshal(respDetailTicket)
 			helper.PanicIfError(errorJson)

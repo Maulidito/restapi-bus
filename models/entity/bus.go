@@ -10,6 +10,7 @@ type Bus struct {
 	BusId       int
 	AgencyId    int
 	NumberPlate string
+	TotalSeat   int
 }
 
 type BusServiceInterface interface {
