@@ -97,7 +97,8 @@ func (repo *ScheduleRepositoryImplementation) AddSchedule(ctx context.Context, s
 	tx, err := repo.conn.Begin()
 	defer helper.DoCommitOrRollback(tx)
 	helper.PanicIfError(err)
-	res, err := tx.ExecContext(ctx, "INSERT INTO schedule(from_agency_id,to_agency_id,bus_id,driver_id,price,date,arrived) VALUES (?,?,?,?,?,?,?)", schedule.FromAgencyId, schedule.ToAgencyId, schedule.BusId, schedule.DriverId, schedule.Price, schedule.Date, schedule.Arrived)
+
+	res, err := repo.conn.ExecContext(ctx, "INSERT INTO schedule(from_agency_id,to_agency_id,bus_id,driver_id,price,date,arrived) VALUES (?,?,?,?,?,?,?)", schedule.FromAgencyId, schedule.ToAgencyId, schedule.BusId, schedule.DriverId, schedule.Price, schedule.Date, schedule.Arrived)
 	helper.PanicIfError(err)
 	scheduleId, err := res.LastInsertId()
 	helper.PanicIfError(err)

@@ -10,6 +10,7 @@ type InterfaceCronJob interface {
 	SetCronJobOnce(idCron string, callback func(), timeFormat string) error
 	SetCronJob(idCron string, callback func(), timeFormat string) error
 	StopCronJob(idCron string)
+	IsCronJobRunning(idCron string) bool
 }
 
 // type CustomCron struct {
@@ -38,6 +39,10 @@ func (c *CronJob) SetCronJobOnce(idCron string, callback func(), timeFormat stri
 
 	cronAgent := cron.New()
 
+	if _, ok := c.ListCron[idCron]; ok {
+		return fmt.Errorf("you still have cron job with id %s running", idCron)
+	}
+
 	c.ListCron[idCron] = cronAgent
 
 	_, err := cronAgent.AddFunc(fmt.Sprintf("CRON_TZ=Asia/Jakarta %s", timeFormat), func() {
@@ -52,7 +57,10 @@ func (c *CronJob) SetCronJobOnce(idCron string, callback func(), timeFormat stri
 
 func (c *CronJob) StopCronJob(idCron string) {
 	cronJob := c.ListCron[idCron]
-	defer c.closeAndDeleteCron(cronJob, idCron)
+	if cronJob == nil {
+		return
+	}
+	c.closeAndDeleteCron(cronJob, idCron)
 }
 
 func (c *CronJob) closeAndDeleteCron(cronJob *cron.Cron, idCron string) {
@@ -73,4 +81,11 @@ func (c *CronJob) SetCronJob(idCron string, callback func(), timeFormat string) 
 	cronAgenct.Start()
 	return err
 
+}
+
+func (c *CronJob) IsCronJobRunning(idCron string) bool {
+	if _, ok := c.ListCron[idCron]; ok {
+		return ok
+	}
+	return false
 }

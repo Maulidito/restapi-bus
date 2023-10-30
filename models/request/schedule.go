@@ -29,6 +29,8 @@ type AutoSchedule struct {
 	SecondAgencyId int    `form:"secondAgencyId" binding:"required,number"`
 	Price          int    `form:"price" binding:"required,number"`
 	StartHour      string `form:"startHour" binding:"required,datetime=15:04:05"`
+	EstimateTime   string `form:"estimateTime" binding:"required,datetime=15:04:05"`
 	EndHour        string `form:"startEnd" binding:"required,datetime=15:04:05"`
-	RangeSchedule  string `form:"rangeSchedule,default=3" binding:"number,min=1,max=12"`
+	RangeSchedule  int    `form:"rangeSchedule,default=3" binding:"number,min=1,max=12"`
+	BothAgency     bool   `form:"bothAgency,default=true" binding:"boolean"`
 }

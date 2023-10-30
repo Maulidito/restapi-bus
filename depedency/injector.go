@@ -50,7 +50,7 @@ func InitializedControllerDriver(db *sql.DB, rdb *middleware.RedisClientDb) cont
 	return nil
 }
 
-func InitializedControllerSchedule(db *sql.DB, rdb *middleware.RedisClientDb) controller.ControllerScheduleInterface {
+func InitializedControllerSchedule(db *sql.DB, rdb *middleware.RedisClientDb, cronJob croncustom.InterfaceCronJob) controller.ControllerScheduleInterface {
 	wire.Build(
 		repository.NewScheduleRepository,
 		repository.NewBusRepository,

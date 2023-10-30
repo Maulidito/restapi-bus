@@ -147,8 +147,10 @@ func (controller *ControllerScheduleImplementation) UpdateArrivedSchedule(ctx *g
 }
 
 func (controller *ControllerScheduleImplementation) AutoSchedule(ctx *gin.Context) {
-	// autoSchedule := request.AutoSchedule{}
+	autoSchedule := request.AutoSchedule{}
 
-	// err := ctx.ShouldBind(&autoSchedule)
+	err := ctx.ShouldBind(&autoSchedule)
+	helper.PanicIfError(err)
+	controller.Service.AutoSchedule(ctx, &autoSchedule)
 
 }

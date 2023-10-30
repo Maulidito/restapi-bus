@@ -23,6 +23,7 @@ type ScheduleServiceInterface interface {
 	AddSchedule(ctx context.Context, schedule *request.Schedule)
 	DeleteSchedule(ctx context.Context, scheduleId int) response.Schedule
 	UpdateArrivedSchedule(ctx context.Context, scheduleId int, isArrived bool) response.Schedule
+	AutoSchedule(ctx context.Context, autoSchedule *request.AutoSchedule)
 }
 
 type ScheduleRepositoryInterface interface {

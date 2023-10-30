@@ -51,12 +51,12 @@ func InitializedControllerDriver(db *sql.DB, rdb *middleware.RedisClientDb) cont
 	return controllerDriverInterface
 }
 
-func InitializedControllerSchedule(db *sql.DB, rdb *middleware.RedisClientDb) controller.ControllerScheduleInterface {
+func InitializedControllerSchedule(db *sql.DB, rdb *middleware.RedisClientDb, cronJob croncustom.InterfaceCronJob) controller.ControllerScheduleInterface {
 	scheduleRepositoryInterface := repository.NewScheduleRepository(db)
 	agencyRepositoryInterface := repository.NewAgencyRepository(db)
 	driverRepositoryInterface := repository.NewDiverRepository(db)
 	busRepositoryInterface := repository.NewBusRepository(db)
-	scheduleServiceInterface := service.NewScheduleService(scheduleRepositoryInterface, agencyRepositoryInterface, driverRepositoryInterface, busRepositoryInterface)
+	scheduleServiceInterface := service.NewScheduleService(scheduleRepositoryInterface, agencyRepositoryInterface, driverRepositoryInterface, cronJob, busRepositoryInterface)
 	controllerScheduleInterface := controller.NewScheduleController(scheduleServiceInterface, rdb)
 	return controllerScheduleInterface
 }
@@ -80,7 +80,7 @@ func InitializedServer(db *sql.DB, redisClientDb *middleware.RedisClientDb, chan
 	busControllerInterface := InitializedControllerBus(db, redisClientDb)
 	controllerDriverInterface := InitializedControllerDriver(db, redisClientDb)
 	controllerTicketInterface := InitializedControllerTicket(db, redisClientDb, channel, interfacePayment, interfaceCronJob)
-	controllerScheduleInterface := InitializedControllerSchedule(db, redisClientDb)
+	controllerScheduleInterface := InitializedControllerSchedule(db, redisClientDb, interfaceCronJob)
 	engine := app.Router(customerControllerInterface, agencyControllerInterface, busControllerInterface, controllerDriverInterface, controllerTicketInterface, controllerScheduleInterface, interfaceCronJob)
 	return engine
 }

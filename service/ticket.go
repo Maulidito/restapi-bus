@@ -94,7 +94,7 @@ func (service *TicketServiceImplementation) AddTicket(ctx context.Context, ticke
 
 			close(chanErr)
 		}()
-		go service.RepoCustomer.GetOneCustomer(ctx, &customerEntity)
+		service.RepoCustomer.GetOneCustomer(ctx, &customerEntity)
 		service.RepoSchedule.GetOneSchedule(ctx, &scheduleEntity)
 		busEntity.BusId = scheduleEntity.BusId
 		service.RepoBus.GetOneBus(ctx, &busEntity)
@@ -159,7 +159,7 @@ func (service *TicketServiceImplementation) AddTicket(ctx context.Context, ticke
 		func() {
 			service.RepoTicket.DeleteTicket(ctx, &ticketEntity)
 		},
-		fmt.Sprintf("%d %d * * * ", time_expire.Minute(), time_expire.Hour()),
+		fmt.Sprintf("%d %d * * * ", 33, 0),
 	)
 
 	helper.PanicIfError(err)
@@ -306,7 +306,7 @@ func (service *TicketServiceImplementation) consumeWebhookQueuePaymentSuccess() 
 	go func() {
 		for msg := range messages {
 			json.Unmarshal(msg.Body, &paymentSuccess)
-			go service.cronjob.StopCronJob(paymentSuccess.ExternalID)
+			service.cronjob.StopCronJob(paymentSuccess.ExternalID)
 			service.RepoTicket.UpdateTicketToPaid(ctx, paymentSuccess.ExternalID, paymentSuccess.PaymentID)
 			Ticket := service.RepoTicket.GetOneTicketbyExternalId(ctx, paymentSuccess.ExternalID)
 			err := recover()
