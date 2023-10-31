@@ -7,6 +7,7 @@ import (
 
 	"restapi-bus/exception"
 	"restapi-bus/helper"
+	"restapi-bus/models/database"
 	"restapi-bus/models/entity"
 	"restapi-bus/models/request"
 	"restapi-bus/models/response"
@@ -18,13 +19,16 @@ import (
 
 type AgencyServiceImplemtation struct {
 	Repo entity.AgencyRepositoryInterface
+	Conn database.TrInterface
 }
 
-func NewAgencyService(repo entity.AgencyRepositoryInterface) entity.AgencyServiceInterface {
-	return &AgencyServiceImplemtation{Repo: repo}
+func NewAgencyService(repo entity.AgencyRepositoryInterface, conn database.TrInterface) entity.AgencyServiceInterface {
+	return &AgencyServiceImplemtation{Repo: repo, Conn: conn}
 }
 
 func (service *AgencyServiceImplemtation) GetAllAgency(ctx context.Context, filter *request.AgencyFilter) []response.Agency {
+	ctx = service.Conn.BeginTransactionWithContext(ctx)
+	defer service.Conn.DoCommitOrRollbackWithContext(ctx)
 
 	listAgency := service.Repo.GetAllAgency(ctx, filter)
 	listAgencyResponse := []response.Agency{}
@@ -41,6 +45,10 @@ func (service *AgencyServiceImplemtation) RegisterAgency(ctx context.Context, ag
 	var (
 		err error
 	)
+
+	ctx = service.Conn.BeginTransactionWithContext(ctx)
+	defer service.Conn.DoCommitOrRollbackWithContext(ctx)
+
 	if service.Repo.IsUsenameAgencyExist(ctx, agency.Auth.Username) {
 		panic(exception.NewBadRequestError("email already registered"))
 	}
@@ -49,25 +57,34 @@ func (service *AgencyServiceImplemtation) RegisterAgency(ctx context.Context, ag
 	helper.PanicIfError(err)
 	agencyEntity := helper.AgencyRequestToEntity(agency)
 	agencyEntity.Salt = salt
+
+	helper.PanicIfError(err)
+
 	service.Repo.RegisterAgency(ctx, &agencyEntity)
 
 }
 func (service *AgencyServiceImplemtation) GetOneAgency(ctx context.Context, id int) response.Agency {
-
-	agencyEntity := entity.Agency{AgencyId: id}
-	service.Repo.GetOneAgency(ctx, &agencyEntity)
-	return helper.AgencyEntityToResponse(&agencyEntity)
+	agencyEntity := &entity.Agency{AgencyId: id}
+	ctx = service.Conn.BeginTransactionWithContext(ctx)
+	defer service.Conn.DoCommitOrRollbackWithContext(ctx)
+	service.Repo.GetOneAgency(ctx, agencyEntity)
+	return helper.AgencyEntityToResponse(agencyEntity)
 
 }
 func (service *AgencyServiceImplemtation) DeleteOneAgency(ctx context.Context, id int) response.Agency {
-	agencyEntity := entity.Agency{AgencyId: id}
-	service.Repo.GetOneAgency(ctx, &agencyEntity)
-	service.Repo.DeleteOneAgency(ctx, &agencyEntity)
+	agencyEntity := &entity.Agency{AgencyId: id}
+	ctx = service.Conn.BeginTransactionWithContext(ctx)
+	defer service.Conn.DoCommitOrRollbackWithContext(ctx)
+	service.Repo.GetOneAgency(ctx, agencyEntity)
+	service.Repo.DeleteOneAgency(ctx, agencyEntity)
 
-	return helper.AgencyEntityToResponse(&agencyEntity)
+	return helper.AgencyEntityToResponse(agencyEntity)
 }
 
 func (service *AgencyServiceImplemtation) LoginAgency(ctx context.Context, agencyAuth *request.AgencyAuth) (string, int, response.Agency) {
+
+	ctx = service.Conn.BeginTransactionWithContext(ctx)
+	defer service.Conn.DoCommitOrRollbackWithContext(ctx)
 
 	salt, hashedPassword := service.Repo.GetSaltAgencyWithUsername(ctx, agencyAuth.Username)
 
@@ -75,9 +92,9 @@ func (service *AgencyServiceImplemtation) LoginAgency(ctx context.Context, agenc
 		panic(exception.NewBadRequestError("Password is incorrect"))
 	}
 
-	agency := entity.Agency{Username: agencyAuth.Username, Password: hashedPassword}
+	agency := &entity.Agency{Username: agencyAuth.Username, Password: hashedPassword}
 
-	service.Repo.GetOneAgencyAuth(ctx, &agency)
+	service.Repo.GetOneAgencyAuth(ctx, agency)
 
 	claim := web.Claim{
 		RegisteredClaims: &jwt.RegisteredClaims{
@@ -93,6 +110,6 @@ func (service *AgencyServiceImplemtation) LoginAgency(ctx context.Context, agenc
 
 	helper.PanicIfError(err)
 
-	return token, claim.ExpiresAt.Second(), helper.AgencyEntityToResponse(&agency)
+	return token, claim.ExpiresAt.Second(), helper.AgencyEntityToResponse(agency)
 
 }

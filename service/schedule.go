@@ -6,10 +6,10 @@ import (
 	croncustom "restapi-bus/cron_custom"
 	"restapi-bus/exception"
 	"restapi-bus/helper"
+	"restapi-bus/models/database"
 	"restapi-bus/models/entity"
 	"restapi-bus/models/request"
 	"restapi-bus/models/response"
-	"sync"
 	"time"
 )
 
@@ -19,6 +19,7 @@ type ScheduleServiceImplementation struct {
 	RepoDriver   entity.DriverRepositoryInterface
 	RepoBus      entity.BusRepositoryInterface
 	CronCustom   croncustom.InterfaceCronJob
+	Tx           database.TrInterface
 }
 
 func NewScheduleService(
@@ -26,6 +27,7 @@ func NewScheduleService(
 	repoAgency entity.AgencyRepositoryInterface,
 	repoDriver entity.DriverRepositoryInterface,
 	cronCustom croncustom.InterfaceCronJob,
+	tx database.TrInterface,
 	repoBus entity.BusRepositoryInterface) entity.ScheduleServiceInterface {
 	return &ScheduleServiceImplementation{
 		RepoSchedule: repoSchedule,
@@ -33,11 +35,13 @@ func NewScheduleService(
 		RepoDriver:   repoDriver,
 		RepoBus:      repoBus,
 		CronCustom:   cronCustom,
+		Tx:           tx,
 	}
 }
 
 func (service *ScheduleServiceImplementation) GetAllSchedule(ctx context.Context, filter *request.ScheduleFilter) []response.Schedule {
-
+	ctx = service.Tx.BeginTransactionWithContext(ctx)
+	defer service.Tx.DoCommitOrRollbackWithContext(ctx)
 	listSchedule := service.RepoSchedule.GetAllSchedule(ctx, filter)
 
 	listResponseSchedule := []response.Schedule{}
@@ -53,22 +57,19 @@ func (service *ScheduleServiceImplementation) GetAllSchedule(ctx context.Context
 }
 
 func (service *ScheduleServiceImplementation) GetOneSchedule(ctx context.Context, scheduleId int) response.Schedule {
-
+	ctx = service.Tx.BeginTransactionWithContext(ctx)
+	defer service.Tx.DoCommitOrRollbackWithContext(ctx)
 	entitySchedule := entity.Schedule{ScheduleId: scheduleId}
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		service.RepoSchedule.GetOneSchedule(ctx, &entitySchedule)
-	}()
-	wg.Wait()
+
+	service.RepoSchedule.GetOneSchedule(ctx, &entitySchedule)
 
 	return helper.ScheduleEntityToResponse(&entitySchedule)
 
 }
 
 func (service *ScheduleServiceImplementation) AddSchedule(ctx context.Context, schedule *request.Schedule) {
-
+	ctx = service.Tx.BeginTransactionWithContext(ctx)
+	defer service.Tx.DoCommitOrRollbackWithContext(ctx)
 	chanErr := make(chan error, 1)
 
 	go func() {
@@ -102,7 +103,8 @@ func (service *ScheduleServiceImplementation) AddSchedule(ctx context.Context, s
 }
 
 func (service *ScheduleServiceImplementation) DeleteSchedule(ctx context.Context, scheduleId int) response.Schedule {
-
+	ctx = service.Tx.BeginTransactionWithContext(ctx)
+	defer service.Tx.DoCommitOrRollbackWithContext(ctx)
 	entitySchedule := entity.Schedule{ScheduleId: scheduleId}
 
 	service.RepoSchedule.GetOneSchedule(ctx, &entitySchedule)
@@ -113,7 +115,8 @@ func (service *ScheduleServiceImplementation) DeleteSchedule(ctx context.Context
 }
 
 func (service *ScheduleServiceImplementation) UpdateArrivedSchedule(ctx context.Context, scheduleId int, isArrived bool) response.Schedule {
-
+	ctx = service.Tx.BeginTransactionWithContext(ctx)
+	defer service.Tx.DoCommitOrRollbackWithContext(ctx)
 	entitySchedule := entity.Schedule{ScheduleId: scheduleId}
 
 	service.RepoSchedule.GetOneSchedule(ctx, &entitySchedule)
@@ -125,6 +128,8 @@ func (service *ScheduleServiceImplementation) UpdateArrivedSchedule(ctx context.
 }
 
 func (service *ScheduleServiceImplementation) AutoSchedule(ctx context.Context, autoSchedule *request.AutoSchedule) {
+	ctx = service.Tx.BeginTransactionWithContext(ctx)
+	defer service.Tx.DoCommitOrRollbackWithContext(ctx)
 	countBusFirstAgency := 0
 	countBusSecondAgency := 0
 	listDriverFirstAgency := service.RepoDriver.GetAllDriverOnSpecificAgency(ctx, autoSchedule.FirstAgencyId)
@@ -165,7 +170,7 @@ func (service *ScheduleServiceImplementation) AutoSchedule(ctx context.Context, 
 		time.Now().Local().Month(),
 		time.Now().Local().Day(),
 		0, 0, 0, 0,
-		time.UTC)
+		time.Local)
 	timeEnd := timeCurrent.AddDate(0, autoSchedule.RangeSchedule, 0).
 		Add(
 			(time.Duration(EndHour.Hour()) * time.Hour) +
@@ -178,8 +183,8 @@ func (service *ScheduleServiceImplementation) AutoSchedule(ctx context.Context, 
 				(time.Duration(startHour.Minute()) * time.Minute) +
 				(time.Duration(startHour.Second()) * time.Second),
 		)
-	startHour = startHour.AddDate(timeCurrent.Year(), int(timeCurrent.Month())-int(startHour.Month()), timeCurrent.Day()-startHour.Day())
-	EndHour = EndHour.AddDate(timeCurrent.Year(), int(timeCurrent.Month())-int(EndHour.Month()), timeCurrent.Day()-EndHour.Day())
+	startHour = time.Date(timeCurrent.Year(), timeCurrent.Month(), timeCurrent.Day(), startHour.Hour(), startHour.Minute(), startHour.Second(), 0, time.Local)
+	EndHour = time.Date(timeCurrent.Year(), timeCurrent.Month(), timeCurrent.Day(), EndHour.Hour(), EndHour.Minute(), EndHour.Second(), 0, time.Local)
 
 	listSchedule, timeCurrent, timeEnd, startHour, EndHour := generateAutoSchedule(
 		timeCurrent,
@@ -191,16 +196,16 @@ func (service *ScheduleServiceImplementation) AutoSchedule(ctx context.Context, 
 		listDriverFirstAgency,
 		listDriverSecondAgency,
 	)
+
 	for i := 0; i < len(listSchedule); i++ {
-
 		service.RepoSchedule.AddSchedule(ctx, &listSchedule[i])
-
 	}
 
 	service.CronCustom.SetCronJob(
 		fmt.Sprintf("%s-%s", entityAgency1.Place, entityAgency2.Place),
 		func() {
-
+			ctx = service.Tx.BeginTransactionWithContext(ctx)
+			defer service.Tx.DoCommitOrRollbackWithContext(ctx)
 			timeEnd = timeEnd.AddDate(0, 0, 1)
 			startHour = startHour.AddDate(0, 0, 1)
 			EndHour = EndHour.AddDate(0, 0, 1)
@@ -243,7 +248,7 @@ func generateAutoSchedule(
 ) ([]entity.Schedule, time.Time, time.Time, time.Time, time.Time) {
 	counter := 0
 	listSchedule := []entity.Schedule{}
-	timeNowWithoutTZ := time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day(), time.Now().Hour(), time.Now().Minute(), time.Now().Second(), 0, time.UTC)
+	timeNowWithTZ := time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day(), time.Now().Hour(), time.Now().Minute(), time.Now().Second(), 0, time.Local)
 	for timeCurrent.Before(timeEnd) {
 
 		if timeCurrent.Equal(EndHour) || timeCurrent.After(EndHour) || timeCurrent.Before(startHour) {
@@ -252,7 +257,7 @@ func generateAutoSchedule(
 			timeCurrent = startHour
 		}
 
-		if timeCurrent.After(timeNowWithoutTZ) {
+		if timeCurrent.After(timeNowWithTZ) {
 			listSchedule = append(listSchedule, entity.Schedule{
 				FromAgencyId: autoSchedule.FirstAgencyId,
 				ToAgencyId:   autoSchedule.SecondAgencyId,

@@ -47,7 +47,7 @@ func TicketEntityToResponse(ticket *entity.Ticket) response.Ticket {
 		CustomerId: ticket.CustomerId,
 		Date:       ticket.Date,
 		ExternalId: ticket.ExternalId,
-		PaymentId:  ticket.PaymentId,
+		PaymentId:  ticket.PaymentId.String,
 		SeatNumber: ticket.SeatNumber,
 	}
 }

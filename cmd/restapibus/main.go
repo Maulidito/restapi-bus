@@ -59,7 +59,7 @@ func main() {
 	helper.PanicIfError(err)
 	apiPayment := external.NewPayment()
 	cronJob := croncustom.NewCronJob()
-	server := depedency.InitializedServer(db, &middlewareRedis, Rabbitmq, apiPayment, cronJob)
+	server := depedency.InitializedServer(&middlewareRedis, Rabbitmq, apiPayment, cronJob, app.NewDbManager(db))
 	fmt.Println("SERVER RUNNING ON PORT ", port)
 	server.Run(":" + port)
 }

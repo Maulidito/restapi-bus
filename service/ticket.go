@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"restapi-bus/constant"
@@ -10,6 +9,7 @@ import (
 	"restapi-bus/exception"
 	"restapi-bus/external"
 	"restapi-bus/helper"
+	"restapi-bus/models/database"
 	"restapi-bus/models/entity"
 	"restapi-bus/models/request"
 	"restapi-bus/models/response"
@@ -20,7 +20,6 @@ import (
 )
 
 type TicketServiceImplementation struct {
-	Db           *sql.DB
 	RepoBus      entity.BusRepositoryInterface
 	RepoCustomer entity.CustomerRepositoryInterface
 	RepoDriver   entity.DriverRepositoryInterface
@@ -30,10 +29,11 @@ type TicketServiceImplementation struct {
 	RepoMq       repository.IMessageChannel
 	Payapi       external.InterfacePayment
 	cronjob      croncustom.InterfaceCronJob
+	Tx           database.TrInterface
 }
 
 func NewTicketService(
-	db *sql.DB,
+
 	repoBus entity.BusRepositoryInterface,
 	repoCustomer entity.CustomerRepositoryInterface,
 	repoDriver entity.DriverRepositoryInterface,
@@ -43,10 +43,11 @@ func NewTicketService(
 	RepoMq repository.IMessageChannel,
 	payapi external.InterfacePayment,
 	cronJob croncustom.InterfaceCronJob,
+	tx database.TrInterface,
 ) entity.TicketServiceInterface {
 
 	TicketServiceStruct := TicketServiceImplementation{
-		Db:           db,
+
 		RepoBus:      repoBus,
 		RepoCustomer: repoCustomer,
 		RepoDriver:   repoDriver,
@@ -56,6 +57,7 @@ func NewTicketService(
 		RepoMq:       RepoMq,
 		Payapi:       payapi,
 		cronjob:      cronJob,
+		Tx:           tx,
 	}
 
 	go TicketServiceStruct.consumeWebhookQueuePaymentSuccess()
@@ -63,7 +65,8 @@ func NewTicketService(
 }
 
 func (service *TicketServiceImplementation) GetAllTicket(ctx context.Context, filter *request.TicketFilter) []response.Ticket {
-
+	ctx = service.Tx.BeginTransactionWithContext(ctx)
+	defer service.Tx.DoCommitOrRollbackWithContext(ctx)
 	listAllTicket := service.RepoTicket.GetAllTicket(ctx, filter)
 
 	responseListTicket := []response.Ticket{}
@@ -75,32 +78,19 @@ func (service *TicketServiceImplementation) GetAllTicket(ctx context.Context, fi
 	return responseListTicket
 }
 func (service *TicketServiceImplementation) AddTicket(ctx context.Context, ticket *request.Ticket) response.Ticket {
-
+	ctx = service.Tx.BeginTransactionWithContext(ctx)
+	defer service.Tx.DoCommitOrRollbackWithContext(ctx)
 	ticketEntity := helper.TicketRequestToEntity(ticket)
 
 	scheduleEntity := entity.Schedule{ScheduleId: ticket.ScheduleId}
 	customerEntity := entity.Customer{CustomerId: ticket.CustomerId}
 	busEntity := entity.Bus{}
 
-	chanErr := make(chan error, 1)
+	service.RepoCustomer.GetOneCustomer(ctx, &customerEntity)
+	service.RepoSchedule.GetOneSchedule(ctx, &scheduleEntity)
+	busEntity.BusId = scheduleEntity.BusId
+	service.RepoBus.GetOneBus(ctx, &busEntity)
 
-	go func() {
-		defer func() {
-			tempErr := recover()
-
-			if tempErr != nil {
-				chanErr <- tempErr.(error)
-			}
-
-			close(chanErr)
-		}()
-		service.RepoCustomer.GetOneCustomer(ctx, &customerEntity)
-		service.RepoSchedule.GetOneSchedule(ctx, &scheduleEntity)
-		busEntity.BusId = scheduleEntity.BusId
-		service.RepoBus.GetOneBus(ctx, &busEntity)
-
-	}()
-	helper.PanicIfError(<-chanErr)
 	if service.RepoTicket.IsCustomerHaveUnpaidPayment(ctx, customerEntity.CustomerId) {
 		panic(exception.NewBadRequestError(fmt.Sprintf("Customer %s with email %s still have an Unpaid Order Payment", customerEntity.Name, customerEntity.Email)))
 	}
@@ -126,7 +116,7 @@ func (service *TicketServiceImplementation) AddTicket(ctx context.Context, ticke
 	helper.PanicIfError(err)
 	expiration_date := dataVirtualAccount["expiration_date"]
 	time_expire, err := time.Parse(time.RFC3339, fmt.Sprintf("%s", expiration_date))
-
+	time_expire = time_expire.Local()
 	helper.PanicIfError(err)
 	expiration_date_string := time_expire.Format("2006-01-02")
 	expiration_time_string := int(time.Since(time_expire).Abs().Minutes())
@@ -157,9 +147,17 @@ func (service *TicketServiceImplementation) AddTicket(ctx context.Context, ticke
 	err = service.cronjob.SetCronJobOnce(
 		dataVirtualAccount["external_id"].(string),
 		func() {
+			ctx = context.Background()
+			ctx = service.Tx.BeginTransactionWithContext(ctx)
+			defer service.Tx.DoCommitOrRollbackWithContext(ctx)
 			service.RepoTicket.DeleteTicket(ctx, &ticketEntity)
+			err := recover()
+			if err != nil {
+
+				fmt.Printf("Cant delete ticket %d, maybe it already deleted", ticketEntity.TicketId)
+			}
 		},
-		fmt.Sprintf("%d %d * * * ", 33, 0),
+		fmt.Sprintf("%d %d * * * ", time_expire.Minute(), time_expire.Hour()),
 	)
 
 	helper.PanicIfError(err)
@@ -168,7 +166,8 @@ func (service *TicketServiceImplementation) AddTicket(ctx context.Context, ticke
 
 }
 func (service *TicketServiceImplementation) GetOneTicket(ctx context.Context, ticketId int) response.Ticket {
-
+	ctx = service.Tx.BeginTransactionWithContext(ctx)
+	defer service.Tx.DoCommitOrRollbackWithContext(ctx)
 	ticketEntity := entity.Ticket{TicketId: ticketId}
 	service.RepoTicket.GetOneTicket(ctx, &ticketEntity)
 
@@ -176,7 +175,8 @@ func (service *TicketServiceImplementation) GetOneTicket(ctx context.Context, ti
 
 }
 func (service *TicketServiceImplementation) DeleteTicket(ctx context.Context, ticketId int) response.Ticket {
-
+	ctx = service.Tx.BeginTransactionWithContext(ctx)
+	defer service.Tx.DoCommitOrRollbackWithContext(ctx)
 	ticketEntity := entity.Ticket{TicketId: ticketId}
 
 	service.RepoTicket.GetOneTicket(ctx, &ticketEntity)
@@ -185,7 +185,8 @@ func (service *TicketServiceImplementation) DeleteTicket(ctx context.Context, ti
 	return helper.TicketEntityToResponse(&ticketEntity)
 }
 func (service *TicketServiceImplementation) GetAllTicketOnDriver(ctx context.Context, idDriver int) response.AllTicketOnDriver {
-
+	ctx = service.Tx.BeginTransactionWithContext(ctx)
+	defer service.Tx.DoCommitOrRollbackWithContext(ctx)
 	driverEntity := entity.Driver{DriverId: idDriver}
 
 	service.RepoDriver.GetOneDriverOnSpecificAgency(ctx, &driverEntity)
@@ -205,7 +206,8 @@ func (service *TicketServiceImplementation) GetAllTicketOnDriver(ctx context.Con
 }
 
 func (service *TicketServiceImplementation) GetAllTicketOnCustomer(ctx context.Context, idCustomer int) response.AllTicketOnCustomer {
-
+	ctx = service.Tx.BeginTransactionWithContext(ctx)
+	defer service.Tx.DoCommitOrRollbackWithContext(ctx)
 	customerEntity := entity.Customer{CustomerId: idCustomer}
 	service.RepoCustomer.GetOneCustomer(ctx, &customerEntity)
 
@@ -227,7 +229,8 @@ func (service *TicketServiceImplementation) GetAllTicketOnCustomer(ctx context.C
 
 }
 func (service *TicketServiceImplementation) GetAllTicketOnBus(ctx context.Context, idBus int) response.AllTicketOnBus {
-
+	ctx = service.Tx.BeginTransactionWithContext(ctx)
+	defer service.Tx.DoCommitOrRollbackWithContext(ctx)
 	busEntity := entity.Bus{BusId: idBus}
 	service.RepoBus.GetOneBus(ctx, &busEntity)
 
@@ -250,7 +253,8 @@ func (service *TicketServiceImplementation) GetAllTicketOnBus(ctx context.Contex
 }
 
 func (service *TicketServiceImplementation) GetAllTicketOnAgency(ctx context.Context, idAgency int) response.AllTicketOnAgency {
-
+	ctx = service.Tx.BeginTransactionWithContext(ctx)
+	defer service.Tx.DoCommitOrRollbackWithContext(ctx)
 	agencyEntity := entity.Agency{AgencyId: idAgency}
 	service.RepoAgency.GetOneAgency(ctx, &agencyEntity)
 
@@ -272,7 +276,8 @@ func (service *TicketServiceImplementation) GetAllTicketOnAgency(ctx context.Con
 }
 
 func (service *TicketServiceImplementation) GetTotalPriceAllTicket(ctx context.Context) response.AllTicketPrice {
-
+	ctx = service.Tx.BeginTransactionWithContext(ctx)
+	defer service.Tx.DoCommitOrRollbackWithContext(ctx)
 	response := response.AllTicketPrice{}
 
 	service.RepoTicket.GetTotalPriceAllTicket(ctx, &response)
@@ -280,7 +285,8 @@ func (service *TicketServiceImplementation) GetTotalPriceAllTicket(ctx context.C
 
 }
 func (service *TicketServiceImplementation) GetTotalPriceTicketFromSpecificAgency(ctx context.Context, idAgency int) response.AllTicketPriceSpecificAgency {
-
+	ctx = service.Tx.BeginTransactionWithContext(ctx)
+	defer service.Tx.DoCommitOrRollbackWithContext(ctx)
 	agencyEntity := entity.Agency{AgencyId: idAgency}
 	service.RepoAgency.GetOneAgency(ctx, &agencyEntity)
 	response := response.AllTicketPriceSpecificAgency{Agency: helper.AgencyEntityToResponse(&agencyEntity)}
@@ -289,7 +295,8 @@ func (service *TicketServiceImplementation) GetTotalPriceTicketFromSpecificAgenc
 
 }
 func (service *TicketServiceImplementation) GetTotalPriceTicketFromSpecificDriver(ctx context.Context, idDriver int) response.AllTicketPriceSpecificDriver {
-
+	ctx = service.Tx.BeginTransactionWithContext(ctx)
+	defer service.Tx.DoCommitOrRollbackWithContext(ctx)
 	driverEntity := entity.Driver{DriverId: idDriver}
 	service.RepoDriver.GetOneDriverOnSpecificAgency(ctx, &driverEntity)
 	response := response.AllTicketPriceSpecificDriver{Driver: helper.DriverEntityToResponse(&driverEntity)}
@@ -324,7 +331,7 @@ func (service *TicketServiceImplementation) consumeWebhookQueuePaymentSuccess() 
 				Schedule:   Schedule,
 				Customer:   helper.CustomerEntityToResponse(&Customer),
 				Date:       Ticket.Date,
-				PaymentId:  Ticket.PaymentId,
+				PaymentId:  Ticket.PaymentId.String,
 				ExternalId: Ticket.ExternalId,
 				IsPaid:     Ticket.IsPaid,
 				SeatNumber: Ticket.SeatNumber,

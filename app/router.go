@@ -8,6 +8,7 @@ import (
 	croncustom "restapi-bus/cron_custom"
 	"restapi-bus/helper"
 	"restapi-bus/middleware"
+	"restapi-bus/models/database"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -56,7 +57,7 @@ func Router(
 	ticket controller.ControllerTicketInterface,
 	schedule controller.ControllerScheduleInterface,
 	cronJob croncustom.InterfaceCronJob,
-
+	tr database.TrInterface,
 ) *gin.Engine {
 
 	g := DefaultConfigurationRouter()

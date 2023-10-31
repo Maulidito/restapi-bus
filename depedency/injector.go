@@ -4,12 +4,12 @@
 package depedency
 
 import (
-	"database/sql"
 	"restapi-bus/app"
 	"restapi-bus/controller"
 	croncustom "restapi-bus/cron_custom"
 	"restapi-bus/external"
 	"restapi-bus/middleware"
+	"restapi-bus/models/database"
 	"restapi-bus/repository"
 	"restapi-bus/service"
 
@@ -18,7 +18,7 @@ import (
 	"github.com/rabbitmq/amqp091-go"
 )
 
-func InitializedControllerCustomer(db *sql.DB, rdb *middleware.RedisClientDb) controller.CustomerControllerInterface {
+func InitializedControllerCustomer(tr database.TrInterface, rdb *middleware.RedisClientDb) controller.CustomerControllerInterface {
 	wire.Build(
 		repository.NewCustomerRepository,
 		service.NewCustomerService,
@@ -26,7 +26,7 @@ func InitializedControllerCustomer(db *sql.DB, rdb *middleware.RedisClientDb) co
 	return nil
 }
 
-func InitializedControllerAgency(db *sql.DB, rdb *middleware.RedisClientDb) controller.AgencyControllerInterface {
+func InitializedControllerAgency(tr database.TrInterface, rdb *middleware.RedisClientDb) controller.AgencyControllerInterface {
 	wire.Build(
 		repository.NewAgencyRepository,
 		service.NewAgencyService,
@@ -34,7 +34,7 @@ func InitializedControllerAgency(db *sql.DB, rdb *middleware.RedisClientDb) cont
 	return nil
 }
 
-func InitializedControllerBus(db *sql.DB, rdb *middleware.RedisClientDb) controller.BusControllerInterface {
+func InitializedControllerBus(tr database.TrInterface, rdb *middleware.RedisClientDb) controller.BusControllerInterface {
 	wire.Build(repository.NewBusRepository,
 		repository.NewAgencyRepository,
 		service.NewBusService,
@@ -42,7 +42,7 @@ func InitializedControllerBus(db *sql.DB, rdb *middleware.RedisClientDb) control
 	return nil
 }
 
-func InitializedControllerDriver(db *sql.DB, rdb *middleware.RedisClientDb) controller.ControllerDriverInterface {
+func InitializedControllerDriver(tr database.TrInterface, rdb *middleware.RedisClientDb) controller.ControllerDriverInterface {
 	wire.Build(repository.NewDiverRepository,
 		repository.NewAgencyRepository,
 		service.NewServiceDriver,
@@ -50,7 +50,7 @@ func InitializedControllerDriver(db *sql.DB, rdb *middleware.RedisClientDb) cont
 	return nil
 }
 
-func InitializedControllerSchedule(db *sql.DB, rdb *middleware.RedisClientDb, cronJob croncustom.InterfaceCronJob) controller.ControllerScheduleInterface {
+func InitializedControllerSchedule(tr database.TrInterface, rdb *middleware.RedisClientDb, cronJob croncustom.InterfaceCronJob) controller.ControllerScheduleInterface {
 	wire.Build(
 		repository.NewScheduleRepository,
 		repository.NewBusRepository,
@@ -63,7 +63,7 @@ func InitializedControllerSchedule(db *sql.DB, rdb *middleware.RedisClientDb, cr
 }
 
 func InitializedControllerTicket(
-	db *sql.DB,
+	tr database.TrInterface,
 	rdb *middleware.RedisClientDb,
 	rmq *amqp091.Channel,
 	paymid external.InterfacePayment,
@@ -82,7 +82,7 @@ func InitializedControllerTicket(
 	return nil
 }
 
-func InitializedServer(*sql.DB, *middleware.RedisClientDb, *amqp091.Channel, external.InterfacePayment, croncustom.InterfaceCronJob) *gin.Engine {
+func InitializedServer(*middleware.RedisClientDb, *amqp091.Channel, external.InterfacePayment, croncustom.InterfaceCronJob, database.TrInterface) *gin.Engine {
 	wire.Build(
 		InitializedControllerCustomer,
 		InitializedControllerAgency,

@@ -2,6 +2,7 @@ package entity
 
 import (
 	"context"
+	"database/sql"
 	"restapi-bus/models/request"
 	"restapi-bus/models/response"
 )
@@ -11,7 +12,7 @@ type Ticket struct {
 	ScheduleId int
 	CustomerId int
 	Date       string
-	PaymentId  string
+	PaymentId  sql.NullString
 	ExternalId string
 	IsPaid     bool
 	SeatNumber int

@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"os"
 	"time"
@@ -65,7 +64,7 @@ func MiddlewareAuth(ctx *gin.Context) {
 		panic(exception.NewUnauthorizedError("token invalid"))
 
 	}
-	fmt.Println(claim)
+
 	if newToken := refreshToken(claim, tokenAfterParse); newToken != "" {
 		ctx.SetCookie(constant.X_API_KEY, newToken, claim.ExpiresAt.Second(), "/", "localhost", true, true)
 	}
@@ -73,7 +72,7 @@ func MiddlewareAuth(ctx *gin.Context) {
 
 }
 
-//check if token expired token less than 1 hour than refresh
+// check if token expired token less than 1 hour than refresh
 func refreshToken(claim *web.Claim, token *jwt.Token) string {
 	timeToRefresh := claim.ExpiresAt.Time
 

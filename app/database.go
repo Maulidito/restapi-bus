@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"restapi-bus/helper"
+	"restapi-bus/models/database"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -25,4 +26,8 @@ func NewDatabase(username string, password string, dbName string, hostDb string,
 
 	return db
 
+}
+
+func NewDbManager(db *sql.DB) database.TrInterface {
+	return &database.Tr{Db: db}
 }

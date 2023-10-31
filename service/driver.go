@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"restapi-bus/helper"
+	"restapi-bus/models/database"
 	"restapi-bus/models/entity"
 	"restapi-bus/models/request"
 	"restapi-bus/models/response"
@@ -11,14 +12,16 @@ import (
 type ServiceDriverImplementation struct {
 	RepoDriver entity.DriverRepositoryInterface
 	RepoAgency entity.AgencyRepositoryInterface
+	Tx         database.TrInterface
 }
 
-func NewServiceDriver(repoDriver entity.DriverRepositoryInterface, repoAgency entity.AgencyRepositoryInterface) entity.ServiceDriverInterface {
-	return &ServiceDriverImplementation{RepoDriver: repoDriver, RepoAgency: repoAgency}
+func NewServiceDriver(repoDriver entity.DriverRepositoryInterface, repoAgency entity.AgencyRepositoryInterface, tx database.TrInterface) entity.ServiceDriverInterface {
+	return &ServiceDriverImplementation{RepoDriver: repoDriver, RepoAgency: repoAgency, Tx: tx}
 }
 
 func (service *ServiceDriverImplementation) GetAllDriver(ctx context.Context, filter *request.DriverFilter) []response.Driver {
-
+	ctx = service.Tx.BeginTransactionWithContext(ctx)
+	defer service.Tx.DoCommitOrRollbackWithContext(ctx)
 	listDriver := service.RepoDriver.GetAllDriver(ctx, filter)
 
 	res := []response.Driver{}
@@ -30,26 +33,14 @@ func (service *ServiceDriverImplementation) GetAllDriver(ctx context.Context, fi
 
 }
 func (service *ServiceDriverImplementation) GetAllDriverOnSpecificAgency(ctx context.Context, agencyId int) []response.Driver {
-
+	ctx = service.Tx.BeginTransactionWithContext(ctx)
+	defer service.Tx.DoCommitOrRollbackWithContext(ctx)
 	agency := entity.Agency{AgencyId: agencyId}
-	listDriver := []entity.Driver{}
+
 	listDriverResponse := []response.Driver{}
-	chanErr := make(chan error, 1)
-	go func() {
-		defer func() {
-			tempRecover := recover()
 
-			if tempRecover != nil {
-				chanErr <- tempRecover.(error)
-			}
-			close(chanErr)
-
-		}()
-		service.RepoAgency.GetOneAgency(ctx, &agency)
-		listDriver = service.RepoDriver.GetAllDriverOnSpecificAgency(ctx, agency.AgencyId)
-	}()
-
-	helper.PanicIfError(<-chanErr)
+	service.RepoAgency.GetOneAgency(ctx, &agency)
+	listDriver := service.RepoDriver.GetAllDriverOnSpecificAgency(ctx, agency.AgencyId)
 
 	for _, val := range listDriver {
 		listDriverResponse = append(listDriverResponse, helper.DriverEntityToResponse(&val))
@@ -59,7 +50,8 @@ func (service *ServiceDriverImplementation) GetAllDriverOnSpecificAgency(ctx con
 
 }
 func (service *ServiceDriverImplementation) GetOneDriverOnSpecificAgency(ctx context.Context, driverId int) response.Driver {
-
+	ctx = service.Tx.BeginTransactionWithContext(ctx)
+	defer service.Tx.DoCommitOrRollbackWithContext(ctx)
 	driver := entity.Driver{DriverId: driverId}
 
 	service.RepoDriver.GetOneDriverOnSpecificAgency(ctx, &driver)
@@ -68,14 +60,16 @@ func (service *ServiceDriverImplementation) GetOneDriverOnSpecificAgency(ctx con
 
 }
 func (service *ServiceDriverImplementation) AddDriver(ctx context.Context, driver *request.Driver) {
-
+	ctx = service.Tx.BeginTransactionWithContext(ctx)
+	defer service.Tx.DoCommitOrRollbackWithContext(ctx)
 	service.RepoAgency.GetOneAgency(ctx, &entity.Agency{AgencyId: driver.AgencyId})
 	driverEntity := helper.DriverRequestToEntity(driver)
 
 	service.RepoDriver.AddDriver(ctx, &driverEntity)
 }
 func (service *ServiceDriverImplementation) DeleteDriver(ctx context.Context, driverId int) response.Driver {
-
+	ctx = service.Tx.BeginTransactionWithContext(ctx)
+	defer service.Tx.DoCommitOrRollbackWithContext(ctx)
 	driverEntity := entity.Driver{DriverId: driverId}
 	service.RepoDriver.GetOneDriverOnSpecificAgency(ctx, &driverEntity)
 	service.RepoDriver.DeleteDriver(ctx, &driverEntity)

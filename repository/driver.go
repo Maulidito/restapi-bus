@@ -2,10 +2,10 @@ package repository
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"restapi-bus/exception"
 	"restapi-bus/helper"
+	"restapi-bus/models/database"
 	"restapi-bus/models/entity"
 	"restapi-bus/models/request"
 )
@@ -13,20 +13,17 @@ import (
 var driverRepositorySingleton *DriverRepositoryImplementation
 
 type DriverRepositoryImplementation struct {
-	conn *sql.DB
 }
 
-func NewDiverRepository(conn *sql.DB) entity.DriverRepositoryInterface {
+func NewDiverRepository() entity.DriverRepositoryInterface {
 	if driverRepositorySingleton == nil {
-		driverRepositorySingleton = &DriverRepositoryImplementation{conn: conn}
+		driverRepositorySingleton = &DriverRepositoryImplementation{}
 	}
 	return driverRepositorySingleton
 }
 
 func (repo *DriverRepositoryImplementation) GetAllDriver(ctx context.Context, filter *request.DriverFilter) []entity.Driver {
-	tx, err := repo.conn.Begin()
-	defer helper.DoCommitOrRollback(tx)
-	helper.PanicIfError(err)
+	tx := database.GetTransactionContext(ctx)
 	filterString := helper.RequestFilterDriverToString(filter)
 	rows, err := tx.QueryContext(ctx, "SELECT driver_id,agency_id,name FROM driver "+filterString)
 	helper.PanicIfError(err)
@@ -43,9 +40,7 @@ func (repo *DriverRepositoryImplementation) GetAllDriver(ctx context.Context, fi
 
 }
 func (repo *DriverRepositoryImplementation) GetAllDriverOnSpecificAgency(ctx context.Context, agencyId int) []entity.Driver {
-	tx, err := repo.conn.Begin()
-	defer helper.DoCommitOrRollback(tx)
-	helper.PanicIfError(err)
+	tx := database.GetTransactionContext(ctx)
 
 	rows, err := tx.QueryContext(ctx, "SELECT driver_id,agency_id,name FROM driver WHERE agency_id = ?", agencyId)
 	helper.PanicIfError(err)
@@ -62,10 +57,8 @@ func (repo *DriverRepositoryImplementation) GetAllDriverOnSpecificAgency(ctx con
 
 }
 func (repo *DriverRepositoryImplementation) GetOneDriverOnSpecificAgency(ctx context.Context, driver *entity.Driver) {
-	tx, err := repo.conn.Begin()
-	defer helper.DoCommitOrRollback(tx)
-	helper.PanicIfError(err)
-	err = tx.QueryRowContext(ctx, "SELECT agency_id,name FROM driver WHERE driver_id = ?", driver.DriverId).
+	tx := database.GetTransactionContext(ctx)
+	err := tx.QueryRowContext(ctx, "SELECT agency_id,name FROM driver WHERE driver_id = ?", driver.DriverId).
 		Scan(&driver.AgencyId, &driver.Name)
 
 	if err != nil {
@@ -75,9 +68,7 @@ func (repo *DriverRepositoryImplementation) GetOneDriverOnSpecificAgency(ctx con
 
 }
 func (repo *DriverRepositoryImplementation) AddDriver(ctx context.Context, driver *entity.Driver) {
-	tx, err := repo.conn.Begin()
-	defer helper.DoCommitOrRollback(tx)
-	helper.PanicIfError(err)
+	tx := database.GetTransactionContext(ctx)
 	res, err := tx.ExecContext(ctx, "INSERT INTO driver(agency_id,name) VALUES (? ,?)", driver.AgencyId, driver.Name)
 
 	helper.PanicIfError(err)
@@ -88,10 +79,8 @@ func (repo *DriverRepositoryImplementation) AddDriver(ctx context.Context, drive
 
 }
 func (repo *DriverRepositoryImplementation) DeleteDriver(ctx context.Context, driver *entity.Driver) {
-	tx, err := repo.conn.Begin()
-	defer helper.DoCommitOrRollback(tx)
-	helper.PanicIfError(err)
-	_, err = tx.ExecContext(ctx, "DELETE FROM driver WHERE driver_id = ?", driver.DriverId)
+	tx := database.GetTransactionContext(ctx)
+	_, err := tx.ExecContext(ctx, "DELETE FROM driver WHERE driver_id = ?", driver.DriverId)
 
 	helper.PanicIfError(err)
 

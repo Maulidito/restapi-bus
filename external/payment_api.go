@@ -58,7 +58,7 @@ func (p *Payment) MakeVirtualAccount(c context.Context, name string, id string, 
 		IsSingleUse    bool   `json:"is_single_use"`
 	}{Name: name, Id: id, BankCode: bank_code, IsClosed: true,
 		ExpectedAmount: expected_amount,
-		ExpirationDate: time.Now().Add(1 * time.Hour).Format(time.RFC3339),
+		ExpirationDate: time.Now().Local().Add(1 * time.Hour).Format(time.RFC3339),
 		IsSingleUse:    false,
 	}
 	var buffer bytes.Buffer

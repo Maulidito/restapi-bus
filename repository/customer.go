@@ -2,10 +2,10 @@ package repository
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"restapi-bus/exception"
 	"restapi-bus/helper"
+	"restapi-bus/models/database"
 	"restapi-bus/models/entity"
 	"restapi-bus/models/request"
 )
@@ -13,20 +13,17 @@ import (
 var customerRepositorySingleton *CustomerRepositoryImplementation
 
 type CustomerRepositoryImplementation struct {
-	conn *sql.DB
 }
 
-func NewCustomerRepository(conn *sql.DB) entity.CustomerRepositoryInterface {
+func NewCustomerRepository() entity.CustomerRepositoryInterface {
 	if customerRepositorySingleton == nil {
-		customerRepositorySingleton = &CustomerRepositoryImplementation{conn: conn}
+		customerRepositorySingleton = &CustomerRepositoryImplementation{}
 	}
 	return customerRepositorySingleton
 }
 
 func (repo *CustomerRepositoryImplementation) GetAllCustomer(ctx context.Context, filter *request.CustomerFilter) []entity.Customer {
-	tx, err := repo.conn.Begin()
-	defer helper.DoCommitOrRollback(tx)
-	helper.PanicIfError(err)
+	tx := database.GetTransactionContext(ctx)
 	filterString := helper.RequestFilterCustomerToString(filter)
 	row, err := tx.QueryContext(ctx, "SELECT customer_id,name,phone_number,email FROM customer "+filterString)
 	helper.PanicIfError(err)
@@ -45,9 +42,7 @@ func (repo *CustomerRepositoryImplementation) GetAllCustomer(ctx context.Context
 }
 
 func (repo *CustomerRepositoryImplementation) AddCustomer(ctx context.Context, customer *entity.Customer) {
-	tx, err := repo.conn.Begin()
-	defer helper.DoCommitOrRollback(tx)
-	helper.PanicIfError(err)
+	tx := database.GetTransactionContext(ctx)
 	res, err := tx.ExecContext(ctx, "Insert Into customer( name , phone_number, email ) Values (?,?,?)", customer.Name, customer.PhoneNumber, customer.Email)
 	helper.PanicIfError(err)
 	id, err := res.LastInsertId()
@@ -58,10 +53,8 @@ func (repo *CustomerRepositoryImplementation) AddCustomer(ctx context.Context, c
 }
 
 func (repo *CustomerRepositoryImplementation) GetOneCustomer(ctx context.Context, customer *entity.Customer) {
-	tx, err := repo.conn.Begin()
-	defer helper.DoCommitOrRollback(tx)
-	helper.PanicIfError(err)
-	err = tx.QueryRowContext(ctx, "SELECT name, phone_number,email FROM customer where customer_id = ?", customer.CustomerId).
+	tx := database.GetTransactionContext(ctx)
+	err := tx.QueryRowContext(ctx, "SELECT name, phone_number,email FROM customer where customer_id = ?", customer.CustomerId).
 		Scan(&customer.Name, &customer.PhoneNumber, &customer.Email)
 
 	if err != nil {
@@ -70,10 +63,8 @@ func (repo *CustomerRepositoryImplementation) GetOneCustomer(ctx context.Context
 
 }
 func (repo *CustomerRepositoryImplementation) DeleteOneCustomer(ctx context.Context, customer *entity.Customer) {
-	tx, err := repo.conn.Begin()
-	defer helper.DoCommitOrRollback(tx)
-	helper.PanicIfError(err)
-	_, err = tx.ExecContext(ctx, "DELETE FROM customer WHERE customer_id = ?", customer.CustomerId)
+	tx := database.GetTransactionContext(ctx)
+	_, err := tx.ExecContext(ctx, "DELETE FROM customer WHERE customer_id = ?", customer.CustomerId)
 
 	helper.PanicIfError(err)
 
