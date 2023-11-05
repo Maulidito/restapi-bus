@@ -1,6 +1,30 @@
-# Rest Api Bus Travel
+<h1 align="center"> Rest Api Bus </h1> 
 
-Rest api about managing bus and order ticket bus, this rest api are just used by admin of each agency
+## Table of Contents
+
+- [Introduction](#introduction)
+- [Version History](#version-history)
+- [Entity](#entity)
+- [Features](#features)
+- [Project Architecture](#project-architecture)
+- [Diagram Layer](#diagram-layer)
+- [Middleware Pipeline](#middleware-pipeline)
+- [Message Queue System](#message-queue-system)
+- [Documentation Rest Api](#documentation-rest-api)
+- [Getting Started](#getting-started)
+    - [Prerequisites](#prerequisites)
+    - [A think u need todo](#a-think-u-need-todo)
+
+
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+## Introduction
+
+Welcome to my personal portolio, i'm Maulidito Dwinandana, a passionate software engineer with an interest around backend.  this portfolio is to showcase my project and my experience. through this project i learn a lot of how api work.
+
+This Project Rest api is about managing bus, agency, departure schedule, and order ticket bus, however this rest api are just used by admin of each agency. this also still didn't have a web view, it just only api. despite it's only api, i have implemented some current technology that used by the industry, for example rabbitmq, docker, redis. Also i implemented a little of microservice, like webhook service and email service.
+
 
 ### Version History
 
@@ -17,9 +41,6 @@ Rest api about managing bus and order ticket bus, this rest api are just used by
 - [version 1.5](https://github.com/Maulidito/restapi-bus/tree/e00c8893ce99810a2ca5113367389a168c5c204e) (adding email service with rabbit mq for communicating)
 
 
-## Framework
-
-The Framework i use in this project is [Gin](https://github.com/gin-gonic/gin)
 
 ## Entity
 
@@ -32,14 +53,29 @@ The Framework i use in this project is [Gin](https://github.com/gin-gonic/gin)
 
 you can also see Erd in this [link](https://drawsql.app/teams/maulidito-dwinandana/diagrams/rest-api-bus) using [drawsql](https://drawsql.app/)
 
+## Features
+
+- CRUD of All Entity
+- Authentication using Json Web Token
+- Payment with Virtual Account by Xendit
+- Send Email To Customer through SMTP
+- Auto Schedule with Cron Job
+- Booking Seat From Ticket
+
 
 ## Project Architecture
 
 ![Project Architecture](./image/architecture.drawio_withBG.png)
 
-## Diagram Project
+So in this project have 3 server, that are Webhook Server, Email Server, RestApiBus Server.
 
-![Diagram Project](./image/rest%20api%20bus%20diagram-diagram%20rest%20api.drawio.png)
+- Webhook Server (for get all request from xendit to queue)
+- Email Server (get all data from queue forwarded to email customer)
+- RestApiBus Server (Managing all request, respond, and logic that related on bus management)
+
+## Diagram Layer
+
+![Diagram Layer](./image/rest%20api%20bus%20diagram-diagram%20rest%20api.drawio.png)
 
 From the image We Know
 
@@ -47,9 +83,11 @@ From the image We Know
 - One Service can have many repository
 - One Repository only communicate with one database
 
+so in the layer i implemented a repository pattern, that means i separate the logic layer with data access layer
+
 ## Middleware Pipeline
 
-![Diagram Project](./image/middleware_pipeline.png)
+![Middleware Pipeline](./image/middleware_pipeline.png)
 
 1. The First is the base middleware of the router, every error in controller will catch in middleware error using panic function and recover to catch
 
@@ -57,31 +95,27 @@ From the image We Know
 
 3. The Third is the Redis Middleware, the redis middleware just implented in specific router for example in get one agency, get one bus, get one schedule, etc. The redis middleware will always get the data first from the redis, if the data didn't exist then move to the controller but if exist then send to user.
 
-## Workflow Project
 
-![Workflow Project](./image/rest%20api%20bus%20diagram-WorkFlow.drawio.png)
-
-This image show workflow from client send request and get response in REST API
-
-## Email Service
+## Message Queue System 
 
 ![Message Queue System](./image/deep_dive_message_queue.png)
 
 
-The goal of Email service is send a ticket bus to email user. If we see the image i use message queue for connecting to email service and rest api, and smtp gmail to handle delivery email. The technology message queue is using [RabbitMq](https://rabbitmq.com/)
+The goal of message queue is to send a data to consumer. If we see the image i use message queue for connecting to email server and publisher, and smtp gmail to handle delivery email. The technology message queue is using [RabbitMq](https://rabbitmq.com/)
 
 The flow email service work:
 
-1. Rest api declare queue and bind the exchange, then publish detail ticket to MQ
-2. Email Service declare queue if didnt exist, then consume queue
-3. Email Service Render the data of detail ticket to html
-4. Email Service send to email user with smtp gmail
+1. Declare the queue and the exchange
+2. Email Service bind queue , then consume queue
+3. Rest api bind the exchange, then publish data to MQ
+4. Email Service Render the data of detail ticket to html
+5. Email Service send to email user with smtp gmail
 
 - example of ticket email
 
 ![Example Ticket Email](./image/email_ticket.png)
 
-- example of email ticket payment
+- example of email ticket order
 
 ![Example Ticket Email](./image/email_payment_order.png)
 
