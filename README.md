@@ -65,7 +65,7 @@ you can also see Erd in this [link](https://drawsql.app/teams/maulidito-dwinanda
 
 ## Project Architecture
 
-![Project Architecture](./image/architecture.drawio_withBG.png)
+![Project Architecture](./image/architecture.drawio_withBG_view.png)
 
 So in this project have 3 server, that are Webhook Server, Email Server, RestApiBus Server.
 
