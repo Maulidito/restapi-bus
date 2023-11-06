@@ -18,8 +18,10 @@ type ControllerScheduleInterface interface {
 	GetAllSchedule(ctx *gin.Context)
 	GetOneSchedule(ctx *gin.Context)
 	AddSchedule(ctx *gin.Context)
-	AutoSchedule(ctx *gin.Context)
 	DeleteSchedule(ctx *gin.Context)
+	SetAutoSchedule(ctx *gin.Context)
+	GetAutoSchedule(ctx *gin.Context)
+	DeleteAutoSchedule(ctx *gin.Context)
 	UpdateArrivedSchedule(ctx *gin.Context)
 	RouterMount(g gin.IRouter)
 }
@@ -39,7 +41,10 @@ func (controller *ControllerScheduleImplementation) RouterMount(g gin.IRouter) {
 	grouterScheduleRdb := grouterSchedule.Group("", controller.Rdb.MiddlewareGetDataRedis)
 	grouterSchedule.GET("", controller.GetAllSchedule)
 	grouterScheduleAuth.POST("", controller.AddSchedule)
-	grouterScheduleAuth.POST("/autoschedule", controller.AutoSchedule)
+	grouterAutoSchedule := grouterScheduleAuth.Group("/autoschedule")
+	grouterAutoSchedule.POST("", controller.SetAutoSchedule)
+	grouterAutoSchedule.GET("", controller.GetAutoSchedule)
+	grouterAutoSchedule.DELETE("", controller.DeleteAutoSchedule)
 	grouterScheduleRdb.GET("/:scheduleId", controller.GetOneSchedule, controller.Rdb.MiddlewareSetDataRedis)
 	grouterScheduleAuth.DELETE("/:scheduleId", controller.DeleteSchedule)
 	grouterScheduleAuth.PATCH("/:scheduleId/arrived", controller.UpdateArrivedSchedule)
@@ -146,11 +151,47 @@ func (controller *ControllerScheduleImplementation) UpdateArrivedSchedule(ctx *g
 	ctx.JSON(finalResponse.Code, finalResponse)
 }
 
-func (controller *ControllerScheduleImplementation) AutoSchedule(ctx *gin.Context) {
-	autoSchedule := request.AutoSchedule{}
+func (controller *ControllerScheduleImplementation) SetAutoSchedule(ctx *gin.Context) {
 
-	err := ctx.ShouldBind(&autoSchedule)
+	automateSchedule := request.AutoSchedule{}
+
+	err := ctx.ShouldBind(&automateSchedule)
 	helper.PanicIfError(err)
-	controller.Service.AutoSchedule(ctx, &autoSchedule)
 
+	controller.Service.SetAutoSchedule(ctx, &automateSchedule)
+
+	finalResponse := web.WebResponseNoData{Code: http.StatusOK, Status: "OK"}
+
+	ctx.JSON(http.StatusOK, finalResponse)
+
+}
+
+func (controller *ControllerScheduleImplementation) GetAutoSchedule(ctx *gin.Context) {
+
+	listCronJob := controller.Service.GetAutoSchedule(ctx)
+
+	if len(listCronJob) == 0 {
+		ctx.JSON(
+			http.StatusNotFound,
+			web.WebResponseNoData{
+				Code: http.StatusOK, Status: http.StatusText(http.StatusOK),
+			})
+		return
+	}
+	ctx.JSON(
+		http.StatusOK,
+		web.WebResponse{
+			Code: http.StatusOK, Status: http.StatusText(http.StatusOK),
+			Data: listCronJob,
+		})
+
+}
+
+func (controller *ControllerScheduleImplementation) DeleteAutoSchedule(ctx *gin.Context) {
+	id := ctx.Query("id")
+	if id == "" {
+		panic(exception.NewBadRequestError("ERROR ID NOT FOUND"))
+
+	}
+	controller.Service.DeleteAutoSchedule(ctx, id)
 }

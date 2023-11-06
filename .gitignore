@@ -10,3 +10,4 @@ diagram_drawio/
 *.zip
 docker-compose-local.yaml
 docker-compose-dev.yaml
+config/*

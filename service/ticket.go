@@ -158,6 +158,7 @@ func (service *TicketServiceImplementation) AddTicket(ctx context.Context, ticke
 			}
 		},
 		fmt.Sprintf("%d %d * * * ", time_expire.Minute(), time_expire.Hour()),
+		fmt.Sprintf("Once - Ticket %d - Time %s", ticketResponse.TicketId, time_expire.String()),
 	)
 
 	helper.PanicIfError(err)

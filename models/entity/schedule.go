@@ -2,6 +2,7 @@ package entity
 
 import (
 	"context"
+	cronmodel "restapi-bus/models/cron_model"
 	"restapi-bus/models/request"
 	"restapi-bus/models/response"
 )
@@ -23,7 +24,9 @@ type ScheduleServiceInterface interface {
 	AddSchedule(ctx context.Context, schedule *request.Schedule)
 	DeleteSchedule(ctx context.Context, scheduleId int) response.Schedule
 	UpdateArrivedSchedule(ctx context.Context, scheduleId int, isArrived bool) response.Schedule
-	AutoSchedule(ctx context.Context, autoSchedule *request.AutoSchedule)
+	SetAutoSchedule(ctx context.Context, autoSchedule *request.AutoSchedule)
+	GetAutoSchedule(ctx context.Context) []cronmodel.ResponseCronJob
+	DeleteAutoSchedule(ctx context.Context, id string)
 }
 
 type ScheduleRepositoryInterface interface {

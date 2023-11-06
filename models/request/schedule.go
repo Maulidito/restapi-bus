@@ -31,6 +31,8 @@ type AutoSchedule struct {
 	StartHour      string `form:"startHour" binding:"required,datetime=15:04:05"`
 	EstimateTime   string `form:"estimateTime" binding:"required,datetime=15:04:05"`
 	EndHour        string `form:"startEnd" binding:"required,datetime=15:04:05"`
-	RangeSchedule  int    `form:"rangeSchedule,default=3" binding:"number,min=1,max=12"`
 	BothAgency     bool   `form:"bothAgency,default=true" binding:"boolean"`
+	StartFrom      string `form:"startFrom" binding:"omitempty,datetime=2006-01-02"`
+	AddRangeDay    int    `form:"addRangeDay,default=1" binding:"omitempty,numeric,min=1"`
+	AddRangeMonth  int    `form:"addRangeMonth,default=0" binding:"omitempty,number,min=0,max=12"`
 }

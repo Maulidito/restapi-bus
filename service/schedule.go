@@ -2,10 +2,13 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"log"
 	croncustom "restapi-bus/cron_custom"
 	"restapi-bus/exception"
 	"restapi-bus/helper"
+	cronmodel "restapi-bus/models/cron_model"
 	"restapi-bus/models/database"
 	"restapi-bus/models/entity"
 	"restapi-bus/models/request"
@@ -29,7 +32,8 @@ func NewScheduleService(
 	cronCustom croncustom.InterfaceCronJob,
 	tx database.TrInterface,
 	repoBus entity.BusRepositoryInterface) entity.ScheduleServiceInterface {
-	return &ScheduleServiceImplementation{
+
+	scheduleService := &ScheduleServiceImplementation{
 		RepoSchedule: repoSchedule,
 		RepoAgency:   repoAgency,
 		RepoDriver:   repoDriver,
@@ -37,6 +41,8 @@ func NewScheduleService(
 		CronCustom:   cronCustom,
 		Tx:           tx,
 	}
+	scheduleService.InitAutoSchedule()
+	return scheduleService
 }
 
 func (service *ScheduleServiceImplementation) GetAllSchedule(ctx context.Context, filter *request.ScheduleFilter) []response.Schedule {
@@ -127,7 +133,7 @@ func (service *ScheduleServiceImplementation) UpdateArrivedSchedule(ctx context.
 
 }
 
-func (service *ScheduleServiceImplementation) AutoSchedule(ctx context.Context, autoSchedule *request.AutoSchedule) {
+func (service *ScheduleServiceImplementation) SetAutoSchedule(ctx context.Context, autoSchedule *request.AutoSchedule) {
 	ctx = service.Tx.BeginTransactionWithContext(ctx)
 	defer service.Tx.DoCommitOrRollbackWithContext(ctx)
 	countBusFirstAgency := 0
@@ -164,14 +170,23 @@ func (service *ScheduleServiceImplementation) AutoSchedule(ctx context.Context, 
 	helper.PanicIfError(err)
 	EstimateTime, err := time.Parse(time.TimeOnly, autoSchedule.EstimateTime)
 	helper.PanicIfError(err)
+	startDateTime := time.Now().Local()
+	if autoSchedule.StartFrom != "" {
+		startDateTime, err = time.ParseInLocation(time.DateOnly, autoSchedule.StartFrom, time.Local)
+		helper.PanicIfError(err)
 
+	}
 	timeCurrent := time.Date(
-		time.Now().Local().Year(),
-		time.Now().Local().Month(),
-		time.Now().Local().Day(),
+		startDateTime.Year(),
+		startDateTime.Month(),
+		startDateTime.Day(),
 		0, 0, 0, 0,
 		time.Local)
-	timeEnd := timeCurrent.AddDate(0, autoSchedule.RangeSchedule, 0).
+	var timeEnd time.Time
+
+	timeEnd = timeCurrent.AddDate(0, autoSchedule.AddRangeMonth, autoSchedule.AddRangeDay)
+
+	timeEnd = timeEnd.
 		Add(
 			(time.Duration(EndHour.Hour()) * time.Hour) +
 				(time.Duration(EndHour.Minute()) * time.Minute) +
@@ -186,7 +201,7 @@ func (service *ScheduleServiceImplementation) AutoSchedule(ctx context.Context, 
 	startHour = time.Date(timeCurrent.Year(), timeCurrent.Month(), timeCurrent.Day(), startHour.Hour(), startHour.Minute(), startHour.Second(), 0, time.Local)
 	EndHour = time.Date(timeCurrent.Year(), timeCurrent.Month(), timeCurrent.Day(), EndHour.Hour(), EndHour.Minute(), EndHour.Second(), 0, time.Local)
 
-	listSchedule, timeCurrent, timeEnd, startHour, EndHour := generateAutoSchedule(
+	listSchedule, timeCurrent, timeEnd, startHour, EndHour := helper.GenerateAutoSchedule(
 		timeCurrent,
 		timeEnd, EstimateTime,
 		startHour, EndHour,
@@ -204,6 +219,7 @@ func (service *ScheduleServiceImplementation) AutoSchedule(ctx context.Context, 
 	service.CronCustom.SetCronJob(
 		fmt.Sprintf("%s-%s", entityAgency1.Place, entityAgency2.Place),
 		func() {
+			ctx = context.Background()
 			ctx = service.Tx.BeginTransactionWithContext(ctx)
 			defer service.Tx.DoCommitOrRollbackWithContext(ctx)
 			timeEnd = timeEnd.AddDate(0, 0, 1)
@@ -212,7 +228,7 @@ func (service *ScheduleServiceImplementation) AutoSchedule(ctx context.Context, 
 			timeCurrent = startHour
 
 			listSchedule = []entity.Schedule{}
-			listSchedule, timeCurrent, timeEnd, startHour, EndHour = generateAutoSchedule(
+			listSchedule, timeCurrent, timeEnd, startHour, EndHour = helper.GenerateAutoSchedule(
 				timeCurrent,
 				timeEnd, EstimateTime,
 				startHour, EndHour,
@@ -229,63 +245,139 @@ func (service *ScheduleServiceImplementation) AutoSchedule(ctx context.Context, 
 			}
 
 		},
-		"0 * * * *", //every day
+		"0 0 * * *", //every day
+		autoSchedule,
+		fmt.Sprintf("Everyday - Schedule %s - Time %s", idCronJob, "00:00"),
+		true,
 	)
 
 }
 
-func generateAutoSchedule(
-	timeCurrent time.Time,
-	timeEnd time.Time,
-	EstimateTime time.Time,
-	startHour time.Time,
-	EndHour time.Time,
-	autoSchedule *request.AutoSchedule,
-	listBusFirstAgency []entity.Bus,
-	listBusSecondAgency []entity.Bus,
-	listDriverFirstAgency []entity.Driver,
-	listDriverSecondAgency []entity.Driver,
-) ([]entity.Schedule, time.Time, time.Time, time.Time, time.Time) {
-	counter := 0
-	listSchedule := []entity.Schedule{}
-	timeNowWithTZ := time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day(), time.Now().Hour(), time.Now().Minute(), time.Now().Second(), 0, time.Local)
-	for timeCurrent.Before(timeEnd) {
+func (service *ScheduleServiceImplementation) InitAutoSchedule() {
+	ctx := context.Background()
+	ctx = service.Tx.BeginTransactionWithContext(ctx)
+	defer service.Tx.DoCommitOrRollbackWithContext(ctx)
+	listCronJob := service.CronCustom.LoadConfigCronJobSchedule()
 
-		if timeCurrent.Equal(EndHour) || timeCurrent.After(EndHour) || timeCurrent.Before(startHour) {
-			startHour = startHour.AddDate(0, 0, 1)
-			EndHour = EndHour.AddDate(0, 0, 1)
-			timeCurrent = startHour
+	for id, val := range listCronJob {
+		job := val.Job.(map[string]interface{})
+		autoSchedule := &request.AutoSchedule{}
+		byteJob, err := json.Marshal(job)
+
+		if err != nil {
+			log.Print("something went wrong when decode the json config")
+		}
+		err = json.Unmarshal(byteJob, autoSchedule)
+		if err != nil {
+			log.Print("something went wrong when decode the json config")
 		}
 
-		if timeCurrent.After(timeNowWithTZ) {
-			listSchedule = append(listSchedule, entity.Schedule{
-				FromAgencyId: autoSchedule.FirstAgencyId,
-				ToAgencyId:   autoSchedule.SecondAgencyId,
-				Date:         fmt.Sprintf("%s %s", timeCurrent.Format(time.DateOnly), timeCurrent.Format(time.TimeOnly)),
-				Price:        autoSchedule.Price,
-				Arrived:      false,
-				BusId:        listBusFirstAgency[counter%len(listBusFirstAgency)].BusId,
-				DriverId:     listDriverFirstAgency[counter%len(listDriverFirstAgency)].DriverId,
-			})
-			if autoSchedule.BothAgency {
-				listSchedule = append(listSchedule, entity.Schedule{
-					FromAgencyId: autoSchedule.SecondAgencyId,
-					ToAgencyId:   autoSchedule.FirstAgencyId,
-					Date:         fmt.Sprintf("%s %s", timeCurrent.Format(time.DateOnly), timeCurrent.Format(time.TimeOnly)),
-					Price:        autoSchedule.Price,
-					Arrived:      false,
-					BusId:        listBusSecondAgency[counter%len(listBusSecondAgency)].BusId,
-					DriverId:     listDriverSecondAgency[counter%len(listDriverSecondAgency)].DriverId,
-				})
+		countBusFirstAgency := 0
+		countBusSecondAgency := 0
+		listDriverFirstAgency := service.RepoDriver.GetAllDriverOnSpecificAgency(ctx, autoSchedule.FirstAgencyId)
+		listBusFirstAgency := service.RepoBus.GetAllBusSpecificAgency(ctx, autoSchedule.FirstAgencyId)
+		listBusSecondAgency := service.RepoBus.GetAllBusSpecificAgency(ctx, autoSchedule.SecondAgencyId)
+		listDriverSecondAgency := service.RepoDriver.GetAllDriverOnSpecificAgency(ctx, autoSchedule.SecondAgencyId)
+		entityAgency1 := entity.Agency{AgencyId: autoSchedule.FirstAgencyId}
+		entityAgency2 := entity.Agency{AgencyId: autoSchedule.SecondAgencyId}
+		service.RepoAgency.GetOneAgency(ctx, &entityAgency1)
+		service.RepoAgency.GetOneAgency(ctx, &entityAgency2)
+		countBusFirstAgency = len(listBusFirstAgency)
+
+		countBusSecondAgency = len(listBusSecondAgency)
+
+		if countBusFirstAgency == 0 {
+			log.Printf("got bus in first agency %d , the total bus cannot 0", countBusSecondAgency)
+		}
+		if autoSchedule.BothAgency {
+			if countBusSecondAgency == 0 {
+				log.Printf("got bus in  second agency %d, the total bus cannot 0", countBusSecondAgency)
 			}
 		}
-		timeCurrent = timeCurrent.
-			Add((time.Duration(EstimateTime.Hour())) * time.Hour).
-			Add((time.Duration(EstimateTime.Minute())) * time.Minute)
 
-		counter++
+		startHour, err := time.Parse(time.TimeOnly, autoSchedule.StartHour)
+		helper.PanicIfError(err)
+		EndHour, err := time.Parse(time.TimeOnly, autoSchedule.EndHour)
+		helper.PanicIfError(err)
+		EstimateTime, err := time.Parse(time.TimeOnly, autoSchedule.EstimateTime)
+		helper.PanicIfError(err)
+		startDateTime := time.Now().Local()
+		timeCurrent := time.Date(
+			startDateTime.Year(),
+			startDateTime.Month(),
+			startDateTime.Day(),
+			0, 0, 0, 0,
+			time.Local)
+		var timeEnd time.Time
+
+		timeEnd = timeCurrent.AddDate(0, autoSchedule.AddRangeMonth, autoSchedule.AddRangeDay)
+
+		timeEnd = timeEnd.
+			Add(
+				(time.Duration(EndHour.Hour()) * time.Hour) +
+					(time.Duration(EndHour.Minute()) * time.Minute) +
+					(time.Duration(EndHour.Second()) * time.Second),
+			)
+		timeCurrent = timeCurrent.
+			Add(
+				(time.Duration(startHour.Hour()) * time.Hour) +
+					(time.Duration(startHour.Minute()) * time.Minute) +
+					(time.Duration(startHour.Second()) * time.Second),
+			)
+		startHour = time.Date(timeCurrent.Year(), timeCurrent.Month(), timeCurrent.Day(), startHour.Hour(), startHour.Minute(), startHour.Second(), 0, time.Local)
+		EndHour = time.Date(timeCurrent.Year(), timeCurrent.Month(), timeCurrent.Day(), EndHour.Hour(), EndHour.Minute(), EndHour.Second(), 0, time.Local)
+		listSchedule := []entity.Schedule{}
+
+		service.CronCustom.SetCronJob(
+			id,
+			func() {
+				ctx = context.Background()
+				ctx = service.Tx.BeginTransactionWithContext(ctx)
+				defer service.Tx.DoCommitOrRollbackWithContext(ctx)
+				timeEnd = timeEnd.AddDate(0, 0, 1)
+				startHour = startHour.AddDate(0, 0, 1)
+				EndHour = EndHour.AddDate(0, 0, 1)
+				timeCurrent = startHour
+
+				listSchedule, timeCurrent, timeEnd, startHour, EndHour = helper.GenerateAutoSchedule(
+					timeCurrent,
+					timeEnd, EstimateTime,
+					startHour, EndHour,
+					autoSchedule,
+					listBusFirstAgency,
+					listBusSecondAgency,
+					listDriverFirstAgency,
+					listDriverSecondAgency,
+				)
+				for i := 0; i < len(listSchedule); i++ {
+
+					service.RepoSchedule.AddSchedule(ctx, &listSchedule[i])
+
+				}
+
+			},
+			val.Spec, //every day
+			autoSchedule,
+			val.Desc,
+			false,
+		)
 	}
 
-	return listSchedule, timeCurrent, timeEnd, startHour, EndHour
+}
 
+func (service *ScheduleServiceImplementation) GetAutoSchedule(ctx context.Context) []cronmodel.ResponseCronJob {
+	listAllCronJob, err := service.CronCustom.GetAllCronJob()
+
+	helper.PanicIfError(err)
+	listResponseCronJob := []cronmodel.ResponseCronJob{}
+	for id, val := range listAllCronJob {
+		listResponseCronJob = append(listResponseCronJob, cronmodel.ResponseCronJob{Id: id, Spec: val.Spec, Desc: val.Description})
+	}
+
+	return listResponseCronJob
+}
+
+func (service *ScheduleServiceImplementation) DeleteAutoSchedule(ctx context.Context, id string) {
+	err := service.CronCustom.DeleteOneCronJob(id)
+	helper.PanicIfError(err)
 }
