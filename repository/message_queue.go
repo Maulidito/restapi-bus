@@ -17,13 +17,14 @@ type IMessageChannel interface {
 	PublishToEmailService(ctx context.Context, queueName string, data []byte)
 	PublishToEmailServiceTopic(ctx context.Context, topic string, queueName string, data []byte)
 	ConsumeQueue(ctx context.Context, consumerName string, queueName string) <-chan amqp091.Delivery
+	AckMessage(ctx context.Context, msg amqp091.Delivery) error
 }
 
 func BindMqChannel(channelMq *amqp091.Channel) IMessageChannel {
 	if MessageChannelSingleton == nil {
 		MessageChannelSingleton = &MessageChannel{channelMq}
 	}
-	return MessageChannelSingleton
+	return &MessageChannel{channelMq}
 }
 
 func (mq *MessageChannel) PublishToEmailServiceTopic(ctx context.Context, topic string, queueName string, data []byte) {
@@ -41,7 +42,7 @@ func (mq *MessageChannel) PublishToEmailService(ctx context.Context, queueName s
 }
 
 func (mq *MessageChannel) ConsumeQueue(ctx context.Context, consumerName string, queueName string) <-chan amqp091.Delivery {
-	queue, err := mq.QueueDeclare(queueName, false, true, false, true, nil)
+	queue, err := mq.QueueDeclare(queueName, true, false, false, true, nil)
 
 	helper.PanicIfError(err)
 
@@ -50,4 +51,9 @@ func (mq *MessageChannel) ConsumeQueue(ctx context.Context, consumerName string,
 	helper.PanicIfError(err)
 
 	return dataConsume
+}
+
+func (mq *MessageChannel) AckMessage(ctx context.Context, msg amqp091.Delivery) error {
+	err := mq.Ack(msg.DeliveryTag, false)
+	return err
 }

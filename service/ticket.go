@@ -313,6 +313,8 @@ func (service *TicketServiceImplementation) consumeWebhookQueuePaymentSuccess() 
 
 	go func() {
 		for msg := range messages {
+
+			ctx = service.Tx.BeginTransactionWithContext(ctx)
 			json.Unmarshal(msg.Body, &paymentSuccess)
 			service.cronjob.StopCronJob(paymentSuccess.ExternalID)
 			service.RepoTicket.UpdateTicketToPaid(ctx, paymentSuccess.ExternalID, paymentSuccess.PaymentID)
@@ -341,6 +343,8 @@ func (service *TicketServiceImplementation) consumeWebhookQueuePaymentSuccess() 
 			helper.PanicIfError(errorJson)
 			fmt.Printf("SUCCESS PAYMENT WITH Payment ID %s", paymentSuccess.PaymentID)
 			service.RepoMq.PublishToEmailServiceTopic(ctx, constant.TOPIC_TICKET_EMAIL, constant.QUEUE_TICKET, respDetailTicketByte)
+			service.Tx.DoCommitOrRollbackWithContext(ctx)
+			msg.Ack(false)
 
 		}
 	}()
