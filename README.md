@@ -23,7 +23,7 @@
 
 Welcome to my personal portolio, i'm Maulidito Dwinandana, a passionate software engineer with an interest around backend.  this portfolio is to showcase my project and my experience. through this project i learn a lot of how api work.
 
-This Project Rest api is about managing bus, agency, departure schedule, and order ticket bus, however this rest api are just used by admin of each agency. this also still didn't have a web view, it just only api. despite it's only api, i have implemented some current technology that used by the industry, for example rabbitmq, docker, redis. Also i implemented a little of microservice, like webhook service and email service.
+This Project Rest api is about managing bus, agency, departure schedule, and order ticket bus, however this rest api are just used by admin of each agency. this also still didn't have a web view, it just only api. even if it's only api, i have implemented some current technology that used by the industry, for example rabbitmq, docker, redis. Also i implemented a little of microservice, like webhook service and email service.
 
 
 ### Version History
